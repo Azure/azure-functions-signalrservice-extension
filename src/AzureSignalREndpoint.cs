@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SignalRExtension
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class AzureSignalREndpoint
     {

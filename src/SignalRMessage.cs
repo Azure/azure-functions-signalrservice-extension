@@ -1,4 +1,4 @@
-namespace SignalRExtension
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRMessage
     {

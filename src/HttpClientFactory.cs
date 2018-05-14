@@ -1,7 +1,7 @@
 using System;
 using System.Net.Http;
 
-namespace SignalRExtension
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public static class HttpClientFactory
     {

@@ -2,7 +2,7 @@ using System;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Newtonsoft.Json.Linq;
 
-namespace SignalRExtension
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRConfiguration : IExtensionConfigProvider
     {
