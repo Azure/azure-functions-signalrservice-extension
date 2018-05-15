@@ -1,4 +1,25 @@
-# Azure Functions bindings for SignalR Service
+# Azure Functions bindings for Azure SignalR Service
+
+## Intro
+
+These bindings allow Azure Functions to integrate with Azure SignalR Service.
+
+### Supported scenarios
+
+- Allow clients to serverlessly connect to a SignalR Service hub without requiring an ASP.NET Core backend
+- Use Azure Functions (any language supported by V2) to broadcast messages to all clients connected to a SignalR Service hub
+- Example scenarios include: broadcast messages to a SignalR Service hub on HTTP requests and events from Cosmos DB change feed, Event Hub, Event Grid, etc
+
+### Bindings
+
+`SignalRConnectionInfo` input binding makes it easy to generate the token required for clients to initiate a connection to Azure SignalR Service.
+
+`SignalR` output binding allows messages to be broadcast to an Azure SignalR Service hub.
+
+### Current limitations
+
+- Only supports broadcasting at this time, cannot invoke methods on a subset of connections, users, or groups
+- Functions cannot be triggered by client invocation of server methods (clients need to call an HTTP endpoint or post messages to a Event Grid, etc, to trigger a function)
 
 ## Prerequisites
 
@@ -32,7 +53,7 @@ In order for a client to connect to SignalR, it needs to obtain the SignalR Serv
 
 Binding schema:
 
-```json
+```javascript
 {
   "type": "signalRConnectionInfo",
   "name": "connectionInfo",
@@ -50,17 +71,30 @@ The `SignalR` output binding can be used to broadcast messages to all clients co
 - [Simple chat app](samples/simple-chat/content/index.html)
     - Calls negotiate endpoint to fetch connection information
     - Connects to SignalR Service
-    - Send messages to HttpTrigger function, which then broadcasts the messages to all clients
+    - Sends messages to HttpTrigger function, which then broadcasts the messages to all clients
 
 Binding schema:
 
-```json
+```javascript
 {
   "type": "signalR",
-  "name": "signalRMessages",
+  "name": "signalRMessages", // name of the output binding
   "hubName": "<hub_name>",
   "connectionStringSetting": "<setting_name>", // Defaults to AzureSignalRConnectionString
   "direction": "out"
 }
 ```
 
+To send one or more messages, set the output binding to an array of objects:
+
+```javascript
+module.exports = function (context, req) {
+  context.bindings.signalRMessages = [{
+    "target": "newMessage", // name of the client method to invoke
+    "arguments": [
+      req.body // arguments to pass to client method
+    ]
+  }];
+  context.done();
+};
+```
