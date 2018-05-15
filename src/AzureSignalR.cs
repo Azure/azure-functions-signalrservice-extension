@@ -17,22 +17,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             (BaseEndpoint, AccessKey) = ParseConnectionString(connectionString);
         }
 
-        public AzureSignalREndpoint GetClientEndpoint(string hubName)
+        public AzureSignalRConnectionInfo GetClientConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
-            return new AzureSignalREndpoint
+            return new AzureSignalRConnectionInfo
             {
                 Endpoint = hubUrl,
                 AccessKey = token
             };
         }
 
-        public AzureSignalREndpoint GetServerEndpoint(string hubName)
+        public AzureSignalRConnectionInfo GetServerConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
-            return new AzureSignalREndpoint
+            return new AzureSignalRConnectionInfo
             {
                 Endpoint = hubUrl,
                 AccessKey = token

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
 
         [AppSetting(Default = "AzureSignalRConnectionString")]
-        public string ConnectionString { get; set; }
+        public string ConnectionStringSetting { get; set; }
         [AutoResolve]
         public string HubName { get; set; }
     }

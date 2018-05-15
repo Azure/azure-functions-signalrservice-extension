@@ -5,10 +5,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     [AttributeUsage(AttributeTargets.ReturnValue | AttributeTargets.Parameter)]
     [Binding]
-    public class SignalRTokenAttribute : Attribute
+    public class SignalRConnectionInfoAttribute : Attribute
     {
         [AppSetting(Default = "AzureSignalRConnectionString")]
-        public string ConnectionString { get; set; }
+        public string ConnectionStringSetting { get; set; }
         [AutoResolve]
         public string HubName { get; set; }
     }

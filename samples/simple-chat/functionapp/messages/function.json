@@ -16,7 +16,7 @@
       "name": "res"
     },
     {
-      "type": "signalr",
+      "type": "signalR",
       "name": "signalRMessages",
       "hubName": "simplechat",
       "direction": "out"

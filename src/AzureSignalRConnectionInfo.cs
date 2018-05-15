@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class AzureSignalREndpoint
+    public class AzureSignalRConnectionInfo
     {
         [JsonProperty("endpoint")]
         public string Endpoint { get; set; }

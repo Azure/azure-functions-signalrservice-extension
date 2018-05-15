@@ -10,18 +10,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             context.AddConverter<string, JObject>(JObject.FromObject);
             context.AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>());
-            context.AddConverter<AzureSignalREndpoint, JObject>(JObject.FromObject);
+            context.AddConverter<AzureSignalRConnectionInfo, JObject>(JObject.FromObject);
 
-            context.AddBindingRule<SignalRTokenAttribute>()
-                .BindToInput<AzureSignalREndpoint>(BuildEndpoint);
+            context.AddBindingRule<SignalRConnectionInfoAttribute>()
+                .BindToInput<AzureSignalRConnectionInfo>(GetConnectionInfo);
             context.AddBindingRule<SignalRAttribute>()
                 .BindToCollector<SignalRMessage>(attr => new SignalRMessageAsyncCollector(this, attr));
         }
 
-        private AzureSignalREndpoint BuildEndpoint(SignalRTokenAttribute attribute)
+        private AzureSignalRConnectionInfo GetConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalR(attribute.ConnectionString);
-            return signalR.GetClientEndpoint(attribute.HubName);
+            var signalR = new AzureSignalR(attribute.ConnectionStringSetting);
+            return signalR.GetClientConnectionInfo(attribute.HubName);
         }
 
     }

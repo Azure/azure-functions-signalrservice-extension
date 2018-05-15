@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Functions Host",
+      "options": {
+        "cwd": "samples/simple-chat/functionapp"
+      },
+      "identifier": "runFunctionsHost",
+      "type": "shell",
+      "command": "func host start --cors http://localhost:3000",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always"
+      },
+      "problemMatcher": [
+        {
+          "owner": "azureFunctions",
+          "pattern": [
+            {
+              "regexp": "\\b\\B",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Stopping host.*",
+            "endsPattern": "^.*Job host started.*"
+          }
+        }
+      ]
+    }
+  ]
+}

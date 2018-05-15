@@ -13,8 +13,8 @@
       "name": "res"
     },
     {
-      "type": "signalRToken",
-      "name": "token",
+      "type": "signalRConnectionInfo",
+      "name": "connectionInfo",
       "hubName": "simplechat",
       "direction": "in"
     }

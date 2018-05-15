@@ -28,6 +28,19 @@
 In order for a client to connect to SignalR, it needs to obtain the SignalR Service client hub URL and an access token.
 
 1. Create a new function named `negotiate` and use the `SignalRToken` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/functionapp/negotiate/).
+1. Before connecting to the SignalR Service, the client needs to call this function to obtain the endpoint URL and access token. See [this file](samples/simple-chat/content/index.html) for a sample usage.
+
+Binding schema:
+
+```json
+{
+  "type": "signalRConnectionInfo",
+  "name": "connectionInfo",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<setting_name>", // Defaults to AzureSignalRConnectionString
+  "direction": "in"
+}
+```
 
 ### Using the SignalR output binding
 
@@ -37,6 +50,17 @@ The `SignalR` output binding can be used to broadcast messages to all clients co
 - [Simple chat app](samples/simple-chat/content/index.html)
     - Calls negotiate endpoint to fetch connection information
     - Connects to SignalR Service
-    - Send messages to HttpTrigger function, which in-turn broadcasts the messages back
+    - Send messages to HttpTrigger function, which then broadcasts the messages to all clients
 
+Binding schema:
+
+```json
+{
+  "type": "signalR",
+  "name": "signalRMessages",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<setting_name>", // Defaults to AzureSignalRConnectionString
+  "direction": "out"
+}
+```
 
