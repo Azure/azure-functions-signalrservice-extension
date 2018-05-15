@@ -1,0 +1,74 @@
+<html>
+
+<head>
+  <title>Simple Chat</title>
+</head>
+
+<body>
+  <div class="signalr-demo">
+    <form id="message-form">
+      <input type="text" id="message-box" class="form-control" />
+    </form>
+    <hr/>
+    <ul id="messages"></ul>
+  </div>
+
+  <script src="https://unpkg.com/@aspnet/signalr@1.0.0-rc1-final/dist/browser/signalr.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script>
+    const apiBaseUrl = 'http://localhost:7071';
+    const hubName = 'simplechat';
+
+    getConnectionInfo().then(info => {
+      let username;
+      while (!username) {
+        username = prompt('Enter a username');
+      }
+
+      const messageForm = document.getElementById('message-form');
+      const messageBox = document.getElementById('message-box');
+      const messages = document.getElementById('messages');
+      const options = {
+        accessTokenFactory: () => info.accessKey
+      };
+
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(info.endpoint, options)
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+      connection.on('newMessage', (message) => {
+        const newMessage = document.createElement('li');
+        newMessage.appendChild(document.createTextNode(`${message.sender}: ${message.text}`));
+        messages.appendChild(newMessage);
+      });
+      connection.onclose(() => console.log('disconnected'));
+
+      console.log('connecting...');
+      connection.start()
+        .then(() => console.log('connected!'))
+        .catch(console.error);
+
+      messageForm.addEventListener('submit', ev => {
+        ev.preventDefault();
+        const message = messageBox.value;
+        sendMessage(username, message);
+        messageBox.value = '';
+      });
+    }).catch(alert);
+
+    function getConnectionInfo() {
+      return axios.post(`${apiBaseUrl}/api/negotiate`)
+        .then(resp => resp.data);
+    }
+
+    function sendMessage(sender, messageText) {
+      return axios.post(`${apiBaseUrl}/api/messages`, {
+        sender: sender,
+        text: messageText
+      }).then(resp => resp.data);
+    }
+  </script>
+</body>
+
+</html>
