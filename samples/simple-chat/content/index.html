@@ -2,13 +2,22 @@
 
 <head>
   <title>Simple Chat</title>
+  <style>
+    #message-form, .ready #loading {
+      display: none;
+    }
+    .ready #message-form, #loading {
+      display: block;
+    }
+  </style>
 </head>
 
 <body>
   <div class="signalr-demo">
     <form id="message-form">
-      <input type="text" id="message-box" class="form-control" />
+      message: <input type="text" id="message-box" class="form-control" />
     </form>
+    <div id="loading">Loading...</div>
     <hr/>
     <ul id="messages"></ul>
   </div>
@@ -19,11 +28,14 @@
     const apiBaseUrl = 'http://localhost:7071';
     const hubName = 'simplechat';
 
-    getConnectionInfo().then(info => {
+    getConnectionInfo().then(info => {      
       let username;
-      while (!username) {
+      while (!username && username !== null) {
         username = prompt('Enter a username');
       }
+      
+      if (username === null) return;
+      document.body.classList.add('ready');
 
       const messageForm = document.getElementById('message-form');
       const messageBox = document.getElementById('message-box');
