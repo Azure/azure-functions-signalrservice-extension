@@ -23,11 +23,11 @@
     - On localhost, use `local.settings.json`
     - In Azure, use App Settings
 
-### Using the SignalRToken input binding
+### Using the SignalRConnectionInfo input binding
 
 In order for a client to connect to SignalR, it needs to obtain the SignalR Service client hub URL and an access token.
 
-1. Create a new function named `negotiate` and use the `SignalRToken` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/functionapp/negotiate/).
+1. Create a new function named `negotiate` and use the `SignalRConnectionInfo` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/functionapp/negotiate/).
 1. Before connecting to the SignalR Service, the client needs to call this function to obtain the endpoint URL and access token. See [this file](samples/simple-chat/content/index.html) for a sample usage.
 
 Binding schema:
