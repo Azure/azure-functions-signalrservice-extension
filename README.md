@@ -15,7 +15,7 @@
 1. In a new folder, create a new Azure Functions app.
     - `func init`
 1. Install this Functions extension.
-    - `func extensions install -p WebJobs.Extensions.SignalRService -v 0.1.0-alpha`
+    - `func extensions install -p AzureAdvocates.WebJobs.Extensions.SignalRService -v 0.1.0-alpha`
 
 ### Add application setting for SignalR connection string
 
