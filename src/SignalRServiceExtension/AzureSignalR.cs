@@ -7,17 +7,17 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class AzureSignalR
+    internal class AzureSignalR
     {
-        public string BaseEndpoint { get; }
-        public string AccessKey { get; }
+        internal string BaseEndpoint { get; }
+        internal string AccessKey { get; }
 
-        public AzureSignalR(string connectionString)
+        internal AzureSignalR(string connectionString)
         {
             (BaseEndpoint, AccessKey) = ParseConnectionString(connectionString);
         }
 
-        public AzureSignalRConnectionInfo GetClientConnectionInfo(string hubName)
+        internal AzureSignalRConnectionInfo GetClientConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public AzureSignalRConnectionInfo GetServerConnectionInfo(string hubName)
+        internal AzureSignalRConnectionInfo GetServerConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
@@ -41,15 +41,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
         {
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new ArgumentException("SignalR Service connection string is empty");
+            }
+
             var endpointMatch = Regex.Match(connectionString, @"endpoint=([^;]+)", RegexOptions.IgnoreCase);
             if (!endpointMatch.Success)
             {
-                throw new ArgumentException("No endpoint present in connection string");
+                throw new ArgumentException("No endpoint present in SignalR Service connection string");
             }
             var accessKeyMatch = Regex.Match(connectionString, @"accesskey=([^;]+)", RegexOptions.IgnoreCase);
             if (!accessKeyMatch.Success)
             {
-                throw new ArgumentException("No access key present in connection string");
+                throw new ArgumentException("No access key present in SignalR Service connection string");
             }
 
             return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value);
