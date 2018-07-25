@@ -22,7 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         
         public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var httpClient = HttpClientFactory.GetInstance();
+            var httpClient = HttpClientFactory.GetClient();
             var connectionInfo = signalR.GetServerConnectionInfo(hubName);
             return PostJsonAsync(httpClient, connectionInfo.Endpoint, item, connectionInfo.AccessKey);
         }
