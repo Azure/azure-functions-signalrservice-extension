@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <PackageId>AzureAdvocates.WebJobs.Extensions.SignalRService</PackageId>
-    <Version>0.2.0-alpha</Version>
+    <Version>0.3.0-alpha</Version>
     <Authors>Anthony Chu</Authors>
     <Company>Microsoft</Company>
     <RepositoryUrl>https://github.com/anthonychu/AzureAdvocates.WebJobs.Extensions.SignalRService</RepositoryUrl>
