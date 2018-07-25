@@ -1,5 +1,7 @@
 using System;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Azure.WebJobs.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -16,6 +18,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 .BindToInput<AzureSignalRConnectionInfo>(GetConnectionInfo);
             context.AddBindingRule<SignalRAttribute>()
                 .BindToCollector<SignalRMessage>(attr => new SignalRMessageAsyncCollector(this, attr));
+
+            var logger = context.Config.LoggerFactory.CreateLogger(LogCategories.Startup);
+            logger.LogInformation("SignalRService binding initialized");
         }
 
         private AzureSignalRConnectionInfo GetConnectionInfo(SignalRConnectionInfoAttribute attribute)
