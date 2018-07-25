@@ -41,15 +41,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
         {
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                throw new ArgumentException("SignalR Service connection string is empty");
+            }
+
             var endpointMatch = Regex.Match(connectionString, @"endpoint=([^;]+)", RegexOptions.IgnoreCase);
             if (!endpointMatch.Success)
             {
-                throw new ArgumentException("No endpoint present in connection string");
+                throw new ArgumentException("No endpoint present in SignalR Service connection string");
             }
             var accessKeyMatch = Regex.Match(connectionString, @"accesskey=([^;]+)", RegexOptions.IgnoreCase);
             if (!accessKeyMatch.Success)
             {
-                throw new ArgumentException("No access key present in connection string");
+                throw new ArgumentException("No access key present in SignalR Service connection string");
             }
 
             return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value);
