@@ -13,16 +13,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly AzureSignalR signalR;
         private readonly string hubName;
-        
-        public SignalRMessageAsyncCollector(SignalRConfiguration config, SignalRAttribute attr)
+        private readonly HttpClient httpClient;
+
+        internal SignalRMessageAsyncCollector(SignalRAttribute attr, HttpClient httpClient)
         {
+            this.httpClient = httpClient;
             signalR = new AzureSignalR(attr.ConnectionStringSetting);
             hubName = attr.HubName;
         }
         
+        public SignalRMessageAsyncCollector(SignalRAttribute attr)
+            : this(attr, HttpClientFactory.GetClient())
+        {
+        }
+        
         public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var httpClient = HttpClientFactory.GetClient();
             var connectionInfo = signalR.GetServerConnectionInfo(hubName);
             return PostJsonAsync(httpClient, connectionInfo.Endpoint, item, connectionInfo.AccessKey);
         }
