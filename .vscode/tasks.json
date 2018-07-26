@@ -8,7 +8,7 @@
       },
       "identifier": "runFunctionsHost",
       "type": "shell",
-      "command": "func host start --cors http://localhost:3000",
+      "command": "func host start",
       "isBackground": true,
       "presentation": {
         "reveal": "always"
