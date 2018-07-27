@@ -1,13 +1,12 @@
 ﻿using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.IdentityModel.Tokens;
+using SignalRServiceExtension.Tests.Utils;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
 {
-    public class UnitTests
+    public class AzureSignalRTests
     {
         [Fact]
         public void AzureSignalR_ParsesConnectionString()
@@ -25,7 +24,7 @@ namespace SignalRServiceExtension.Tests
             var info = azureSignalR.GetClientConnectionInfo("chat");
 
             const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
-            EnsureValidAccessKey(
+            TestHelpers.EnsureValidAccessKey(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
                 accessKey: info.AccessKey);
@@ -40,30 +39,11 @@ namespace SignalRServiceExtension.Tests
             var info = azureSignalR.GetServerConnectionInfo("chat");
 
             const string expectedEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
-            EnsureValidAccessKey(
+            TestHelpers.EnsureValidAccessKey(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
                 accessKey: info.AccessKey);
             Assert.Equal(expectedEndpoint, info.Endpoint);
-        }
-
-        private void EnsureValidAccessKey(string audience, string signingKey, string accessKey)
-        {
-            var validationParameters =
-                new TokenValidationParameters
-                {
-                    ValidAudiences = new[] { audience },
-                    ValidateAudience = true,
-                    ValidateIssuer = false,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey)),
-                    RequireSignedTokens = true,
-                    RequireExpirationTime = true,
-                    ValidateLifetime = true,
-                    LifetimeValidator = (_, expires, __, ___) => 
-                        expires.HasValue && expires > DateTime.Now.AddMinutes(5) // at least 5 minutes
-                };
-            var handler = new JwtSecurityTokenHandler();
-            handler.ValidateToken(accessKey, validationParameters, out _);
         }
     }
 }
