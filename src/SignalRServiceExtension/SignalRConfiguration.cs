@@ -17,7 +17,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context.AddBindingRule<SignalRConnectionInfoAttribute>()
                 .BindToInput<AzureSignalRConnectionInfo>(GetConnectionInfo);
             context.AddBindingRule<SignalRAttribute>()
-                .BindToCollector<SignalRMessage>(attr => new SignalRMessageAsyncCollector(this, attr));
+                .BindToCollector<SignalRMessage>(attr => new SignalRMessageAsyncCollector(attr));
 
             var logger = context.Config.LoggerFactory.CreateLogger(LogCategories.Startup);
             logger.LogInformation("SignalRService binding initialized");

@@ -1,10 +1,12 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.IdentityModel.Tokens;
 
+[assembly:InternalsVisibleTo("SignalRServiceExtension.Tests")]
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class AzureSignalR
