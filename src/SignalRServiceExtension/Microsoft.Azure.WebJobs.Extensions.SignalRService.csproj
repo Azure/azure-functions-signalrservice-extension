@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>AzureAdvocates.WebJobs.Extensions.SignalRService</PackageId>
+    <PackageId>Microsoft.Azure.WebJobs.Extensions.SignalRService</PackageId>
     <Version>0.3.0-alpha</Version>
-    <Authors>Anthony Chu</Authors>
+    <Authors>Microsoft</Authors>
     <Company>Microsoft</Company>
-    <RepositoryUrl>https://github.com/anthonychu/AzureAdvocates.WebJobs.Extensions.SignalRService</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/anthonychu/AzureAdvocates.WebJobs.Extensions.SignalRService</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Azure/azure-functions-signalrservice-extension</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Azure/azure-functions-signalrservice-extension</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
