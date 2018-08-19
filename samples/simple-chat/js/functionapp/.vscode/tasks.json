@@ -4,7 +4,6 @@
     {
       "label": "Run Functions Host",
       "options": {
-        "cwd": "samples/simple-chat/functionapp"
       },
       "identifier": "runFunctionsHost",
       "type": "shell",
