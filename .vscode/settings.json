@@ -1,6 +1,3 @@
 {
-  "azureFunctions.projectRuntime": "beta",
-  "azureFunctions.projectLanguage": "JavaScript",
-  "azureFunctions.templateFilter": "Verified",
   "dotnet-test-explorer.testProjectPath": "test/SignalRServiceExtension.Tests"
 }
