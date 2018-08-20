@@ -1,0 +1,4 @@
+<Project>
+  <PropertyGroup>
+    <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
+</Project>
