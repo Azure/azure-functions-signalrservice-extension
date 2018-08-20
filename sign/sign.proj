@@ -22,7 +22,7 @@
       <!-- The OutDir and IntermediateOutputPath properties are required by MicroBuild. MicroBuild only
            signs files that are under these paths. -->
       <OutDir>$(RepositoryRoot)\</OutDir>
-      <IntermediateOutputPath>$(RepositoryRoot)\artifacts\build</IntermediateOutputPath>
+      <IntermediateOutputPath>$(RepositoryRoot)artifacts\build</IntermediateOutputPath>
     </PropertyGroup>
 
     <Message Text="IntermediateOutputPath = $(IntermediateOutputPath)" />
