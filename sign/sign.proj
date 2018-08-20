@@ -24,6 +24,8 @@
       <OutDir>$(RepositoryRoot)\</OutDir>
       <IntermediateOutputPath>$(RepositoryRoot)\artifacts\build</IntermediateOutputPath>
     </PropertyGroup>
+
+    <Message Text="IntermediateOutputPath = $(IntermediateOutputPath)" />
     
     <ItemGroup>
       <!-- Adding the assemblies to sign -->
