@@ -11,14 +11,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRMessageAsyncCollector : IAsyncCollector<SignalRMessage>
     {
-        private readonly AzureSignalR signalR;
+        private readonly AzureSignalRClient signalR;
         private readonly string hubName;
         private readonly HttpClient httpClient;
 
         internal SignalRMessageAsyncCollector(SignalRAttribute attr, HttpClient httpClient)
         {
             this.httpClient = httpClient;
-            signalR = new AzureSignalR(attr.ConnectionStringSetting);
+            signalR = new AzureSignalRClient(attr.ConnectionStringSetting);
             hubName = attr.HubName;
         }
         

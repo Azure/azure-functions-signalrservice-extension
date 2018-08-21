@@ -6,20 +6,20 @@ using Xunit;
 
 namespace SignalRServiceExtension.Tests
 {
-    public class AzureSignalRTests
+    public class AzureSignalRClientTests
     {
         [Fact]
-        public void AzureSignalR_ParsesConnectionString()
+        public void AzureSignalRClient_ParsesConnectionString()
         {
-            var azureSignalR = new AzureSignalR("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
             Assert.Equal("https://foo.service.signalr.net", azureSignalR.BaseEndpoint);
             Assert.Equal("/abcdefghijklmnopqrstu/v/wxyz11111111111111=", azureSignalR.AccessKey);
         }
 
         [Fact]
-        public void AzureSignalR_GetClientConnectionInfo_ReturnsValidInfo()
+        public void AzureSignalRClient_GetClientConnectionInfo_ReturnsValidInfo()
         {
-            var azureSignalR = new AzureSignalR("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
 
             var info = azureSignalR.GetClientConnectionInfo("chat");
 
@@ -32,9 +32,9 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public void AzureSignalR_GetServerConnectionInfo_ReturnsValidInfo()
+        public void AzureSignalRClient_GetServerConnectionInfo_ReturnsValidInfo()
         {
-            var azureSignalR = new AzureSignalR("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;");
 
             var info = azureSignalR.GetServerConnectionInfo("chat");
 

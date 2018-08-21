@@ -9,32 +9,32 @@ using Microsoft.IdentityModel.Tokens;
 [assembly:InternalsVisibleTo("SignalRServiceExtension.Tests")]
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class AzureSignalR
+    internal class AzureSignalRClient
     {
         internal string BaseEndpoint { get; }
         internal string AccessKey { get; }
 
-        internal AzureSignalR(string connectionString)
+        internal AzureSignalRClient(string connectionString)
         {
             (BaseEndpoint, AccessKey) = ParseConnectionString(connectionString);
         }
 
-        internal AzureSignalRConnectionInfo GetClientConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
-            return new AzureSignalRConnectionInfo
+            return new SignalRConnectionInfo
             {
                 Endpoint = hubUrl,
                 AccessKey = token
             };
         }
 
-        internal AzureSignalRConnectionInfo GetServerConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetServerConnectionInfo(string hubName)
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
-            return new AzureSignalRConnectionInfo
+            return new SignalRConnectionInfo
             {
                 Endpoint = hubUrl,
                 AccessKey = token
