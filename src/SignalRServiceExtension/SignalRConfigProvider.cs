@@ -6,8 +6,15 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class SignalRConfiguration : IExtensionConfigProvider
+    public class SignalRConfigProvider : IExtensionConfigProvider
     {
+        private readonly ILogger logger;
+
+        public SignalRConfigProvider(ILoggerFactory loggerFactory)
+        {
+            logger = loggerFactory.CreateLogger("SignalR");
+        }
+        
         public void Initialize(ExtensionConfigContext context)
         {
             context.AddConverter<string, JObject>(JObject.FromObject);
@@ -19,7 +26,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context.AddBindingRule<SignalRAttribute>()
                 .BindToCollector<SignalRMessage>(attr => new SignalRMessageAsyncCollector(attr));
 
-            var logger = context.Config.LoggerFactory.CreateLogger(LogCategories.Startup);
             logger.LogInformation("SignalRService binding initialized");
         }
 
