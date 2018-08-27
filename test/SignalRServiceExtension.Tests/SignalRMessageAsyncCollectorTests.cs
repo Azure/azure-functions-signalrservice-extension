@@ -17,14 +17,11 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task AddAsync_CallsAzureSignalRService()
         {
-            var attr = new SignalRAttribute
-            {
-                ConnectionStringSetting = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;",
-                HubName = "chat"
-            };
+            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
+            var hubName = "chat";
             var requestHandler = new FakeHttpMessageHandler();
             var httpClient = new HttpClient(requestHandler);
-            var collector = new SignalRMessageAsyncCollector(attr, httpClient);
+            var collector = new SignalRMessageAsyncCollector(connectionString, hubName, httpClient);
 
             await collector.AddAsync(new SignalRMessage
             {

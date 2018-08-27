@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -15,16 +16,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly string hubName;
         private readonly HttpClient httpClient;
 
-        internal SignalRMessageAsyncCollector(SignalRAttribute attr, HttpClient httpClient)
+        internal SignalRMessageAsyncCollector(string connectionString, string hubName, HttpClient httpClient)
         {
+            this.signalR = new AzureSignalRClient(connectionString);
+            this.hubName = hubName;
             this.httpClient = httpClient;
-            signalR = new AzureSignalRClient(attr.ConnectionStringSetting);
-            hubName = attr.HubName;
-        }
-        
-        public SignalRMessageAsyncCollector(SignalRAttribute attr)
-            : this(attr, HttpClientFactory.GetClient())
-        {
         }
         
         public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
@@ -55,6 +51,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var content = JsonConvert.SerializeObject(body);
             request.Content = new StringContent(content, Encoding.UTF8, "application/json");
             return httpClient.SendAsync(request);
+        }
+
+        private string FirstOrDefault(params string[] values)
+        {
+            return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
         }
     }
 }

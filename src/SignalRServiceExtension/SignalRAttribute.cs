@@ -8,7 +8,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRAttribute : Attribute
     {
 
-        [AppSetting(Default = "AzureSignalRConnectionString")]
+        [AppSetting(Default = SignalRConfigProvider.AzureSignalRConnectionStringName)]
         public string ConnectionStringSetting { get; set; }
         
         [AutoResolve]

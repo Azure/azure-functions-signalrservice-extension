@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -19,9 +20,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.AddExtension<SignalRConfigProvider>();
+            builder.AddExtension<SignalRConfigProvider>()
+                .ConfigureOptions<SignalROptions>(ApplyConfiguration);
 
             return builder;
+        }
+
+        private static void ApplyConfiguration(IConfiguration config, SignalROptions options)
+        {
+            if (config == null)
+            {
+                return;
+            }
+
+            config.Bind(options);
+
+            var hubName = config.GetValue<string>("hubName");
+            if (!string.IsNullOrEmpty(hubName))
+            {
+                options.HubName = hubName;
+            }
         }
     }
 }
