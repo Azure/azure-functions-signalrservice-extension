@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Net.Http;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
+        private readonly IHttpClientFactory httpClientFactory;
         private readonly ILogger logger;
 
         public SignalRConfigProvider(
-            IOptions<SignalROptions> options, INameResolver nameResolver, ILoggerFactory loggerFactory)
+            IOptions<SignalROptions> options, 
+            INameResolver nameResolver, 
+            ILoggerFactory loggerFactory, 
+            IHttpClientFactory httpClientFactory)
         {
             this.options = options.Value;
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
+            this.httpClientFactory = httpClientFactory;
         }
         
         public void Initialize(ExtensionConfigContext context)
@@ -80,7 +86,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
             var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new SignalRMessageAsyncCollector(connectionString, hubName, HttpClientFactory.GetClient());
+            return new SignalRMessageAsyncCollector(connectionString, hubName, httpClientFactory.CreateClient());
         }
 
         private SignalRConnectionInfo GetConnectionInfo(SignalRConnectionInfoAttribute attribute)
