@@ -48,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
-            signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetConnectionInfo);
+            signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
@@ -86,12 +86,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
             var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new SignalRMessageAsyncCollector(connectionString, hubName, httpClientFactory.CreateClient());
+            var client = new AzureSignalRClient(connectionString, httpClientFactory.CreateClient());
+            return new SignalRMessageAsyncCollector(client, hubName);
         }
 
-        private SignalRConnectionInfo GetConnectionInfo(SignalRConnectionInfoAttribute attribute)
+        private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting);
+            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, httpClientFactory.CreateClient());
             return signalR.GetClientConnectionInfo(attribute.HubName);
         }
 
