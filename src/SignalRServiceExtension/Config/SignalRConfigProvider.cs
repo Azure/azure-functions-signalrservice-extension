@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    [Extension("SignalR")]
     internal class SignalRConfigProvider : IExtensionConfigProvider
     {
         internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
