@@ -7,7 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Binding]
     public class SignalRConnectionInfoAttribute : Attribute
     {
-        [AppSetting(Default = "AzureSignalRConnectionString")]
+        [AppSetting(Default = SignalRConfigProvider.AzureSignalRConnectionStringName)]
         public string ConnectionStringSetting { get; set; }
         
         [AutoResolve]

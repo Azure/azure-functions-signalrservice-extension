@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -14,7 +15,10 @@ namespace FunctionApp
     public static class Functions
     {
         [FunctionName("messages")]
-        public static async System.Threading.Tasks.Task<IActionResult> RunAsync([HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)]HttpRequest req, [SignalR(HubName = @"simplechat")]IAsyncCollector<SignalRMessage> signalRmessages, ILogger log)
+        public static async Task<IActionResult> GetMessages(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req, 
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages, 
+            ILogger log)
         {
             JToken bodyObject;
             try
@@ -26,15 +30,23 @@ namespace FunctionApp
                 return new BadRequestObjectResult(ex.ToString());
             }
 
-            await signalRmessages.AddAsync(new SignalRMessage { Target = @"newMessage", Arguments = new object[] { bodyObject } });
+            await signalRMessages.AddAsync(
+                new SignalRMessage 
+                {
+                    Target = "newMessage", 
+                    Arguments = new [] { bodyObject } 
+                });
 
             return new OkResult();
         }
 
         [FunctionName("negotiate")]
-        public static IActionResult RunNegotiate([HttpTrigger(AuthorizationLevel.Anonymous, Route = null)]HttpRequest req, [SignalRConnectionInfo(HubName = @"simplechat")]AzureSignalRConnectionInfo connectionInfo, ILogger log)
+        public static IActionResult GetSignalRInfo(
+            [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
+            [SignalRConnectionInfo(HubName = "simplechat")]SignalRConnectionInfo connectionInfo, 
+            ILogger log)
         {
-            return new OkObjectResult(JsonConvert.SerializeObject(connectionInfo));
+            return new OkObjectResult(connectionInfo);
         }
     }
 }
