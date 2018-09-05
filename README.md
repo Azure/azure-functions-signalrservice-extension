@@ -48,7 +48,7 @@ These bindings allow Azure Functions to integrate with Azure SignalR Service.
 
 In order for a client to connect to SignalR, it needs to obtain the SignalR Service client hub URL and an access token.
 
-1. Create a new function named `negotiate` and use the `SignalRConnectionInfo` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/functionapp/negotiate/).
+1. Create a new function named `negotiate` and use the `SignalRConnectionInfo` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/js/functionapp/negotiate/).
 1. Before connecting to the SignalR Service, the client needs to call this function to obtain the endpoint URL and access token. See [this file](samples/simple-chat/content/index.html) for a sample usage.
 
 Binding schema:
@@ -67,7 +67,7 @@ Binding schema:
 
 The `SignalR` output binding can be used to broadcast messages to all clients connected a hub. Take a look at this sample:
 
-- [HttpTrigger function to send messages](samples/simple-chat/functionapp/messages/)
+- [HttpTrigger function to send messages](samples/simple-chat/js/functionapp/messages/)
 - [Simple chat app](samples/simple-chat/content/index.html)
     - Calls negotiate endpoint to fetch connection information
     - Connects to SignalR Service
