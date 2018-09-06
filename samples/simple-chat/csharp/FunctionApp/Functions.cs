@@ -17,39 +17,27 @@ namespace FunctionApp
 {
     public static class Functions
     {
+        [FunctionName("negotiate")]
+        public static IActionResult GetSignalRInfo(
+            [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
+            [SignalRConnectionInfo(HubName = "simplechat")]SignalRConnectionInfo connectionInfo)
+        {
+            return new OkObjectResult(connectionInfo);
+        }
+
         [FunctionName("messages")]
         public static async Task<IActionResult> GetMessages(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req, 
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages, 
-            ILogger log)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            JToken bodyObject;
-            try
-            {
-                bodyObject = JToken.ReadFrom(new JsonTextReader(new StreamReader(req.Body)));
-            }
-            catch (Exception ex)
-            {
-                return new BadRequestObjectResult(ex.ToString());
-            }
-
             await signalRMessages.AddAsync(
                 new SignalRMessage 
                 {
                     Target = "newMessage", 
-                    Arguments = new [] { bodyObject } 
+                    Arguments = new [] { message } 
                 });
 
             return new OkResult();
-        }
-
-        [FunctionName("negotiate")]
-        public static IActionResult GetSignalRInfo(
-            [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
-            [SignalRConnectionInfo(HubName = "simplechat")]SignalRConnectionInfo connectionInfo, 
-            ILogger log)
-        {
-            return new OkObjectResult(connectionInfo);
         }
     }
 }
