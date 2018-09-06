@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
@@ -98,7 +100,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
             var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, httpClientFactory.CreateClient());
-            return signalR.GetClientConnectionInfo(attribute.HubName);
+            var claims = attribute.GetClaims();
+            return signalR.GetClientConnectionInfo(attribute.HubName, claims);
         }
 
         private string FirstOrDefault(params string[] values)

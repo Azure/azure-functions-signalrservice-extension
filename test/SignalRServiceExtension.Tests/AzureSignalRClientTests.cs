@@ -3,6 +3,7 @@
 
 using System;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,27 @@ namespace SignalRServiceExtension.Tests
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
                 accessKey: info.AccessKey);
+            Assert.Equal(expectedEndpoint, info.Endpoint);
+        }
+
+        [Fact]
+        public void AzureSignalRClient_GetClientConnectionInfoWithUserId_ReturnsValidInfoWithUserId()
+        {
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var claims = new []
+            {
+                new Claim(ClaimTypes.NameIdentifier, "foo")
+            };
+
+            var info = azureSignalR.GetClientConnectionInfo("chat", claims);
+
+            const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
+            var claimsPrincipal = TestHelpers.EnsureValidAccessKey(
+                audience: expectedEndpoint,
+                signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
+                accessKey: info.AccessKey);
+            Assert.Contains(claimsPrincipal.Claims, 
+                c => c.Type == ClaimTypes.NameIdentifier && c.Value == "foo");
             Assert.Equal(expectedEndpoint, info.Endpoint);
         }
 

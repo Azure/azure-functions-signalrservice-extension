@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -29,10 +30,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.httpClient = httpClient;
         }
 
-        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, IEnumerable<Claim> claims = null)
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
-            var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+            var identity = new ClaimsIdentity(claims);
+            var token = GenerateJwtBearer(null, hubUrl, identity, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
                 Endpoint = hubUrl,
