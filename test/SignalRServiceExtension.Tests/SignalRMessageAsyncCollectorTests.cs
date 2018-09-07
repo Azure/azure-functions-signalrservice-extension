@@ -3,6 +3,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Moq;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
@@ -10,10 +11,13 @@ namespace SignalRServiceExtension.Tests
     public class SignalRMessageAsyncCollectorTests
     {
         [Fact]
-        public async Task AddAsync_CallsAzureSignalRClient()
+        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
         {
-            var client = new FakeAzureSignalRClient();
-            var collector = new SignalRMessageAsyncCollector(client, "foo");
+            var clientMock = new Mock<IAzureSignalRSender>();
+            clientMock
+                .Setup(c => c.SendToAll(It.Is<string>(val => val == "foo"), It.IsAny<SignalRData>()))
+                .Returns(() => Task.CompletedTask);
+            var collector = new SignalRMessageAsyncCollector(clientMock.Object, "foo");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -21,22 +25,11 @@ namespace SignalRServiceExtension.Tests
                 Arguments = new object[] { "arg1", "arg2" }
             });
 
-            var actualSendMessageParams = client.SendMessageParams;
-            Assert.Equal("foo", actualSendMessageParams.hubName);
-            Assert.Equal("newMessage", actualSendMessageParams.message.Target);
-            Assert.Equal("arg1", actualSendMessageParams.message.Arguments[0]);
-            Assert.Equal("arg2", actualSendMessageParams.message.Arguments[1]);
-        }
-
-        private class FakeAzureSignalRClient : IAzureSignalRClient
-        {
-            public (string hubName, SignalRMessage message) SendMessageParams { get; private set; }
-            
-            public Task SendMessage(string hubName, SignalRMessage message)
-            {
-                SendMessageParams = (hubName, message);
-                return Task.CompletedTask;
-            }
+            Assert.Equal(1, clientMock.Invocations.Count);
+            var actualData = (SignalRData)clientMock.Invocations[0].Arguments[1];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
         }
     }
 }

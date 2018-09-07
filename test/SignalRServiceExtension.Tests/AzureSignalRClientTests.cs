@@ -76,7 +76,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task SendMessage_CallsAzureSignalRService()
+        public async Task SendToAll_CallsAzureSignalRService()
         {
             var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
             var hubName = "chat";
@@ -84,7 +84,7 @@ namespace SignalRServiceExtension.Tests
             var httpClient = new HttpClient(requestHandler);
             var azureSignalR = new AzureSignalRClient(connectionString, httpClient);
 
-            await azureSignalR.SendMessage(hubName, new SignalRMessage
+            await azureSignalR.SendToAll(hubName, new SignalRData
             {
                 Target = "newMessage",
                 Arguments = new object[] { "arg1", "arg2" }

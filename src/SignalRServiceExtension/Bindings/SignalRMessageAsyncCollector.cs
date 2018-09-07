@@ -9,10 +9,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRMessageAsyncCollector : IAsyncCollector<SignalRMessage>
     {
-        private readonly IAzureSignalRClient client;
+        private readonly IAzureSignalRSender client;
         private readonly string hubName;
 
-        internal SignalRMessageAsyncCollector(IAzureSignalRClient client, string hubName)
+        internal SignalRMessageAsyncCollector(IAzureSignalRSender client, string hubName)
         {
             this.client = client;
             this.hubName = hubName;
@@ -20,7 +20,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         
         public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return client.SendMessage(hubName, item);
+            var data = new SignalRData
+            {
+                Target = item.Target,
+                Arguments = item.Arguments
+            };
+            return client.SendToAll(hubName, data);
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))

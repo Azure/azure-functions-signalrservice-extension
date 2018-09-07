@@ -15,9 +15,10 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 [assembly:InternalsVisibleTo("SignalRServiceExtension.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class AzureSignalRClient : IAzureSignalRClient
+    internal class AzureSignalRClient : IAzureSignalRSender
     {
         private readonly HttpClient httpClient;
 
@@ -53,10 +54,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public Task SendMessage(string hubName, SignalRMessage message)
+        public Task SendToAll(string hubName, SignalRData data)
         {
             var connectionInfo = GetServerConnectionInfo(hubName);
-            return PostJsonAsync(connectionInfo.Endpoint, message, connectionInfo.AccessKey);
+            return PostJsonAsync(connectionInfo.Endpoint, data, connectionInfo.AccessKey);
         }
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
