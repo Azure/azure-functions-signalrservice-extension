@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -58,6 +59,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionInfo = GetServerConnectionInfo(hubName);
             return PostJsonAsync(connectionInfo.Endpoint, data, connectionInfo.AccessKey);
+        }
+
+        public Task SendToUsers(string hubName, IEnumerable<string> userIds, SignalRData data)
+        {
+            if (userIds == null || !userIds.Any())
+            {
+                throw new ArgumentException($"{nameof(userIds)} cannot be null or empty");
+            }
+
+            var connectionInfo = GetServerConnectionInfo(hubName);
+            var userIdsSegment = string.Join(",", userIds);
+            var uri = $"{connectionInfo.Endpoint}/users/{userIdsSegment}";
+            return PostJsonAsync(uri, data, connectionInfo.AccessKey);
         }
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)

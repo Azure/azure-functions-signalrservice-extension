@@ -18,14 +18,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.hubName = hubName;
         }
         
-        public Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task AddAsync(SignalRMessage item, CancellationToken cancellationToken = default(CancellationToken))
         {
             var data = new SignalRData
             {
                 Target = item.Target,
                 Arguments = item.Arguments
             };
-            return client.SendToAll(hubName, data);
+
+            var hasUserIds = item.UserIds?.Any() ?? false;
+            if (hasUserIds)
+            {
+                await client.SendToUsers(hubName, item.UserIds, data).ConfigureAwait(false);
+            }
+            else
+            {
+                await client.SendToAll(hubName, data).ConfigureAwait(false);
+            }
         }
 
         public Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))

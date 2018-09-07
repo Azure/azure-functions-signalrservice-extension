@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -8,5 +9,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal interface IAzureSignalRSender
     {
         Task SendToAll(string hubName, SignalRData data);
+        Task SendToUsers(string hubName, IEnumerable<string> userIds, SignalRData data);
     }
 }
