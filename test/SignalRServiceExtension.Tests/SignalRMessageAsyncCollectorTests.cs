@@ -14,8 +14,8 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
         {
-            var clientMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(clientMock.Object, "foo");
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -23,9 +23,9 @@ namespace SignalRServiceExtension.Tests
                 Arguments = new object[] { "arg1", "arg2" }
             });
             
-            clientMock.Verify(c => c.SendToAll("foo", It.IsAny<SignalRData>()), Times.Once);
-            clientMock.VerifyNoOtherCalls();
-            var actualData = (SignalRData)clientMock.Invocations[0].Arguments[1];
+            signalRSenderMock.Verify(c => c.SendToAll("chathub", It.IsAny<SignalRData>()), Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
@@ -34,8 +34,8 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task AddAsync_WithUserIds_CallsSendToUsers()
         {
-            var clientMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(clientMock.Object, "foo");
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -44,13 +44,13 @@ namespace SignalRServiceExtension.Tests
                 Arguments = new object[] { "arg1", "arg2" }
             });
 
-            clientMock.Verify(
-                c => c.SendToUsers("foo", It.IsAny<IEnumerable<string>>(), It.IsAny<SignalRData>()),
+            signalRSenderMock.Verify(
+                c => c.SendToUsers("chathub", It.IsAny<IEnumerable<string>>(), It.IsAny<SignalRData>()),
                 Times.Once);
-            clientMock.VerifyNoOtherCalls();
-            var actualUserIds = (IEnumerable<string>)clientMock.Invocations[0].Arguments[1];
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualUserIds = (IEnumerable<string>)signalRSenderMock.Invocations[0].Arguments[1];
             Assert.Equal(new [] { "userId1", "userId2" }, actualUserIds);
-            var actualData = (SignalRData)clientMock.Invocations[0].Arguments[2];
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
