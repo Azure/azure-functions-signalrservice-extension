@@ -17,40 +17,30 @@ namespace FunctionApp
 {
     public static class Functions
     {
-        [FunctionName("messages")]
-        public static async Task<IActionResult> SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req, 
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages, 
-            ILogger log)
-        {
-            JToken bodyObject;
-            try
-            {
-                bodyObject = JToken.ReadFrom(new JsonTextReader(new StreamReader(req.Body)));
-            }
-            catch (Exception ex)
-            {
-                return new BadRequestObjectResult(ex.ToString());
-            }
-
-            await signalRMessages.AddAsync(
-                new SignalRMessage 
-                {
-                    Target = "newMessage", 
-                    Arguments = new [] { bodyObject } 
-                });
-
-            return new OkResult();
-        }
-
         [FunctionName("negotiate")]
         public static IActionResult GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
-            [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-client-principal-id}")]
+            [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-id}")]
                 SignalRConnectionInfo connectionInfo,
             ILogger log)
         {
             return new OkObjectResult(connectionInfo);
+        }
+
+        [FunctionName("messages")]
+        public static async Task<IActionResult> SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
+            [SignalR(HubName = "authchat")]IAsyncCollector<SignalRMessage> signalRMessages, 
+            ILogger log)
+        {
+            await signalRMessages.AddAsync(
+                new SignalRMessage 
+                {
+                    Target = "newMessage", 
+                    Arguments = new [] { message } 
+                });
+
+            return new OkResult();
         }
     }
 }
