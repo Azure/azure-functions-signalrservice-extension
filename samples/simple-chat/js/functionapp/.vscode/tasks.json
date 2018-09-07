@@ -4,6 +4,9 @@
     {
       "label": "Run Functions Host",
       "options": {
+        "env": {
+          "languageWorkers:node:arguments": "--inspect=5858"
+        }
       },
       "identifier": "runFunctionsHost",
       "type": "shell",

@@ -140,7 +140,7 @@ namespace SignalRServiceExtension.Tests
             var authorizationHeader = request.Headers.Authorization;
             Assert.Equal("Bearer", authorizationHeader.Scheme);
             TestHelpers.EnsureValidAccessKey(
-                audience: baseEndpoint,
+                audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
                 accessKey: authorizationHeader.Parameter);
         }

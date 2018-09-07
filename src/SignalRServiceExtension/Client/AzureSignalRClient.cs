@@ -44,10 +44,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        internal SignalRConnectionInfo GetServerConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetServerConnectionInfo(string hubName, string additionalPath = "")
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
-            var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+            var audienceUrl = $"{hubUrl}{additionalPath}";
+            var token = GenerateJwtBearer(null, audienceUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
                 Endpoint = hubUrl,
@@ -68,9 +69,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException($"{nameof(userIds)} cannot be null or empty");
             }
 
-            var connectionInfo = GetServerConnectionInfo(hubName);
-            var userIdsSegment = string.Join(",", userIds);
-            var uri = $"{connectionInfo.Endpoint}/users/{userIdsSegment}";
+            var userIdsSegment = $"/users/{string.Join(",", userIds)}";
+            var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
+            var uri = $"{connectionInfo.Endpoint}{userIdsSegment}";
             return PostJsonAsync(uri, data, connectionInfo.AccessKey);
         }
 

@@ -27,14 +27,15 @@
   <script>
     const apiBaseUrl = 'http://localhost:7071';
     const hubName = 'simplechat';
+   
+    let username;
+    while (!username && username !== null) {
+      username = prompt('Enter a username').replace(/\W/g, '_');
+    }
+    
+    if (username === null) throw 'No username!';
 
-    getConnectionInfo().then(info => {      
-      let username;
-      while (!username && username !== null) {
-        username = prompt('Enter a username');
-      }
-      
-      if (username === null) return;
+    getConnectionInfo(username).then(info => {   
       document.body.classList.add('ready');
 
       const messageForm = document.getElementById('message-form');
@@ -51,7 +52,17 @@
 
       connection.on('newMessage', (message) => {
         const newMessage = document.createElement('li');
-        newMessage.appendChild(document.createTextNode(`${message.sender}: ${message.text}`));
+        const senderLink = document.createElement('a');
+        senderLink.href="javascript:void(0)";
+        senderLink.innerText = message.sender;
+        senderLink.addEventListener('click', () => {
+          const directMessageText = prompt(`Send a direct message to ${message.sender}...`);
+          if (directMessageText) {
+            sendMessage(username, message.sender, directMessageText);
+          }
+        });
+        newMessage.appendChild(senderLink);
+        newMessage.appendChild(document.createTextNode(`: ${message.text}`));
         messages.appendChild(newMessage);
       });
       connection.onclose(() => console.log('disconnected'));
@@ -64,18 +75,19 @@
       messageForm.addEventListener('submit', ev => {
         ev.preventDefault();
         const message = messageBox.value;
-        sendMessage(username, message);
+        sendMessage(username, null, message);
         messageBox.value = '';
       });
     }).catch(alert);
 
-    function getConnectionInfo() {
-      return axios.post(`${apiBaseUrl}/api/negotiate`)
+    function getConnectionInfo(username) {
+      return axios.post(`${apiBaseUrl}/api/negotiate?name=${username}`)
         .then(resp => resp.data);
     }
 
-    function sendMessage(sender, messageText) {
-      return axios.post(`${apiBaseUrl}/api/messages`, {
+    function sendMessage(sender, recipient, messageText) {
+      const recipientQuery = recipient ? `?recipient=${recipient}` : '';
+      return axios.post(`${apiBaseUrl}/api/messages${recipientQuery}`, {
         sender: sender,
         text: messageText
       }).then(resp => resp.data);

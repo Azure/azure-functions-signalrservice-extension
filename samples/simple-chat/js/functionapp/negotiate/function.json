@@ -15,6 +15,7 @@
     {
       "type": "signalRConnectionInfo",
       "name": "connectionInfo",
+      "userId": "{query.name}",
       "hubName": "simplechat",
       "direction": "in"
     }
