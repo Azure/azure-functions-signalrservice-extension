@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class SignalRData
+    internal class SignalRData
     {
         public string Target { get; set; }
         public object[] Arguments { get; set; }
