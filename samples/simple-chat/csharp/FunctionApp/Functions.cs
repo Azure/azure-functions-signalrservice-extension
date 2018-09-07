@@ -26,7 +26,7 @@ namespace FunctionApp
         }
 
         [FunctionName("messages")]
-        public static async Task<IActionResult> GetMessages(
+        public static async Task<IActionResult> SendMessage(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
