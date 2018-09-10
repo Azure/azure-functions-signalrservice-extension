@@ -30,8 +30,7 @@ namespace FunctionApp
         [FunctionName("messages")]
         public static Task SendMessage(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req, 
-            [SignalR(HubName = "authchat")]IAsyncCollector<SignalRMessage> signalRMessages,
-            ILogger log)
+            [SignalR(HubName = "authchat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = DeserializeFromStream<ChatMessage>(req.Body);
             req.Headers.TryGetValue("x-ms-client-principal-name", out var sender);
@@ -47,8 +46,6 @@ namespace FunctionApp
             {
                 userIds.Add(message.recipient);
             }
-
-            log.LogInformation(JsonConvert.SerializeObject(message));
 
             return signalRMessages.AddAsync(
                 new SignalRMessage 
