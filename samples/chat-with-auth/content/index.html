@@ -108,20 +108,22 @@
 
     if (window.auth.token) {
       getConnectionInfo().then(info => {
+        // make compatible with old and new SignalRConnectionInfo
+        info.accessToken = info.accessToken || info.accessKey;
+        info.url = info.url || info.endpoint;
+
         data.ready = true;
         const options = {
-          accessTokenFactory: () => info.accessKey
+          accessTokenFactory: () => info.accessToken
         };
 
         const connection = new signalR.HubConnectionBuilder()
-          .withUrl(info.endpoint, options)
+          .withUrl(info.url, options)
           .configureLogging(signalR.LogLevel.Information)
           .build();
 
         connection.on('newMessage', newMessage);
         connection.onclose(() => console.log('disconnected'));
-
-        console.log('retrieving messages');
 
         console.log('connecting...');
         connection.start()
