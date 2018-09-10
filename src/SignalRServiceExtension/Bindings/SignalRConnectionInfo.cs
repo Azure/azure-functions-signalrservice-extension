@@ -7,9 +7,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRConnectionInfo
     {
-        [JsonProperty("endpoint")]
-        public string Endpoint { get; set; }
-        [JsonProperty("accessKey")]
-        public string AccessKey { get; set; }
+        [JsonProperty("url")]
+        public string Url { get; set; }
+        [JsonProperty("accessToken")]
+        public string AccessToken { get; set; }
     }
 }
