@@ -19,7 +19,7 @@ namespace FunctionApp
     public static class Functions
     {
         [FunctionName("negotiate")]
-        public static object GetSignalRInfo(
+        public static SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
             [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-name}")]
                 SignalRConnectionInfo connectionInfo)
