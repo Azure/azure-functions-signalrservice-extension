@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -18,29 +19,63 @@ namespace FunctionApp
     public static class Functions
     {
         [FunctionName("negotiate")]
-        public static IActionResult GetSignalRInfo(
+        public static object GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
-            [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-id}")]
-                SignalRConnectionInfo connectionInfo,
-            ILogger log)
+            [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-name}")]
+                SignalRConnectionInfo connectionInfo)
         {
-            return new OkObjectResult(connectionInfo);
+            return connectionInfo;
         }
 
         [FunctionName("messages")]
-        public static async Task<IActionResult> SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
-            [SignalR(HubName = "authchat")]IAsyncCollector<SignalRMessage> signalRMessages, 
+        public static Task SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req, 
+            [SignalR(HubName = "authchat")]IAsyncCollector<SignalRMessage> signalRMessages,
             ILogger log)
         {
-            await signalRMessages.AddAsync(
+            var message = DeserializeFromStream<ChatMessage>(req.Body);
+            req.Headers.TryGetValue("x-ms-client-principal-name", out var sender);
+
+            if (!string.IsNullOrEmpty(sender))
+            {
+                message.sender = sender;
+            }
+
+            var userIds = new List<string>();
+            message.isPrivate = !string.IsNullOrEmpty(message.recipient);
+            if (message.isPrivate)
+            {
+                userIds.Add(message.recipient);
+            }
+
+            log.LogInformation(JsonConvert.SerializeObject(message));
+
+            return signalRMessages.AddAsync(
                 new SignalRMessage 
                 {
+                    UserIds = userIds,
                     Target = "newMessage", 
                     Arguments = new [] { message } 
                 });
+        }
 
-            return new OkResult();
+        private static T DeserializeFromStream<T>(Stream stream)
+        {
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(stream))
+            using (var jsonTextReader = new JsonTextReader(sr))
+            {
+                return serializer.Deserialize<T>(jsonTextReader);
+            }
+        }
+
+        public class ChatMessage
+        {
+            public string sender { get; set; }
+            public string text { get; set; }
+            public string recipient { get; set; }
+            public bool isPrivate { get; set; }
         }
     }
 }
