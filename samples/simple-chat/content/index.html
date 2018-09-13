@@ -25,27 +25,23 @@
   <script src="https://unpkg.com/@aspnet/signalr@1.0/dist/browser/signalr.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
-    const apiBaseUrl = 'http://localhost:7071';
-    const hubName = 'simplechat';
+    const apiBaseUrl = 'http://localhost:7071/simplechat';
 
-    getConnectionInfo().then(info => {      
+    (function () {
       let username;
       while (!username && username !== null) {
         username = prompt('Enter a username');
       }
-      
+
       if (username === null) return;
       document.body.classList.add('ready');
 
       const messageForm = document.getElementById('message-form');
       const messageBox = document.getElementById('message-box');
       const messages = document.getElementById('messages');
-      const options = {
-        accessTokenFactory: () => info.accessKey
-      };
 
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(info.endpoint, options)
+        .withUrl(`${apiBaseUrl}`)
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
@@ -67,19 +63,14 @@
         sendMessage(username, message);
         messageBox.value = '';
       });
-    }).catch(alert);
 
-    function getConnectionInfo() {
-      return axios.post(`${apiBaseUrl}/api/negotiate`)
-        .then(resp => resp.data);
-    }
-
-    function sendMessage(sender, messageText) {
-      return axios.post(`${apiBaseUrl}/api/messages`, {
-        sender: sender,
-        text: messageText
-      }).then(resp => resp.data);
-    }
+      function sendMessage(sender, messageText) {
+        return axios.post(`${apiBaseUrl}/messages`, {
+          sender: sender,
+          text: messageText
+        }).then(resp => resp.data);
+      }
+    })();
   </script>
 </body>
 

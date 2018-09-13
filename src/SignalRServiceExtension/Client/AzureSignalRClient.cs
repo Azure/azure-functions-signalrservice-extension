@@ -35,8 +35,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
-                Endpoint = hubUrl,
-                AccessKey = token
+                Url = hubUrl,
+                AccessToken = token
             };
         }
 
@@ -46,15 +46,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
-                Endpoint = hubUrl,
-                AccessKey = token
+                Url = hubUrl,
+                AccessToken = token
             };
         }
 
         public Task SendMessage(string hubName, SignalRMessage message)
         {
             var connectionInfo = GetServerConnectionInfo(hubName);
-            return PostJsonAsync(connectionInfo.Endpoint, message, connectionInfo.AccessKey);
+            return PostJsonAsync(connectionInfo.Url, message, connectionInfo.AccessToken);
         }
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
