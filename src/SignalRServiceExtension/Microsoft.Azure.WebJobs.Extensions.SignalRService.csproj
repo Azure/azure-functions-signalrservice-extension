@@ -6,7 +6,7 @@
 
   <PropertyGroup>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.SignalRService</PackageId>
-    <Version>0.3.0-alpha</Version>
+    <Version>1.0.0-preview1-10001</Version>
     <Authors>Microsoft</Authors>
     <Company>Microsoft</Company>
     <RepositoryUrl>https://github.com/Azure/azure-functions-signalrservice-extension</RepositoryUrl>
