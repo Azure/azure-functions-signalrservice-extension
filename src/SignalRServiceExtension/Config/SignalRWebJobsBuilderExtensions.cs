@@ -26,8 +26,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             builder.AddExtension<SignalRConfigProvider>()
                 .ConfigureOptions<SignalROptions>(ApplyConfiguration);
 
-            builder.Services.AddHttpClient();
-
             return builder;
         }
 
