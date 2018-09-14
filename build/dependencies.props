@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <RepositoryRoot>$(MSBuildThisFileDirectory)\..</RepositoryRoot>
+  </PropertyGroup>
+  <PropertyGroup Label="Package Versions">
+    <MicrosoftAzureWebJobsPackageVersion>3.0.0-beta8</MicrosoftAzureWebJobsPackageVersion>
+    <MicrosoftExtensionsHttpPackageVersion>2.1.1</MicrosoftExtensionsHttpPackageVersion>
+    <SystemIdentityModelTokensJwtPackageVersion>5.1.4</SystemIdentityModelTokensJwtPackageVersion>
+    <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
+    <XunitPackageVersion>2.4.0</XunitPackageVersion>
+    <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
+    <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
+  </PropertyGroup>
+  <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
+</Project>
