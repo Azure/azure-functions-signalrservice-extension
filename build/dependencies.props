@@ -6,7 +6,6 @@
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
     <MicrosoftAzureWebJobsPackageVersion>3.0.0-beta8</MicrosoftAzureWebJobsPackageVersion>
-    <MicrosoftExtensionsHttpPackageVersion>2.1.1</MicrosoftExtensionsHttpPackageVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <SystemIdentityModelTokensJwtPackageVersion>5.1.4</SystemIdentityModelTokensJwtPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
