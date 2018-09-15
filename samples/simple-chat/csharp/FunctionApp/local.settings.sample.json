@@ -7,7 +7,6 @@
     "AzureSignalRConnectionString": "<signalr-connection-string>"
   },
   "Host": {
-    "LocalHttpPort": 7071,
-    "CORS": "*"
+    "LocalHttpPort": 7071
   }
 }

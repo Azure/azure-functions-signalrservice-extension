@@ -5,11 +5,22 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7005F387-A2ED-42B0-8CE1-41639A6D1E51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.WebJobs.Extensions.SignalRService", "src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj", "{27EBF417-718B-40A2-808B-EF6538AEEDC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.WebJobs.Extensions.SignalRService", "src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj", "{27EBF417-718B-40A2-808B-EF6538AEEDC7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D6082274-DF4A-455D-9EF3-090C74BC96A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRServiceExtension.Tests", "test\SignalRServiceExtension.Tests\SignalRServiceExtension.Tests.csproj", "{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRServiceExtension.Tests", "test\SignalRServiceExtension.Tests\SignalRServiceExtension.Tests.csproj", "{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FFE2667E-131F-40CE-8851-AFAECFBF89BB}"
+	ProjectSection(SolutionItems) = preProject
+		build\dependencies.props = build\dependencies.props
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		build\repo.props = build\repo.props
+		build\repo.targets = build\repo.targets
+		build\sources.props = build\sources.props
+		version.props = version.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,9 +30,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{27EBF417-718B-40A2-808B-EF6538AEEDC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -49,8 +57,14 @@ Global
 		{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3}.Release|x86.ActiveCfg = Release|Any CPU
 		{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{27EBF417-718B-40A2-808B-EF6538AEEDC7} = {7005F387-A2ED-42B0-8CE1-41639A6D1E51}
 		{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3} = {D6082274-DF4A-455D-9EF3-090C74BC96A1}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {227AD9AE-1447-4D8C-A014-50ABEC8E005C}
 	EndGlobalSection
 EndGlobal

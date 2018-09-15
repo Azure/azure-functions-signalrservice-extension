@@ -22,19 +22,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
-        private readonly IHttpClientFactory httpClientFactory;
+        private static HttpClient httpClient = new HttpClient();
         private readonly ILogger logger;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options, 
             INameResolver nameResolver, 
-            ILoggerFactory loggerFactory, 
-            IHttpClientFactory httpClientFactory)
+            ILoggerFactory loggerFactory)
         {
             this.options = options.Value;
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
-            this.httpClientFactory = httpClientFactory;
         }
         
         public void Initialize(ExtensionConfigContext context)
@@ -93,13 +91,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
             var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            var client = new AzureSignalRClient(connectionString, httpClientFactory.CreateClient());
+            var client = new AzureSignalRClient(connectionString, httpClient);
             return new SignalRMessageAsyncCollector(client, hubName);
         }
 
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, httpClientFactory.CreateClient());
+            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, httpClient);
             var claims = attribute.GetClaims();
             return signalR.GetClientConnectionInfo(attribute.HubName, claims);
         }

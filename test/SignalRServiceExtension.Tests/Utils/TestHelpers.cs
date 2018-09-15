@@ -11,7 +11,7 @@ namespace SignalRServiceExtension.Tests.Utils
 {
     class TestHelpers
     {
-        internal static ClaimsPrincipal EnsureValidAccessKey(string audience, string signingKey, string accessKey)
+        internal static ClaimsPrincipal EnsureValidAccessToken(string audience, string signingKey, string accessToken)
         {
             var validationParameters =
                 new TokenValidationParameters
@@ -24,10 +24,10 @@ namespace SignalRServiceExtension.Tests.Utils
                     RequireExpirationTime = true,
                     ValidateLifetime = true,
                     LifetimeValidator = (_, expires, __, ___) => 
-                        expires.HasValue && expires > DateTime.Now.AddMinutes(5) // at least 5 minutes
+                        expires.HasValue && expires > DateTime.UtcNow.AddMinutes(5) // at least 5 minutes
                 };
             var handler = new JwtSecurityTokenHandler();
-            return handler.ValidateToken(accessKey, validationParameters, out _);
+            return handler.ValidateToken(accessToken, validationParameters, out _);
         }
     }
 }

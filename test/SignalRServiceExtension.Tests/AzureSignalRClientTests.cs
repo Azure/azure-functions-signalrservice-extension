@@ -31,12 +31,12 @@ namespace SignalRServiceExtension.Tests
 
             var info = azureSignalR.GetClientConnectionInfo("chat");
 
-            const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
-            TestHelpers.EnsureValidAccessKey(
-                audience: expectedEndpoint,
+            const string expectedUrl = "https://foo.service.signalr.net:5001/client/?hub=chat";
+            TestHelpers.EnsureValidAccessToken(
+                audience: expectedUrl,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
-                accessKey: info.AccessKey);
-            Assert.Equal(expectedEndpoint, info.Endpoint);
+                accessToken: info.AccessToken);
+            Assert.Equal(expectedUrl, info.Url);
         }
 
         [Fact]
@@ -51,13 +51,13 @@ namespace SignalRServiceExtension.Tests
             var info = azureSignalR.GetClientConnectionInfo("chat", claims);
 
             const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
-            var claimsPrincipal = TestHelpers.EnsureValidAccessKey(
+            var claimsPrincipal = TestHelpers.EnsureValidAccessToken(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
-                accessKey: info.AccessKey);
+                accessToken: info.AccessToken);
             Assert.Contains(claimsPrincipal.Claims, 
                 c => c.Type == ClaimTypes.NameIdentifier && c.Value == "foo");
-            Assert.Equal(expectedEndpoint, info.Endpoint);
+            Assert.Equal(expectedEndpoint, info.Url);
         }
 
         [Fact]
@@ -67,12 +67,12 @@ namespace SignalRServiceExtension.Tests
 
             var info = azureSignalR.GetServerConnectionInfo("chat");
 
-            const string expectedEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
-            TestHelpers.EnsureValidAccessKey(
-                audience: expectedEndpoint,
+            const string expectedUrl = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
+            TestHelpers.EnsureValidAccessToken(
+                audience: expectedUrl,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
-                accessKey: info.AccessKey);
-            Assert.Equal(expectedEndpoint, info.Endpoint);
+                accessToken: info.AccessToken);
+            Assert.Equal(expectedUrl, info.Url);
         }
 
         [Fact]
@@ -102,10 +102,10 @@ namespace SignalRServiceExtension.Tests
 
             var authorizationHeader = request.Headers.Authorization;
             Assert.Equal("Bearer", authorizationHeader.Scheme);
-            TestHelpers.EnsureValidAccessKey(
+            TestHelpers.EnsureValidAccessToken(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
-                accessKey: authorizationHeader.Parameter);
+                accessToken: authorizationHeader.Parameter);
         }
 
         [Fact]
@@ -139,10 +139,10 @@ namespace SignalRServiceExtension.Tests
 
             var authorizationHeader = request.Headers.Authorization;
             Assert.Equal("Bearer", authorizationHeader.Scheme);
-            TestHelpers.EnsureValidAccessKey(
+            TestHelpers.EnsureValidAccessToken(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
-                accessKey: authorizationHeader.Parameter);
+                accessToken: authorizationHeader.Parameter);
         }
 
         private class FakeHttpMessageHandler : HttpMessageHandler
