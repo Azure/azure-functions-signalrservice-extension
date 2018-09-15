@@ -26,14 +26,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 Arguments = item.Arguments
             };
 
-            var hasUserIds = item.UserIds?.Any() ?? false;
-            if (hasUserIds)
+            if (string.IsNullOrEmpty(item.UserId))
             {
-                await client.SendToUsers(hubName, item.UserIds, data).ConfigureAwait(false);
+                await client.SendToAll(hubName, data).ConfigureAwait(false);
             }
             else
             {
-                await client.SendToAll(hubName, data).ConfigureAwait(false);
+                await client.SendToUser(hubName, item.UserId, data).ConfigureAwait(false);
             }
         }
 

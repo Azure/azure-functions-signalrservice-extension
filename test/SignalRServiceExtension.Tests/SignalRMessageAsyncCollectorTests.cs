@@ -32,24 +32,22 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task AddAsync_WithUserIds_CallsSendToUsers()
+        public async Task AddAsync_WithUserId_CallsSendToUser()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
-                UserIds = new [] { "userId1", "userId2" },
+                UserId = "userId1",
                 Target = "newMessage",
                 Arguments = new object[] { "arg1", "arg2" }
             });
 
             signalRSenderMock.Verify(
-                c => c.SendToUsers("chathub", It.IsAny<IEnumerable<string>>(), It.IsAny<SignalRData>()),
+                c => c.SendToUser("chathub", "userId1", It.IsAny<SignalRData>()),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualUserIds = (IEnumerable<string>)signalRSenderMock.Invocations[0].Arguments[1];
-            Assert.Equal(new [] { "userId1", "userId2" }, actualUserIds);
             var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);

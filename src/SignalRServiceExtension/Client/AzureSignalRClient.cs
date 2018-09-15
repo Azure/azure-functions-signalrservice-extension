@@ -62,14 +62,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return PostJsonAsync(connectionInfo.Url, data, connectionInfo.AccessToken);
         }
 
-        public Task SendToUsers(string hubName, IEnumerable<string> userIds, SignalRData data)
+        public Task SendToUser(string hubName, string userId, SignalRData data)
         {
-            if (userIds == null || !userIds.Any())
+            if (string.IsNullOrEmpty(userId))
             {
-                throw new ArgumentException($"{nameof(userIds)} cannot be null or empty");
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
 
-            var userIdsSegment = $"/users/{string.Join(",", userIds)}";
+            var userIdsSegment = $"/user/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
             var uri = $"{connectionInfo.Url}{userIdsSegment}";
             return PostJsonAsync(uri, data, connectionInfo.AccessToken);

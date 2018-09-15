@@ -9,6 +9,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal interface IAzureSignalRSender
     {
         Task SendToAll(string hubName, SignalRData data);
-        Task SendToUsers(string hubName, IEnumerable<string> userIds, SignalRData data);
+        Task SendToUser(string hubName, string userId, SignalRData data);
     }
 }

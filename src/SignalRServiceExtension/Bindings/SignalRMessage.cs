@@ -7,7 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRMessage
     {
-        public IEnumerable<string> UserIds { get; set; } = new List<string>();
+        public string UserId { get; set; }
         public string Target { get; set; }
         public object[] Arguments { get; set; }
     }

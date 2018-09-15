@@ -109,7 +109,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task SendToUsers_CallsAzureSignalRService()
+        public async Task SendToUser_CallsAzureSignalRService()
         {
             var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
             var hubName = "chat";
@@ -117,9 +117,9 @@ namespace SignalRServiceExtension.Tests
             var httpClient = new HttpClient(requestHandler);
             var azureSignalR = new AzureSignalRClient(connectionString, httpClient);
 
-            await azureSignalR.SendToUsers(
+            await azureSignalR.SendToUser(
                 hubName, 
-                new [] { "userId1", "userId2" },
+                "userId1",
                 new SignalRData
                 {
                     Target = "newMessage",
@@ -127,7 +127,7 @@ namespace SignalRServiceExtension.Tests
                 });
 
             var baseEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
-            var expectedEndpoint = $"{baseEndpoint}/users/userId1,userId2";
+            var expectedEndpoint = $"{baseEndpoint}/user/userId1";
             var request = requestHandler.HttpRequestMessage;
             Assert.Equal("application/json", request.Content.Headers.ContentType.MediaType);
             Assert.Equal(expectedEndpoint, request.RequestUri.AbsoluteUri);

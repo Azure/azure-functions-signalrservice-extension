@@ -40,17 +40,17 @@ namespace FunctionApp
                 message.sender = sender;
             }
 
-            var userIds = new List<string>();
+            string userId = null;
             message.isPrivate = !string.IsNullOrEmpty(message.recipient);
             if (message.isPrivate)
             {
-                userIds.Add(message.recipient);
+                userId = message.recipient;
             }
 
             return signalRMessages.AddAsync(
                 new SignalRMessage 
                 {
-                    UserIds = userIds,
+                    UserId = userId,
                     Target = "newMessage", 
                     Arguments = new [] { message } 
                 });
