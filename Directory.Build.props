@@ -16,7 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryRoot>$(MSBuildThisFileDirectory)</RepositoryRoot>
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <PublicSign Condition="'$(OS)' != 'Windows_NT' and !$([System.IO.File]::Exists('/usr/lib/libc.dylib'))">true</PublicSign>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>latest</LangVersion>
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
