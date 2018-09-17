@@ -12,10 +12,20 @@ module.exports = function (context, req) {
   };
 
   if (req.method === 'POST') {
-    context.bindings.signalRMessages = [{
+    const message = req.body;
+    const recipient = req.query.recipient;
+
+    const signalRMessage = {
       "target": "newMessage",
-      "arguments": [req.body]
-    }];
+      "arguments": [ message ]
+    };
+
+    if (recipient) {
+      message.text = "(private message) " + message.text;
+      signalRMessage.userId = recipient;
+    }
+
+    context.bindings.signalRMessages = [ signalRMessage ];
   }
 
   context.done();

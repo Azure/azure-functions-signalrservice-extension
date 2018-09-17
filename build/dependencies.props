@@ -7,6 +7,7 @@
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
     <MicrosoftAzureWebJobsPackageVersion>3.0.0-rc1</MicrosoftAzureWebJobsPackageVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
+    <MoqPackageVersion>4.9.0</MoqPackageVersion>
     <SystemIdentityModelTokensJwtPackageVersion>5.1.4</SystemIdentityModelTokensJwtPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>

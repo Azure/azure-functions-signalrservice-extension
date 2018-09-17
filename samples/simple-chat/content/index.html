@@ -30,7 +30,7 @@
     (function () {
       let username;
       while (!username && username !== null) {
-        username = prompt('Enter a username');
+        username = prompt('Enter a username').replace(/\W/g, '_');
       }
 
       if (username === null) return;
@@ -47,7 +47,17 @@
 
       connection.on('newMessage', (message) => {
         const newMessage = document.createElement('li');
-        newMessage.appendChild(document.createTextNode(`${message.sender}: ${message.text}`));
+        const senderLink = document.createElement('a');
+        senderLink.href="javascript:void(0)";
+        senderLink.innerText = message.sender;
+        senderLink.addEventListener('click', () => {
+          const directMessageText = prompt(`Send a direct message to ${message.sender}...`);
+          if (directMessageText) {
+            sendMessage(username, message.sender, directMessageText);
+          }
+        });
+        newMessage.appendChild(senderLink);
+        newMessage.appendChild(document.createTextNode(`: ${message.text}`));
         messages.appendChild(newMessage);
       });
       connection.onclose(() => console.log('disconnected'));
@@ -60,7 +70,7 @@
       messageForm.addEventListener('submit', ev => {
         ev.preventDefault();
         const message = messageBox.value;
-        sendMessage(username, message);
+        sendMessage(username, null, message);
         messageBox.value = '';
       });
 

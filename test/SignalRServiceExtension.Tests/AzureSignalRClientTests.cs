@@ -3,6 +3,7 @@
 
 using System;
 using System.Net.Http;
+using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,6 +40,27 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
+        public void AzureSignalRClient_GetClientConnectionInfoWithUserId_ReturnsValidInfoWithUserId()
+        {
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var claims = new []
+            {
+                new Claim(ClaimTypes.NameIdentifier, "foo")
+            };
+
+            var info = azureSignalR.GetClientConnectionInfo("chat", claims);
+
+            const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
+            var claimsPrincipal = TestHelpers.EnsureValidAccessToken(
+                audience: expectedEndpoint,
+                signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
+                accessToken: info.AccessToken);
+            Assert.Contains(claimsPrincipal.Claims, 
+                c => c.Type == ClaimTypes.NameIdentifier && c.Value == "foo");
+            Assert.Equal(expectedEndpoint, info.Url);
+        }
+
+        [Fact]
         public void AzureSignalRClient_GetServerConnectionInfo_ReturnsValidInfo()
         {
             var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
@@ -54,7 +76,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task SendMessage_CallsAzureSignalRService()
+        public async Task SendToAll_CallsAzureSignalRService()
         {
             var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
             var hubName = "chat";
@@ -62,13 +84,50 @@ namespace SignalRServiceExtension.Tests
             var httpClient = new HttpClient(requestHandler);
             var azureSignalR = new AzureSignalRClient(connectionString, httpClient);
 
-            await azureSignalR.SendMessage(hubName, new SignalRMessage
+            await azureSignalR.SendToAll(hubName, new SignalRData
             {
                 Target = "newMessage",
                 Arguments = new object[] { "arg1", "arg2" }
             });
 
             const string expectedEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
+            var request = requestHandler.HttpRequestMessage;
+            Assert.Equal("application/json", request.Content.Headers.ContentType.MediaType);
+            Assert.Equal(expectedEndpoint, request.RequestUri.AbsoluteUri);
+
+            var actualRequestBody = JsonConvert.DeserializeObject<SignalRMessage>(await request.Content.ReadAsStringAsync());
+            Assert.Equal("newMessage", actualRequestBody.Target);
+            Assert.Equal("arg1", actualRequestBody.Arguments[0]);
+            Assert.Equal("arg2", actualRequestBody.Arguments[1]);
+
+            var authorizationHeader = request.Headers.Authorization;
+            Assert.Equal("Bearer", authorizationHeader.Scheme);
+            TestHelpers.EnsureValidAccessToken(
+                audience: expectedEndpoint,
+                signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
+                accessToken: authorizationHeader.Parameter);
+        }
+
+        [Fact]
+        public async Task SendToUser_CallsAzureSignalRService()
+        {
+            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
+            var hubName = "chat";
+            var requestHandler = new FakeHttpMessageHandler();
+            var httpClient = new HttpClient(requestHandler);
+            var azureSignalR = new AzureSignalRClient(connectionString, httpClient);
+
+            await azureSignalR.SendToUser(
+                hubName, 
+                "userId1",
+                new SignalRData
+                {
+                    Target = "newMessage",
+                    Arguments = new object[] { "arg1", "arg2" }
+                });
+
+            var baseEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
+            var expectedEndpoint = $"{baseEndpoint}/user/userId1";
             var request = requestHandler.HttpRequestMessage;
             Assert.Equal("application/json", request.Content.Headers.ContentType.MediaType);
             Assert.Equal(expectedEndpoint, request.RequestUri.AbsoluteUri);

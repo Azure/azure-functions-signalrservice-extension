@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -14,9 +16,10 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
 [assembly:InternalsVisibleTo("SignalRServiceExtension.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class AzureSignalRClient : IAzureSignalRClient
+    internal class AzureSignalRClient : IAzureSignalRSender
     {
         private readonly HttpClient httpClient;
 
@@ -29,10 +32,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.httpClient = httpClient;
         }
 
-        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, IEnumerable<Claim> claims = null)
         {
             var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
-            var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+            var identity = new ClaimsIdentity(claims);
+            var token = GenerateJwtBearer(null, hubUrl, identity, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
                 Url = hubUrl,
@@ -40,10 +44,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        internal SignalRConnectionInfo GetServerConnectionInfo(string hubName)
+        internal SignalRConnectionInfo GetServerConnectionInfo(string hubName, string additionalPath = "")
         {
             var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
-            var token = GenerateJwtBearer(null, hubUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
+            var audienceUrl = $"{hubUrl}{additionalPath}";
+            var token = GenerateJwtBearer(null, audienceUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
                 Url = hubUrl,
@@ -51,10 +56,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public Task SendMessage(string hubName, SignalRMessage message)
+        public Task SendToAll(string hubName, SignalRData data)
         {
             var connectionInfo = GetServerConnectionInfo(hubName);
-            return PostJsonAsync(connectionInfo.Url, message, connectionInfo.AccessToken);
+            return PostJsonAsync(connectionInfo.Url, data, connectionInfo.AccessToken);
+        }
+
+        public Task SendToUser(string hubName, string userId, SignalRData data)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
+            }
+
+            var userIdsSegment = $"/user/{userId}";
+            var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
+            var uri = $"{connectionInfo.Url}{userIdsSegment}";
+            return PostJsonAsync(uri, data, connectionInfo.AccessToken);
         }
 
         private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)

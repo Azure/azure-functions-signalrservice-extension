@@ -3,6 +3,7 @@
 
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
@@ -10,7 +11,7 @@ namespace SignalRServiceExtension.Tests.Utils
 {
     class TestHelpers
     {
-        internal static void EnsureValidAccessToken(string audience, string signingKey, string accessToken)
+        internal static ClaimsPrincipal EnsureValidAccessToken(string audience, string signingKey, string accessToken)
         {
             var validationParameters =
                 new TokenValidationParameters
@@ -26,7 +27,7 @@ namespace SignalRServiceExtension.Tests.Utils
                         expires.HasValue && expires > DateTime.UtcNow.AddMinutes(5) // at least 5 minutes
                 };
             var handler = new JwtSecurityTokenHandler();
-            handler.ValidateToken(accessToken, validationParameters, out _);
+            return handler.ValidateToken(accessToken, validationParameters, out _);
         }
     }
 }
