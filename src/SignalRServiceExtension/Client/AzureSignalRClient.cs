@@ -4,10 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,8 +13,6 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 
-[assembly:InternalsVisibleTo("SignalRServiceExtension.Tests")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class AzureSignalRClient : IAzureSignalRSender

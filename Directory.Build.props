@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/Azure/azure-functions-signalrservice-extension</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryRoot>$(MSBuildThisFileDirectory)</RepositoryRoot>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)build\Key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <!-- PublicSign only when not Windows and not macOS https://github.com/Microsoft/msbuild/issues/2468#issuecomment-324719212  -->
     <PublicSign Condition="'$(OS)' != 'Windows_NT' and !$([System.IO.File]::Exists('/usr/lib/libc.dylib'))">true</PublicSign>
