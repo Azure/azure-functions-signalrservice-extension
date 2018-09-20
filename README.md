@@ -7,7 +7,7 @@ Travis: [![travis](https://travis-ci.org/Azure/azure-functions-signalrservice-ex
 ## NuGet Packages
 
 Package Name | Target Framework | NuGet
----|---|---|---
+---|---|---
 Microsoft.Azure.WebJobs.Extensions.SignalRService | .NET Standard 2.0 | [![NuGet](https://img.shields.io/nuget/v/Microsoft.Azure.WebJobs.Extensions.SignalRService.svg)](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.SignalRService)
 
 ## Intro
