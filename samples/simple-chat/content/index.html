@@ -41,7 +41,7 @@
       const messages = document.getElementById('messages');
 
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${apiBaseUrl}`)
+        .withUrl(`${apiBaseUrl}?name=${username}`)
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
@@ -70,7 +70,7 @@
       messageForm.addEventListener('submit', ev => {
         ev.preventDefault();
         const message = messageBox.value;
-        sendMessage(username, null, message);
+        sendMessage(username, message);
         messageBox.value = '';
       });
 
