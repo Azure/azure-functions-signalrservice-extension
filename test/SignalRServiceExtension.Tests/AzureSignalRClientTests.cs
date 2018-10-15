@@ -31,7 +31,7 @@ namespace SignalRServiceExtension.Tests
 
             var info = azureSignalR.GetClientConnectionInfo("chat");
 
-            const string expectedUrl = "https://foo.service.signalr.net:5001/client/?hub=chat";
+            const string expectedUrl = "https://foo.service.signalr.net/client/?hub=chat";
             TestHelpers.EnsureValidAccessToken(
                 audience: expectedUrl,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
@@ -50,7 +50,7 @@ namespace SignalRServiceExtension.Tests
 
             var info = azureSignalR.GetClientConnectionInfo("chat", claims);
 
-            const string expectedEndpoint = "https://foo.service.signalr.net:5001/client/?hub=chat";
+            const string expectedEndpoint = "https://foo.service.signalr.net/client/?hub=chat";
             var claimsPrincipal = TestHelpers.EnsureValidAccessToken(
                 audience: expectedEndpoint,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 

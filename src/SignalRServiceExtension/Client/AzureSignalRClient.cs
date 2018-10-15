@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, IEnumerable<Claim> claims = null)
         {
-            var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
+            var hubUrl = $"{BaseEndpoint}/client/?hub={hubName}";
             var identity = new ClaimsIdentity(claims);
             var token = GenerateJwtBearer(null, hubUrl, identity, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
