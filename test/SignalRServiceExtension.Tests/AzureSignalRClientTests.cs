@@ -67,7 +67,7 @@ namespace SignalRServiceExtension.Tests
 
             var info = azureSignalR.GetServerConnectionInfo("chat");
 
-            const string expectedUrl = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
+            const string expectedUrl = "https://foo.service.signalr.net/api/v1/hubs/chat";
             TestHelpers.EnsureValidAccessToken(
                 audience: expectedUrl,
                 signingKey: "/abcdefghijklmnopqrstu/v/wxyz11111111111111=", 
@@ -90,7 +90,7 @@ namespace SignalRServiceExtension.Tests
                 Arguments = new object[] { "arg1", "arg2" }
             });
 
-            const string expectedEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
+            const string expectedEndpoint = "https://foo.service.signalr.net/api/v1/hubs/chat";
             var request = requestHandler.HttpRequestMessage;
             Assert.Equal("application/json", request.Content.Headers.ContentType.MediaType);
             Assert.Equal(expectedEndpoint, request.RequestUri.AbsoluteUri);
@@ -126,8 +126,8 @@ namespace SignalRServiceExtension.Tests
                     Arguments = new object[] { "arg1", "arg2" }
                 });
 
-            var baseEndpoint = "https://foo.service.signalr.net:5002/api/v1-preview/hub/chat";
-            var expectedEndpoint = $"{baseEndpoint}/user/userId1";
+            var baseEndpoint = "https://foo.service.signalr.net/api/v1/hubs/chat";
+            var expectedEndpoint = $"{baseEndpoint}/users/userId1";
             var request = requestHandler.HttpRequestMessage;
             Assert.Equal("application/json", request.Content.Headers.ContentType.MediaType);
             Assert.Equal(expectedEndpoint, request.RequestUri.AbsoluteUri);
