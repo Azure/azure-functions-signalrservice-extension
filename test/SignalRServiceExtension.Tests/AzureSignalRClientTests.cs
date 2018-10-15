@@ -78,7 +78,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task SendToAll_CallsAzureSignalRService()
         {
-            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
+            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;";
             var hubName = "chat";
             var requestHandler = new FakeHttpMessageHandler();
             var httpClient = new HttpClient(requestHandler);
@@ -111,7 +111,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task SendToUser_CallsAzureSignalRService()
         {
-            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;";
+            var connectionString = "Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;";
             var hubName = "chat";
             var requestHandler = new FakeHttpMessageHandler();
             var httpClient = new HttpClient(requestHandler);
