@@ -8,6 +8,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRMessage
     {
         public string UserId { get; set; }
+        public string GroupName { get; set; }
+        public string Action { get; set; }
         public string Target { get; set; }
         public object[] Arguments { get; set; }
     }
