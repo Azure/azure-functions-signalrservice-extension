@@ -15,41 +15,59 @@ namespace FunctionApp
     public static class Functions
     {
         [FunctionName("negotiate")]
-        public static IActionResult GetSignalRInfo(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options")]HttpRequest req, 
-            [SignalRConnectionInfo(HubName = "simplechat")]SignalRConnectionInfo connectionInfo)
+        public static SignalRConnectionInfo GetSignalRInfo(
+            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+            [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
         {
-            // Azure function doesn't support CORS well, workaround it by explicitly return CORS headers
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-            if (req.Headers["Origin"].Count > 0) req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", req.Headers["Origin"][0]);
-            if (req.Headers["Access-Control-Request-Headers"].Count > 0) req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", req.Headers["access-control-request-headers"][0]);
-
-            return new OkObjectResult(connectionInfo);
+            var headers = req.Headers;
+            var aaa = req.Body;
+            return connectionInfo;
         }
 
         [FunctionName("messages")]
-        public static async Task<IActionResult> SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options")]HttpRequest req,
+        public static Task SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            // Azure function doesn't support CORS well, workaround it by explicitly return CORS headers
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Credentials", "true");
-            if (req.Headers["Origin"].Count > 0) req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", req.Headers["Origin"][0]);
-            if (req.Headers["Access-Control-Request-Headers"].Count > 0) req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", req.Headers["access-control-request-headers"][0]);
 
-            if (req.Method == "POST")
-            {
-                var message = new JsonSerializer().Deserialize(new JsonTextReader(new StreamReader(req.Body)));
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
-                await signalRMessages.AddAsync(
-                    new SignalRMessage
-                    {
-                        Target = "newMessage",
-                        Arguments = new[] { message }
-                    });
-            }
+            return signalRMessages.AddAsync(
+                new SignalRMessage
+                {
+                    UserId = message.recipient,
+                    GroupName = message.groupname,
+                    Target = "newMessage",
+                    Arguments = new[] { message }
+                });
+        }
 
-            return new OkResult();
+        [FunctionName("group")]
+        public static Task Group(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+        {
+
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+
+
+            return signalRMessages.AddAsync(
+                new SignalRMessage
+                {
+                    UserId = message.recipient,
+                    GroupName = message.groupname,
+                    Action = message.action
+                });
+        }
+
+        public class ChatMessage
+        {
+            public string sender { get; set; }
+            public string text { get; set; }
+            public string groupname { get; set; }
+            public string action { get; set; }
+            public string recipient { get; set; }
+            public bool isPrivate { get; set; }
         }
     }
 }
