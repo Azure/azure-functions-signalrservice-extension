@@ -19,8 +19,6 @@ namespace FunctionApp
             [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
             [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
         {
-            var headers = req.Headers;
-            var aaa = req.Body;
             return connectionInfo;
         }
 
