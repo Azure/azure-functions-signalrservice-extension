@@ -5,8 +5,7 @@ module.exports = function (context, req) {
   context.bindings.signalRMessages = [{
     "userId": req.query.recipient,
     "groupName": req.query.groupname,
-    "target": "newMessage",
-    "arguments": [ req.body ]
+    "action": req.query.action
   }];
   context.done();
 };
