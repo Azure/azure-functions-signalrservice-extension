@@ -5,11 +5,16 @@ using System.Collections.Generic;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class SignalRMessage
+    public class SignalRGroupAction
     {
         public string UserId { get; set; }
         public string GroupName { get; set; }
-        public string Target { get; set; }
-        public object[] Arguments { get; set; }
+        public GroupAction Action { get; set; }
+    }
+
+    public enum GroupAction
+    {
+        Add,
+        Remove
     }
 }

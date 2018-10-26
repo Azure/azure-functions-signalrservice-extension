@@ -1,0 +1,79 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
+{
+    public class SignalRAsyncCollector<T> : IAsyncCollector<T>
+    {
+        private readonly IAzureSignalRSender client;
+        private readonly string hubName;
+
+        internal SignalRAsyncCollector(IAzureSignalRSender client, string hubName)
+        {
+            this.client = client;
+            this.hubName = hubName;
+        }
+
+        public async Task AddAsync(T item, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if(typeof(T) == typeof(SignalRMessage))
+            {
+                SignalRMessage message = item as SignalRMessage;
+                var data = new SignalRData
+                {
+                    Target = message.Target,
+                    Arguments = message.Arguments
+                };
+
+                if (!string.IsNullOrEmpty(message.UserId) && !string.IsNullOrEmpty(message.GroupName))
+                {
+                    throw new ArgumentException("GroupName and UserId can not be specified at the same time.");
+                }
+
+                if (!string.IsNullOrEmpty(message.UserId))
+                {
+                    await client.SendToUser(hubName, message.UserId, data).ConfigureAwait(false);
+                }
+                else if (!string.IsNullOrEmpty(message.GroupName))
+                {
+                    await client.SendToGroup(hubName, message.GroupName, data).ConfigureAwait(false);
+                }
+                else
+                {
+                    await client.SendToAll(hubName, data).ConfigureAwait(false);
+                }
+            }
+            else if(typeof(T) == typeof(SignalRGroupAction))
+            {
+                SignalRGroupAction groupAction = item as SignalRGroupAction;
+                if (groupAction.Action == GroupAction.Add)
+                {
+                    await client.AddUser(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                }
+                else
+                {
+                    await client.RemoveUser(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Unsupport Binding Type.");
+            }
+        }
+
+        public Task FlushAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return Task.CompletedTask;
+        }
+
+        private string FirstOrDefault(params string[] values)
+        {
+            return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
+        }
+    }
+}

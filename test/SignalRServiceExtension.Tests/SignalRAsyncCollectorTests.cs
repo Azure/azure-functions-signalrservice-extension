@@ -9,13 +9,13 @@ using Xunit;
 
 namespace SignalRServiceExtension.Tests
 {
-    public class SignalRMessageAsyncCollectorTests
+    public class SignalRAsyncCollectorTests
     {
         [Fact]
         public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -35,7 +35,7 @@ namespace SignalRServiceExtension.Tests
         public async Task AddAsync_WithUserId_CallsSendToUser()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -58,7 +58,7 @@ namespace SignalRServiceExtension.Tests
         public async Task AddAsync_WithUserId_CallsSendToGroup()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
 
             await collector.AddAsync(new SignalRMessage
             {
@@ -81,13 +81,13 @@ namespace SignalRServiceExtension.Tests
         public async Task AddAsync_WithUserId_CallsAddUser()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
 
-            await collector.AddAsync(new SignalRMessage
+            await collector.AddAsync(new SignalRGroupAction
             {
                 UserId = "userId1",
                 GroupName = "group1",
-                Action = "add"
+                Action = GroupAction.Add
             });
 
             signalRSenderMock.Verify(
@@ -104,13 +104,13 @@ namespace SignalRServiceExtension.Tests
         public async Task AddAsync_WithUserId_CallsRemoveUser()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
-            var collector = new SignalRMessageAsyncCollector(signalRSenderMock.Object, "chathub");
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
 
-            await collector.AddAsync(new SignalRMessage
+            await collector.AddAsync(new SignalRGroupAction
             {
                 UserId = "userId1",
                 GroupName = "group1",
-                Action = "remove"
+                Action = GroupAction.Remove
             });
 
             signalRSenderMock.Verify(
