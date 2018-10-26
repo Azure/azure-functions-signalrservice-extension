@@ -19,15 +19,16 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public void AzureSignalRClient_ParsesConnectionString()
         {
-            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;", null);
             Assert.Equal("https://foo.service.signalr.net", azureSignalR.BaseEndpoint);
             Assert.Equal("/abcdefghijklmnopqrstu/v/wxyz11111111111111=", azureSignalR.AccessKey);
+            Assert.Equal("1.0", azureSignalR.Version);
         }
 
         [Fact]
         public void AzureSignalRClient_GetClientConnectionInfo_ReturnsValidInfo()
         {
-            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;", null);
 
             var info = azureSignalR.GetClientConnectionInfo("chat");
 
@@ -42,7 +43,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public void AzureSignalRClient_GetClientConnectionInfoWithUserId_ReturnsValidInfoWithUserId()
         {
-            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;", null);
             var claims = new []
             {
                 new Claim(ClaimTypes.NameIdentifier, "foo")
@@ -63,7 +64,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public void AzureSignalRClient_GetServerConnectionInfo_ReturnsValidInfo()
         {
-            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;", null);
+            var azureSignalR = new AzureSignalRClient("Endpoint=https://foo.service.signalr.net;AccessKey=/abcdefghijklmnopqrstu/v/wxyz11111111111111=;Version=1.0;", null);
 
             var info = azureSignalR.GetServerConnectionInfo("chat");
 
