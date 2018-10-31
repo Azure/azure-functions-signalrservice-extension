@@ -70,10 +70,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             return Task.CompletedTask;
         }
-
-        private string FirstOrDefault(params string[] values)
-        {
-            return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
-        }
     }
 }

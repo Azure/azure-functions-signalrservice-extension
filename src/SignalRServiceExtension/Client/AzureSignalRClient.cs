@@ -48,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var token = GenerateJwtBearer(null, audienceUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
-                Url = hubUrl,
+                Url = audienceUrl,
                 AccessToken = token
             };
         }
@@ -68,8 +68,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var userIdsSegment = string.IsNullOrEmpty(Version) ? $"/user/{userId}" : $"/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
-            var uri = $"{connectionInfo.Url}{userIdsSegment}";
-            return RequestAsync(uri, data, connectionInfo.AccessToken, HttpMethod.Post);
+            return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
         public Task SendToGroup(string hubName, string groupName, SignalRData data)
@@ -81,15 +80,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var groupSegment = string.IsNullOrEmpty(Version) ? $"/group/{groupName}" : $"/groups/{groupName}";
             var connectionInfo = GetServerConnectionInfo(hubName, groupSegment);
-            var uri = $"{connectionInfo.Url}{groupSegment}";
-            return RequestAsync(uri, data, connectionInfo.AccessToken, HttpMethod.Post);
+            return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
         public Task AddUser(string hubName, string userId, string group)
         {
             if (string.IsNullOrEmpty(Version))
             {
-                throw new ArgumentException($"API AddUserToGroup is support after Version = 1.0, check SignalR connection string to verify Version information");
+                throw new ArgumentException($"API AddUserToGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
             }
             if (string.IsNullOrEmpty(userId))
             {
@@ -102,15 +100,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var userGroupSegment = $"/groups/{group}/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
-            var uri = $"{connectionInfo.Url}{userGroupSegment}";
-            return RequestAsync(uri, null, connectionInfo.AccessToken, HttpMethod.Put);
+            return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Put);
         }
 
         public Task RemoveUser(string hubName, string userId, string group)
         {
             if (string.IsNullOrEmpty(Version))
             {
-                throw new ArgumentException($"API AddUserToGroup is support after Version = 1.0, check SignalR connection string to verify Version information");
+                throw new ArgumentException($"API RemoveUserFromGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
             }
             if (string.IsNullOrEmpty(userId))
             {
@@ -123,11 +120,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var userGroupSegment = $"/groups/{group}/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
-            var uri = $"{connectionInfo.Url}{userGroupSegment}";
-            return RequestAsync(uri, null, connectionInfo.AccessToken, HttpMethod.Delete);
+            return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Delete);
         }
 
-        private (string EndPoint, string AccessKey, string Version) ParseConnectionString(string connectionString)
+        private static (string EndPoint, string AccessKey, string Version) ParseConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -145,6 +141,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException("No access key present in SignalR Service connection string");
             }
             var versionKeyMatch = Regex.Match(connectionString, @"Version=([^;]+)", RegexOptions.IgnoreCase);
+
+            Version version;
+            if (versionKeyMatch.Success && !System.Version.TryParse(versionKeyMatch.Groups[1].Value, out version))
+            {
+                throw new ArgumentException("Invalid version format in SignalR Service connection string");
+            }
 
             return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value, versionKeyMatch.Groups[1].Value);
         }
