@@ -83,7 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
-        public Task AddUser(string hubName, string userId, string group)
+        public Task AddUserToGroup(string hubName, string userId, string groupName)
         {
             if (string.IsNullOrEmpty(Version))
             {
@@ -93,17 +93,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
-            if (string.IsNullOrEmpty(group))
+            if (string.IsNullOrEmpty(groupName))
             {
-                throw new ArgumentException($"{nameof(group)} cannot be null or empty");
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
 
-            var userGroupSegment = $"/groups/{group}/users/{userId}";
+            var userGroupSegment = $"/groups/{groupName}/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
             return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Put);
         }
 
-        public Task RemoveUser(string hubName, string userId, string group)
+        public Task RemoveUserFromGroup(string hubName, string userId, string groupName)
         {
             if (string.IsNullOrEmpty(Version))
             {
@@ -113,12 +113,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
-            if (string.IsNullOrEmpty(group))
+            if (string.IsNullOrEmpty(groupName))
             {
-                throw new ArgumentException($"{nameof(group)} cannot be null or empty");
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
 
-            var userGroupSegment = $"/groups/{group}/users/{userId}";
+            var userGroupSegment = $"/groups/{groupName}/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
             return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Delete);
         }

@@ -53,11 +53,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 SignalRGroupAction groupAction = item as SignalRGroupAction;
                 if (groupAction.Action == GroupAction.Add)
                 {
-                    await client.AddUser(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
                 }
                 else
                 {
-                    await client.RemoveUser(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
                 }
             }
             else

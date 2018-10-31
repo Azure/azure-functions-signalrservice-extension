@@ -1,22 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRCollectorBuilder<T> : IConverter<SignalRAttribute, IAsyncCollector<T>>
     {
-        private readonly SignalRConfigProvider _configProvider;
+        private readonly SignalRConfigProvider configProvider;
 
         public SignalRCollectorBuilder(SignalRConfigProvider configProvider)
         {
-            _configProvider = configProvider;
+            this.configProvider = configProvider;
         }
 
         public IAsyncCollector<T> Convert(SignalRAttribute attribute)
         {
-            var client = _configProvider.GetClient(attribute);
+            var client = configProvider.GetClient(attribute);
             return new SignalRAsyncCollector<T>(client, attribute.HubName);
         }
     }

@@ -78,7 +78,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task AddAsync_WithUserId_CallsAddUser()
+        public async Task AddAsync_WithUserId_CallsAddUserToGroup()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
@@ -91,7 +91,7 @@ namespace SignalRServiceExtension.Tests
             });
 
             signalRSenderMock.Verify(
-                c => c.AddUser("chathub", "userId1", "group1"),
+                c => c.AddUserToGroup("chathub", "userId1", "group1"),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
             var actualData = signalRSenderMock.Invocations[0];
@@ -101,7 +101,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task AddAsync_WithUserId_CallsRemoveUser()
+        public async Task AddAsync_WithUserId_CallsRemoveUserFromGroup()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
@@ -114,7 +114,7 @@ namespace SignalRServiceExtension.Tests
             });
 
             signalRSenderMock.Verify(
-                c => c.RemoveUser("chathub", "userId1", "group1"),
+                c => c.RemoveUserFromGroup("chathub", "userId1", "group1"),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
             var actualData = signalRSenderMock.Invocations[0];
