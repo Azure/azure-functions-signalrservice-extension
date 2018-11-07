@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,18 +11,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly IAzureSignalRSender client;
         private readonly string hubName;
+        private readonly SignalROutputConverter converter;
 
         internal SignalRAsyncCollector(IAzureSignalRSender client, string hubName)
         {
             this.client = client;
             this.hubName = hubName;
+            converter = new SignalROutputConverter();
         }
 
         public async Task AddAsync(T item, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if(typeof(T) == typeof(SignalRMessage))
+            var convertItem = converter.ConvertToSignalROutput(item);
+
+            if (convertItem.GetType() == typeof(SignalRMessage))
             {
-                SignalRMessage message = item as SignalRMessage;
+                SignalRMessage message = convertItem as SignalRMessage;
                 var data = new SignalRData
                 {
                     Target = message.Target,
@@ -48,9 +51,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     await client.SendToAll(hubName, data).ConfigureAwait(false);
                 }
             }
-            else if(typeof(T) == typeof(SignalRGroupAction))
+            else if (convertItem.GetType() == typeof(SignalRGroupAction))
             {
-                SignalRGroupAction groupAction = item as SignalRGroupAction;
+                SignalRGroupAction groupAction = convertItem as SignalRGroupAction;
                 if (groupAction.Action == GroupAction.Add)
                 {
                     await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);

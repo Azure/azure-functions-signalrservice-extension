@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Moq;
+using System;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
@@ -121,6 +121,34 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("chathub", actualData.Arguments[0]);
             Assert.Equal("userId1", actualData.Arguments[1]);
             Assert.Equal("group1", actualData.Arguments[2]);
+        }
+
+        [Fact]
+        public async Task AddAsync_InvalidTypeThrowException()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<object[]>(signalRSenderMock.Object, "chathub");
+
+            var item = new object[] { "arg1", "arg2" };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
+        }
+
+        [Fact]
+        public async Task AddAsync_SendMessage_WithBothUserIdAndGroupNameThrowException()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+
+            var item = new SignalRMessage
+            {
+                UserId = "user1",
+                GroupName = "group1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
         }
     }
 }
