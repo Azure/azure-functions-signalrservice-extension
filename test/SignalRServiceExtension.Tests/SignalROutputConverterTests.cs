@@ -77,6 +77,20 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
+        public void OutputConverter_SignalRGroupAction_EnumNotValid()
+        {
+            var converter = new SignalROutputConverter();
+
+            var input = JObject.Parse(@"{
+              'userId': 'user1',
+              'groupName': 'group1',
+              'action': 'delete'
+            }");
+
+            Assert.Throws<ArgumentException>(() => converter.ConvertToSignalROutput(input));
+        }
+
+        [Fact]
         public void OutputConverter_JObjectNotValid()
         {
             var converter = new SignalROutputConverter();
