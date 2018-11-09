@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.WebJobs.EventHubs;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -16,24 +19,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly INameResolver _nameResolver;
         private readonly ILogger _logger;
         private readonly IConfiguration _config;
-        private readonly IOptions<SignalROptions> _options;
+        private readonly SignalROptions _options;
         private readonly IConverterManager _converterManager;
 
         public SignalRTriggerAttributeBindingProvider(
             IConfiguration configuration,
             INameResolver nameResolver,
             IConverterManager converterManager,
-            IOptions<SignalROptions> options,
-            ILoggerFactory loggerFactory)
+            SignalROptions options,
+            ILogger logger)
         {
             _config = configuration;
-            nameResolver = _nameResolver;
-            converterManager = _converterManager;
+            _nameResolver = nameResolver;
+            _converterManager = converterManager;
             _options = options;
-            _logger = loggerFactory?.CreateLogger(LogCategories.CreateTriggerCategory("SignalR"));
+            _logger = logger;
         }
 
-        public async Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
+        public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
             if (context == null)
             {
@@ -48,9 +51,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
+            string resolvedEventHubName = _nameResolver.ResolveWholeString(attribute.EventHubName);
+            string consumerGroup = attribute.ConsumerGroup ?? PartitionReceiver.DefaultConsumerGroupName;
+            string resolvedConsumerGroup = _nameResolver.ResolveWholeString(consumerGroup);
+            string resolvedHubName = _nameResolver.ResolveWholeString(attribute.HubName);
 
+            if (!string.IsNullOrWhiteSpace(attribute.Connection))
+            {
+                var connectionString = _config.GetConnectionStringOrSetting(attribute.Connection);
+                _options.AddReceiver(resolvedEventHubName, connectionString);
+            }
 
+            var eventHostListener =
+                _options.GetEventProcessorHost(_config, resolvedEventHubName, resolvedConsumerGroup);
 
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameter, eventHostListener, _options, resolvedHubName, _logger));
 
         }
     }

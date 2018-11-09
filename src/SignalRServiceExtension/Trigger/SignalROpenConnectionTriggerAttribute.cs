@@ -4,7 +4,11 @@ using System.Text;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Trigger
 {
-    class SignalROpenConnectionTriggerAttribute : SignalRTriggerAttribute
+    public sealed class SignalROpenConnectionTriggerAttribute : SignalRTriggerAttribute
     {
+        public SignalROpenConnectionTriggerAttribute(string eventHubName, string hubName) : base(eventHubName, hubName)
+        {
+
+        }
     }
 }

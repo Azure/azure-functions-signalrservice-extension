@@ -9,6 +9,7 @@ using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
@@ -20,19 +21,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
 
-        private readonly SignalROptions options;
-        private readonly INameResolver nameResolver;
-        private static HttpClient httpClient = new HttpClient();
-        private readonly ILogger logger;
+        public IConfiguration Config;
+        private readonly SignalROptions _options;
+        private readonly IConverterManager _converterManager;
+        private readonly INameResolver _nameResolver;
+        private static readonly HttpClient HttpClient = new HttpClient();
+        private readonly ILogger _logger;
 
         public SignalRConfigProvider(
+            IConfiguration config,
             IOptions<SignalROptions> options, 
+            IConverterManager converterManager,
             INameResolver nameResolver, 
             ILoggerFactory loggerFactory)
         {
-            this.options = options.Value;
-            this.logger = loggerFactory.CreateLogger("SignalR");
-            this.nameResolver = nameResolver;
+            Config = config;
+            _options = options.Value;
+            _converterManager = converterManager;
+            _logger = loggerFactory.CreateLogger("SignalR");
+            _nameResolver = nameResolver;
         }
         
         public void Initialize(ExtensionConfigContext context)
@@ -42,15 +49,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException("context");
             }
 
-            if (string.IsNullOrEmpty(options.ConnectionString))
+            if (string.IsNullOrEmpty(_options.ConnectionString))
             {
-                options.ConnectionString = nameResolver.Resolve(AzureSignalRConnectionStringName);
+                _options.ConnectionString = _nameResolver.Resolve(AzureSignalRConnectionStringName);
             }
 
             context.AddConverter<string, JObject>(JObject.FromObject);
             context.AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>());
             context.AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject);
 
+            // Register binding provider
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
@@ -59,7 +67,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
             signalRAttributeRule.BindToCollector<SignalRMessage>(CreateCollector);
 
-            logger.LogInformation("SignalRService binding initialized");
+            // Register trigger binding provider'
+            var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _converterManager, _options,_logger);
+            context.AddBindingRule<SignalRTriggerAttribute>().BindToTrigger(triggerBindingProvider);
+
+            _logger.LogInformation("SignalRService binding initialized");
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -78,7 +90,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private void ValidateConnectionString(string attributeConnectionString, string attributeConnectionStringName)
         {
-            var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
+            var connectionString = FirstOrDefault(attributeConnectionString, _options.ConnectionString);
 
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -89,15 +101,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private IAsyncCollector<SignalRMessage> CreateCollector(SignalRAttribute attribute)
         {
-            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
-            var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            var client = new AzureSignalRClient(connectionString, httpClient);
+            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, _options.ConnectionString);
+            var hubName = FirstOrDefault(attribute.HubName, _options.HubName);
+            var client = new AzureSignalRClient(connectionString, HttpClient);
             return new SignalRMessageAsyncCollector(client, hubName);
         }
 
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, httpClient);
+            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, HttpClient);
             var claims = attribute.GetClaims();
             return signalR.GetClientConnectionInfo(attribute.HubName, claims);
         }
