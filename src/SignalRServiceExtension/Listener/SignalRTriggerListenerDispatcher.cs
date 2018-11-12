@@ -49,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         out relatedFunctions);
                     break;
                 case "InvocationMessage":
-                    _arrtibuteDictionary.TryGetValue(typeof(SignalRCloseConnectionTriggerAttribute),
+                    _arrtibuteDictionary.TryGetValue(typeof(SignalRInvocationMessageTriggerAttribute),
                         out relatedFunctions);
                     break;
             }

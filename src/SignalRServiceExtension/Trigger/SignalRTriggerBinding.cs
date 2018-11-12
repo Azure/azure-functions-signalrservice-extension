@@ -33,13 +33,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _logger = logger;
         }
 
-        public Type TriggerValueType => typeof(EventData);
+        public Type TriggerValueType => typeof(SignalRTriggerInput);
 
         public IReadOnlyDictionary<string, Type> BindingDataContract => CreateBindingDataContract();
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
-            EventData eventData = value as EventData;
+            SignalRTriggerInput eventData = value as SignalRTriggerInput;
 
             IValueProvider valueProvider = new ValueProvider(new SignalRBaseMessage(){Hub = "A", Method = "B"}, typeof(SignalRBaseMessage));
 

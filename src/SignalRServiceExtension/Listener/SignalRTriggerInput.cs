@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Text;
 using Microsoft.Azure.EventHubs;
 
@@ -15,7 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public static SignalRTriggerInput Parse(EventData rawData)
         {
-            return new SignalRTriggerInput();
+            return new SignalRTriggerInput(){MessageType = "InvocationMessage"};
         }
     }
 }
