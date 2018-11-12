@@ -12,22 +12,22 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // A host scoped singleton listener
     public class SignalRTriggerSingletonListener : IListener, IEventProcessorFactory
     {
-        private readonly ListenerFactoryContext _context;
         private readonly EventProcessorHost _eventProcessorHost;
         private readonly SignalROptions _options;
         private readonly ILogger _logger;
         private bool _started;
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
-        private readonly SignalRTriggerListenerDispatcher _dispatcher = new SignalRTriggerListenerDispatcher();
+        private readonly SignalRTriggerListenerDispatcher _dispatcher;
 
-        public SignalRTriggerSingletonListener(ListenerFactoryContext context, EventProcessorHost eventProcessorHost, SignalROptions options, ILogger logger)
+        public SignalRTriggerSingletonListener(EventProcessorHost eventProcessorHost, SignalRTriggerListenerDispatcher dispatcher, SignalROptions options, ILogger logger)
         {
-            _context = context;
             _eventProcessorHost = eventProcessorHost;
             _options = options;
             _logger = logger;
+            _dispatcher = dispatcher;
         }
 
         public async Task StartAsync(CancellationToken cancellation)
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public IEventProcessor CreateEventProcessor(PartitionContext context)
         {
-            return new EventProcessor(_context, _options, _logger, _dispatcher);
+            return new EventProcessor(_options, _logger, _dispatcher);
         }
 
         /// <summary>
@@ -98,18 +98,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public class EventProcessor : IEventProcessor, IDisposable, ICheckpointer
         {
             private readonly CancellationTokenSource _cts = new CancellationTokenSource();
-            private readonly ListenerFactoryContext _context;
-            private readonly ITriggeredFunctionExecutor _executor;
             private readonly SignalROptions _options;
             private readonly ILogger _logger;
             private bool _disposed = false;
             private ICheckpointer _checkpointer;
             private readonly SignalRTriggerListenerDispatcher _dispatcher;
 
-            public EventProcessor(ListenerFactoryContext context, SignalROptions options, ILogger logger, SignalRTriggerListenerDispatcher dispatcher, ICheckpointer checkpointer = null)
+            public EventProcessor(SignalROptions options, ILogger logger, SignalRTriggerListenerDispatcher dispatcher, ICheckpointer checkpointer = null)
             {
-                _context = context;
-                _executor = context.Executor;
                 _options = options;
                 _logger = logger;
                 _dispatcher = dispatcher;

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
@@ -22,6 +23,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly Dictionary<string, ReceiverCreds> _receiverCreds = new Dictionary<string, ReceiverCreds>(StringComparer.OrdinalIgnoreCase);
 
         public const string LeaseContainerName = "azure-webjobs-signalr";
+
+        // Use a tuple to identify a host: (EventHub, ConnectionString, ConsumerGroup)
+        // As SignalROption is singleton, _hosts is singleton across the function app.
+        private readonly ConcurrentDictionary<(string, string, string), EventProcessorHost> _hosts = new ConcurrentDictionary<(string, string, string), EventProcessorHost>();
 
         public SignalROptions()
         {
@@ -79,51 +84,51 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
 
         // Lookup a listener for receiving events given the name provided in the [EventHubTrigger] attribute. 
-        internal EventProcessorHost GetEventProcessorHost(IConfiguration config, string eventHubName, string consumerGroup)
+        internal EventProcessorHost GetEventProcessorHost(IConfiguration config, string eventHubName, string receiverConnectionString, string consumerGroup)
         {
-            ReceiverCreds creds;
-            if (this._receiverCreds.TryGetValue(eventHubName, out creds))
+            if (eventHubName == null)
             {
-                // Common case. Create a new EventProcessorHost instance to listen. 
-                string eventProcessorHostName = Guid.NewGuid().ToString();
-
-                if (consumerGroup == null)
-                {
-                    consumerGroup = PartitionReceiver.DefaultConsumerGroupName;
-                }
-                var storageConnectionString = creds.StorageConnectionString;
-                if (storageConnectionString == null)
-                {
-                    string defaultStorageString = config.GetWebJobsConnectionString(ConnectionStringNames.Storage);
-                    storageConnectionString = defaultStorageString;
-                }
-
-                // If the connection string provides a hub name, that takes precedence. 
-                // Note that connection strings *can't* specify a consumerGroup, so must always be passed in. 
-                string actualPath = eventHubName;
-                EventHubsConnectionStringBuilder sb = new EventHubsConnectionStringBuilder(creds.EventHubConnectionString);
-                if (sb.EntityPath != null)
-                {
-                    actualPath = sb.EntityPath;
-                    sb.EntityPath = null; // need to remove to use with EventProcessorHost
-                }
-
-                var @namespace = GetEventHubNamespace(sb);
-                var blobPrefix = GetBlobPrefix(actualPath, @namespace);
-
-                // Use blob prefix support available in EPH starting in 2.2.6 
-                EventProcessorHost host = new EventProcessorHost(
-                    hostName: eventProcessorHostName,
-                    eventHubPath: actualPath,
-                    consumerGroupName: consumerGroup,
-                    eventHubConnectionString: sb.ToString(),
-                    storageConnectionString: storageConnectionString,
-                    leaseContainerName: LeaseContainerName,
-                    storageBlobPrefix: blobPrefix);
-
-                return host;
+                throw new ArgumentNullException("eventHubName");
             }
-            throw new InvalidOperationException("No event hub receiver named " + eventHubName);
+            if (receiverConnectionString == null)
+            {
+                throw new ArgumentNullException("receiverConnectionString");
+            }
+
+
+            // Common case. Create a new EventProcessorHost instance to listen. 
+            string eventProcessorHostName = Guid.NewGuid().ToString();
+
+            if (consumerGroup == null)
+            {
+                consumerGroup = PartitionReceiver.DefaultConsumerGroupName;
+            }
+
+            string defaultStorageString = config.GetWebJobsConnectionString(ConnectionStringNames.Storage);
+            string storageConnectionString = defaultStorageString;
+
+            // If the connection string provides a hub name, that takes precedence. 
+            // Note that connection strings *can't* specify a consumerGroup, so must always be passed in. 
+            string actualPath = eventHubName;
+            EventHubsConnectionStringBuilder sb = new EventHubsConnectionStringBuilder(receiverConnectionString);
+            if (sb.EntityPath != null)
+            {
+                actualPath = sb.EntityPath;
+                sb.EntityPath = null; // need to remove to use with EventProcessorHost
+            }
+
+            var @namespace = GetEventHubNamespace(sb);
+            var blobPrefix = GetBlobPrefix(actualPath, @namespace);
+
+            var host = _hosts.GetOrAdd((actualPath, sb.ToString(), consumerGroup), new EventProcessorHost(
+                hostName: eventProcessorHostName,
+                eventHubPath: actualPath,
+                consumerGroupName: consumerGroup,
+                eventHubConnectionString: sb.ToString(),
+                storageConnectionString: storageConnectionString,
+                leaseContainerName: LeaseContainerName,
+                storageBlobPrefix: blobPrefix));
+            return host;
         }
 
         private static string GetEventHubNamespace(EventHubsConnectionStringBuilder connectionString)

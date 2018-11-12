@@ -56,17 +56,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             string resolvedConsumerGroup = _nameResolver.ResolveWholeString(consumerGroup);
             string resolvedHubName = _nameResolver.ResolveWholeString(attribute.HubName);
 
-            if (!string.IsNullOrWhiteSpace(attribute.Connection))
+            if (string.IsNullOrWhiteSpace(attribute.Connection))
             {
-                var connectionString = _config.GetConnectionStringOrSetting(attribute.Connection);
-                _options.AddReceiver(resolvedEventHubName, connectionString);
+                return Task.FromResult<ITriggerBinding>(null);
             }
 
+            var connectionString = _config.GetConnectionStringOrSetting(attribute.Connection);
             var eventHostListener =
-                _options.GetEventProcessorHost(_config, resolvedEventHubName, resolvedConsumerGroup);
-
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameter, eventHostListener, _options, resolvedHubName, _logger));
-
+                _options.GetEventProcessorHost(_config, resolvedEventHubName, connectionString, resolvedConsumerGroup);
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameter, eventHostListener, attribute.GetType(), _options, resolvedHubName, _logger));
         }
     }
 }

@@ -11,7 +11,7 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // A singleton dispatcher to diliver EventData to correct functions
+    // A app scoped singleton dispatcher to diliver EventData to correct functions
     public class SignalRTriggerListenerDispatcher
     {
         private readonly ConcurrentDictionary<string, ListenerFactoryContext> _contextDictionary =

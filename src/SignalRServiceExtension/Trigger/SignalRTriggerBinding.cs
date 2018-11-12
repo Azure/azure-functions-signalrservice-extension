@@ -18,14 +18,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalROptions _options;
         private readonly ParameterInfo _parameter;
         private readonly EventProcessorHost _host;
+        private readonly Type _attributeType;
         private readonly string _hubName;
         private readonly ILogger _logger;
 
 
-        public SignalRTriggerBinding(ParameterInfo parameter, EventProcessorHost host, SignalROptions options, string hubName, ILogger logger)
+        public SignalRTriggerBinding(ParameterInfo parameter, EventProcessorHost host, Type attributeType, SignalROptions options, string hubName, ILogger logger)
         {
             _parameter = parameter;
             _host = host;
+            _attributeType = attributeType;
             _options = options;
             _hubName = hubName;
             _logger = logger;
@@ -62,7 +64,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException("context");
             }
 
-            IListener listener =  new SignalRTriggerListener(context.Executor, _host, _options, _logger);
+            IListener listener =
+                SignalRTriggerSingletonListenerFactory.Instance.CreateListener(_host, context, _attributeType, _options,
+                    _logger);
             return Task.FromResult(listener);
         }
 
