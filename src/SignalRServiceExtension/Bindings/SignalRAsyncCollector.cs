@@ -22,6 +22,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task AddAsync(T item, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if(item == null)
+            {
+                throw new ArgumentNullException("Binding Object");
+            }
+
             var convertItem = converter.ConvertToSignalROutput(item);
 
             if (convertItem.GetType() == typeof(SignalRMessage))
