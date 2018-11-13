@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -33,15 +34,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _logger = logger;
         }
 
-        public Type TriggerValueType => typeof(SignalRTriggerInput);
+        public Type TriggerValueType => typeof(SignalRExtensionMessage);
 
         public IReadOnlyDictionary<string, Type> BindingDataContract => CreateBindingDataContract();
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
         {
-            SignalRTriggerInput eventData = value as SignalRTriggerInput;
+            SignalRExtensionMessage message = value as SignalRExtensionMessage;
 
-            IValueProvider valueProvider = new ValueProvider(new SignalRBaseMessage(){Hub = "A", Method = "B"}, typeof(SignalRBaseMessage));
+            IValueProvider valueProvider = new ValueProvider(message, message.GetType());
 
             IReadOnlyDictionary<string, object> bindingData = CreateBindingData();
             ITriggerData result = new TriggerData(valueProvider, bindingData);

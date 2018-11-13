@@ -8,6 +8,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public string Hub { get; set; }
         public string Method { get; set; }
-        public string[] Arguments { get; set; }
+        public object[] Arguments { get; set; }
     }
 }

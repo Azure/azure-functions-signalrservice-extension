@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.EventHubs;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService.Trigger;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
@@ -20,9 +22,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ConcurrentDictionary<Type, HashSet<string>> _arrtibuteDictionary =
             new ConcurrentDictionary<Type, HashSet<string>>();
 
-        public SignalRTriggerListenerDispatcher()
+        private readonly ISignalRExtensionProtocols _protocols;
+
+        public SignalRTriggerListenerDispatcher(ISignalRExtensionProtocols protocols)
         {
-            
+            _protocols = protocols;
         }
 
         public void RegisterFunction(string functionId, Type attributeType, ListenerFactoryContext context)
@@ -35,20 +39,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _contextDictionary.AddOrUpdate(functionId, context, (_, __) => context);
         }
 
-        public async Task DispatchListener(SignalRTriggerInput input, CancellationTokenSource cts)
+        public async Task DispatchListener(EventData input, CancellationTokenSource cts)
         {
             HashSet<string> relatedFunctions = null;
-            switch (input.MessageType)
+            if (!_protocols.TryParseMessage(input, out var message))
             {
-                case "OpenConnection":
+                return;
+            }
+
+            switch (message.MessageType)
+            {
+                case SignalRExtensionProtocolConstants.OpenConnectionType:
                     _arrtibuteDictionary.TryGetValue(typeof(SignalROpenConnectionTriggerAttribute),
                         out relatedFunctions);
                     break;
-                case "CloseConnection":
+                case SignalRExtensionProtocolConstants.CloseConnectionType:
                     _arrtibuteDictionary.TryGetValue(typeof(SignalRCloseConnectionTriggerAttribute),
                         out relatedFunctions);
                     break;
-                case "InvocationMessage":
+                case SignalRExtensionProtocolConstants.InvocationType:
                     _arrtibuteDictionary.TryGetValue(typeof(SignalRInvocationMessageTriggerAttribute),
                         out relatedFunctions);
                     break;
@@ -64,7 +73,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 _contextDictionary.TryGetValue(functionId, out var context);
                 var triggeredInput = new TriggeredFunctionData()
                 {
-                    TriggerValue = input
+                    TriggerValue = message
                 };
                 if (context != null)
                 {

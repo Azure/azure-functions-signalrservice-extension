@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
@@ -70,6 +71,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Register trigger binding provider'
             var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _converterManager, _options,_logger);
             context.AddBindingRule<SignalRTriggerAttribute>().BindToTrigger(triggerBindingProvider);
+            context.AddConverter<SignalRExtensionMessage, string>(input => input.Body.ToString());
+            context.AddConverter<SignalRExtensionMessage, JObject>(JObject.FromObject);
 
             _logger.LogInformation("SignalRService binding initialized");
         }

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.EventHubs;
 using Microsoft.Azure.EventHubs.Processor;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Extensions.Logging;
@@ -146,9 +147,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         break;
                     }
 
-                    var input = SignalRTriggerInput.Parse(message);
-
-                    await _dispatcher.DispatchListener(input, _cts);
+                    await _dispatcher.DispatchListener(message, _cts);
 
                     // Dispose message to help with memory pressure. If this is missed, the finalizer thread will still get them.
                     message.Dispose();
