@@ -19,10 +19,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
         bool TryParseMessage(EventData input, out SignalRExtensionMessage message);
 
         /// <summary>
-        /// Writes the specified <see cref="SignalRExtensionMessage"/> to EventData.
+        /// Build <see cref="EventData"/> from some meta data.
         /// </summary>
-        /// <param name="message">The message to write.</param>
-        /// <param name="output">The output writer.</param>
-        EventData WriteMessage();
+        /// <param name="messageType">The message type in <see cref="SignalRExtensionProtocolConstants"/></param>
+        /// <param name="hub">The target hub name</param>
+        /// <param name="connectionId">The client connection id</param>
+        /// <param name="body">The message body</param>
+        /// <returns>A <see cref="EventData"/> to sent to Event Hub</returns>
+        EventData BuildMessage(int messageType, string hub, string connectionId, object body);
     }
 }

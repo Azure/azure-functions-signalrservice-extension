@@ -22,10 +22,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public static SignalRTriggerSingletonListenerFactory Instance { get; } = new SignalRTriggerSingletonListenerFactory();
 
-        public SignalRTriggerSingletonListener CreateListener(EventProcessorHost eventProcessorHost, ListenerFactoryContext context, Type attributeType, SignalROptions options, ILogger logger)
+        public SignalRTriggerSingletonListener CreateListener(EventProcessorHost eventProcessorHost, ListenerFactoryContext context, Type attributeType, string hubName, SignalROptions options, ILogger logger, string target = null)
         {
-            _dispatcher.RegisterFunction(context.Descriptor.Id, attributeType, context);
-            var listener = _listeners.GetOrAdd(context.Descriptor.Id, new SignalRTriggerSingletonListener(
+            _dispatcher.RegisterFunction(context.Descriptor.Id, attributeType, hubName, context, target);
+            var listener = _listeners.GetOrAdd(eventProcessorHost.HostName, new SignalRTriggerSingletonListener(
                 eventProcessorHost, _dispatcher, options, logger));
             return listener;
         }

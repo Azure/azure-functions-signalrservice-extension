@@ -22,9 +22,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly Type _attributeType;
         private readonly string _hubName;
         private readonly ILogger _logger;
+        private readonly string _target;
 
 
-        public SignalRTriggerBinding(ParameterInfo parameter, EventProcessorHost host, Type attributeType, SignalROptions options, string hubName, ILogger logger)
+        public SignalRTriggerBinding(ParameterInfo parameter, EventProcessorHost host, Type attributeType, SignalROptions options, string hubName, ILogger logger, string target = null)
         {
             _parameter = parameter;
             _host = host;
@@ -32,6 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _options = options;
             _hubName = hubName;
             _logger = logger;
+            _target = target;
         }
 
         public Type TriggerValueType => typeof(SignalRExtensionMessage);
@@ -42,18 +44,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             SignalRExtensionMessage message = value as SignalRExtensionMessage;
 
-            IValueProvider valueProvider = new ValueProvider(message, message.GetType());
-
-            IReadOnlyDictionary<string, object> bindingData = CreateBindingData();
-            ITriggerData result = new TriggerData(valueProvider, bindingData);
+            IReadOnlyDictionary<string, object> bindingData = CreateBindingData(message);
+            ITriggerData result = new TriggerData(bindingData);
             return Task.FromResult(result);
         }
 
-        private IReadOnlyDictionary<string, object> CreateBindingData()
+        private IReadOnlyDictionary<string, object> CreateBindingData(SignalRExtensionMessage message)
         {
             var bindingData = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            bindingData.Add("Method", "B");
-            bindingData.Add("ConnectionId", "123456");
+            bindingData.Add("ConnectionId", message.ConnectionId);
+            bindingData.Add("Hub", message.Hub);
 
             return bindingData;
         }
@@ -66,8 +66,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             IListener listener =
-                SignalRTriggerSingletonListenerFactory.Instance.CreateListener(_host, context, _attributeType, _options,
-                    _logger);
+                SignalRTriggerSingletonListenerFactory.Instance.CreateListener(_host, context, _attributeType, _hubName, _options,
+                    _logger, _target);
             return Task.FromResult(listener);
         }
 
@@ -86,8 +86,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private static IReadOnlyDictionary<string, Type> CreateBindingDataContract()
         {
             Dictionary<string, Type> contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-            contract.Add("Method", typeof(string));
-            //contract.Add("Arguments", typeof(Array));
+            contract.Add("Hub", typeof(string));
             contract.Add("ConnectionId", typeof(string));
 
             return contract;

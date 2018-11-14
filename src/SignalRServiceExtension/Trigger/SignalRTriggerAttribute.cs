@@ -9,16 +9,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Binding]
     public class SignalRTriggerAttribute : Attribute
     {
-        public SignalRTriggerAttribute(string eventHubName, string hubName)
+        public SignalRTriggerAttribute(string eventHubName)
         {
             EventHubName = eventHubName;
-            HubName = hubName;
         }
 
         /// <summary>
-        /// Name of SignalR hub
+        /// Optional Name of SignalR hub
         /// </summary>
-        public string HubName { get; private set; }
+        public string Hub { get; set; }
 
         /// <summary>
         /// Name of the event hub. 

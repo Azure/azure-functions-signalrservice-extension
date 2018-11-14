@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -13,6 +14,7 @@ using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -24,7 +26,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public IConfiguration Config;
         private readonly SignalROptions _options;
-        private readonly IConverterManager _converterManager;
         private readonly INameResolver _nameResolver;
         private static readonly HttpClient HttpClient = new HttpClient();
         private readonly ILogger _logger;
@@ -38,7 +39,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             Config = config;
             _options = options.Value;
-            _converterManager = converterManager;
             _logger = loggerFactory.CreateLogger("SignalR");
             _nameResolver = nameResolver;
         }
@@ -69,10 +69,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRAttributeRule.BindToCollector<SignalRMessage>(CreateCollector);
 
             // Register trigger binding provider'
-            var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _converterManager, _options,_logger);
-            context.AddBindingRule<SignalRTriggerAttribute>().BindToTrigger(triggerBindingProvider);
-            context.AddConverter<SignalRExtensionMessage, string>(input => input.Body.ToString());
-            context.AddConverter<SignalRExtensionMessage, JObject>(JObject.FromObject);
+            var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _options,_logger);
+            var rule = context.AddBindingRule<SignalRInvocationMessageTriggerAttribute>();
+            rule.BindToTrigger<SignalRExtensionMessage>(triggerBindingProvider);
+            rule.AddConverter<string, SignalRExtensionMessage>(str => JsonConvert.DeserializeObject<SignalRExtensionMessage>(str));
+            rule.AddConverter<SignalRExtensionMessage, string>(input => Encoding.UTF8.GetString(input.Body.Array));
+            rule.AddConverter<SignalRExtensionMessage, JObject>(JObject.FromObject);
 
             _logger.LogInformation("SignalRService binding initialized");
         }

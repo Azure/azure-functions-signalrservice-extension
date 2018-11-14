@@ -80,7 +80,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void Dispose()
         {
-
         }
 
         public IEventProcessor CreateEventProcessor(PartitionContext context)
@@ -101,7 +100,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             private readonly CancellationTokenSource _cts = new CancellationTokenSource();
             private readonly SignalROptions _options;
             private readonly ILogger _logger;
-            private bool _disposed = false;
+            private bool _disposed;
             private ICheckpointer _checkpointer;
             private readonly SignalRTriggerListenerDispatcher _dispatcher;
 

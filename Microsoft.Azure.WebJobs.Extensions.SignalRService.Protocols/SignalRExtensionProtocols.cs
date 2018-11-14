@@ -33,25 +33,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
                     message = null;
                     return false;
             }
-            
         }
 
-        public EventData WriteMessage()
+        public EventData BuildMessage(int messageType, string hub, string connectionId, object body)
         {
-            JObject o = JObject.FromObject(new
-            {
-                Target = "TestMethod",
-                Arguments = new[]
-                {
-                    "Args1",
-                    "Args2"
-                }
-            });
+            JObject o = JObject.FromObject(body);
             
             var date = new EventData(Encoding.UTF8.GetBytes(o.ToString()));
-            date.Properties.Add(SignalRExtensionProtocolConstants.ConnectionId, "ConnectionID");
-            date.Properties.Add(SignalRExtensionProtocolConstants.MessageType, SignalRExtensionProtocolConstants.InvocationType);
-            date.Properties.Add(SignalRExtensionProtocolConstants.Hub, "Hub");
+            date.Properties.Add(SignalRExtensionProtocolConstants.ConnectionId, connectionId);
+            date.Properties.Add(SignalRExtensionProtocolConstants.MessageType, messageType);
+            date.Properties.Add(SignalRExtensionProtocolConstants.Hub, hub);
 
             return date;
         }
