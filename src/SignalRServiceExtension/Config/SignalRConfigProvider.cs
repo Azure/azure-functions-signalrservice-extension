@@ -19,10 +19,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -73,7 +69,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
-            signalRAttributeRule.BindToCollector<SignalRMessage>(CreateCollector);
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
 
             // Register trigger binding provider
             var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _options,_logger);
@@ -84,9 +80,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.FromObject(input.Body));
 
             _logger.LogInformation("SignalRService binding initialized");
-            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
-            
-            logger.LogInformation("SignalRService binding initialized");
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -114,14 +107,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
 
-        private IAsyncCollector<SignalRMessage> CreateCollector(SignalRAttribute attribute)
-        {
-            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, _options.ConnectionString);
-            var hubName = FirstOrDefault(attribute.HubName, _options.HubName);
-            var client = new AzureSignalRClient(connectionString, HttpClient);
-            return new SignalRMessageAsyncCollector(client, hubName);
-        }
-
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
             var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, HttpClient);
@@ -136,9 +121,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal AzureSignalRClient GetClient(SignalRAttribute attribute)
         {
-            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
-            var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new AzureSignalRClient(connectionString, httpClient);
+            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, _options.ConnectionString);
+            var hubName = FirstOrDefault(attribute.HubName, _options.HubName);
+            return new AzureSignalRClient(connectionString, HttpClient);
         }
 
         private class SignalROpenType : OpenType.Poco
