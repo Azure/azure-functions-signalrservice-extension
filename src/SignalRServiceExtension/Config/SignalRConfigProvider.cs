@@ -19,6 +19,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -57,9 +61,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 _options.ConnectionString = _nameResolver.Resolve(AzureSignalRConnectionStringName);
             }
 
-            context.AddConverter<string, JObject>(JObject.FromObject);
-            context.AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>());
-            context.AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject);
+            context.AddConverter<string, JObject>(JObject.FromObject)
+                   .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
+                   .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
+                   .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
             // Register binding provider
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
@@ -79,6 +84,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.FromObject(input.Body));
 
             _logger.LogInformation("SignalRService binding initialized");
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
+            
+            logger.LogInformation("SignalRService binding initialized");
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -124,6 +132,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private string FirstOrDefault(params string[] values)
         {
             return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
+        }
+
+        internal AzureSignalRClient GetClient(SignalRAttribute attribute)
+        {
+            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
+            var hubName = FirstOrDefault(attribute.HubName, options.HubName);
+            return new AzureSignalRClient(connectionString, httpClient);
+        }
+
+        private class SignalROpenType : OpenType.Poco
+        {
+            public override bool IsMatch(Type type, OpenTypeMatchContext context)
+            {
+                if (type.IsGenericType
+                    && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return false;
+                }
+
+                if (type.FullName == "System.Object")
+                {
+                    return true;
+                }
+
+                return base.IsMatch(type, context);
+            }
         }
     }
 }
