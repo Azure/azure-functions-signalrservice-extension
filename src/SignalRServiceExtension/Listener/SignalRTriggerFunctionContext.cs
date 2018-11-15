@@ -6,7 +6,7 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class SignalRTriggerFunctionData
+    public class SignalRTriggerFunctionContext
     {
         public ListenerFactoryContext Context { get; set; }
 
@@ -14,12 +14,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public string Target { get; set; }
 
-        public SignalRTriggerFunctionData(ListenerFactoryContext context)
+        public SignalRTriggerFunctionContext(ListenerFactoryContext context)
         {
             Context = context;
         }
 
-        public static Func<SignalRTriggerFunctionData, SignalRExtensionMessage, bool> Filter = (data, message) =>
+        public static Func<SignalRTriggerFunctionContext, SignalRExtensionMessage, bool> Filter = (data, message) =>
         {
             bool isMarch = true;
             if (!string.IsNullOrWhiteSpace(data.Hub))
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (!string.IsNullOrWhiteSpace(data.Target) &&
                 message.MessageType == SignalRExtensionProtocolConstants.InvocationType)
             {
-                isMarch = isMarch && data.Target == ((InvocationExtensionMessage) message).Target;
+                isMarch = isMarch && data.Target.Equals(((InvocationExtensionMessage) message).Target, StringComparison.OrdinalIgnoreCase);
             }
 
             return isMarch;

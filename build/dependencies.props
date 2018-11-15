@@ -5,12 +5,14 @@
   </PropertyGroup>
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
-    <MicrosoftAzureWebJobsPackageVersion>3.0.0-rc1</MicrosoftAzureWebJobsPackageVersion>
+    <MicrosoftAzureWebJobsPackageVersion>3.0.1</MicrosoftAzureWebJobsPackageVersion>
+    <MicrosoftAzureWebJobsExtensionEventHubsPackageVersion>3.0.1</MicrosoftAzureWebJobsExtensionEventHubsPackageVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
-    <SystemIdentityModelTokensJwtPackageVersion>5.1.4</SystemIdentityModelTokensJwtPackageVersion>
+    <SystemIdentityModelTokensJwtPackageVersion>5.3.0</SystemIdentityModelTokensJwtPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
+    <MicrosoftAzureEventHubsProcessorPackageVersion>2.2.1</MicrosoftAzureEventHubsProcessorPackageVersion>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>

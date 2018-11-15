@@ -33,56 +33,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             EventProcessorOptions = EventProcessorOptions.DefaultOptions;
         }
 
-        /// <summary>
-        /// Add a connection for listening on events from an event hub. Connect via the connection string and use the supplied storage account
-        /// </summary>
-        /// <param name="eventHubName">name of the event hub</param>
-        /// <param name="receiverConnectionString">connection string for receiving messages</param>
-        /// <param name="storageConnectionString">storage connection string that the EventProcessorHost client will use to coordinate multiple listener instances. </param>
-        public void AddReceiver(string eventHubName, string receiverConnectionString, string storageConnectionString)
-        {
-            if (eventHubName == null)
-            {
-                throw new ArgumentNullException("eventHubName");
-            }
-            if (receiverConnectionString == null)
-            {
-                throw new ArgumentNullException("receiverConnectionString");
-            }
-            if (storageConnectionString == null)
-            {
-                throw new ArgumentNullException("storageConnectionString");
-            }
-
-            this._receiverCreds[eventHubName] = new ReceiverCreds
-            {
-                EventHubConnectionString = receiverConnectionString,
-                StorageConnectionString = storageConnectionString
-            };
-        }
-
-        /// <summary>
-        /// Add a connection for listening on events from an event hub. Connect via the connection string and use the SDK's built-in storage account.
-        /// </summary>
-        /// <param name="eventHubName">name of the event hub</param>
-        /// <param name="receiverConnectionString">connection string for receiving messages. This can encapsulate other service bus properties like the namespace and endpoints.</param>
-        public void AddReceiver(string eventHubName, string receiverConnectionString)
-        {
-            if (eventHubName == null)
-            {
-                throw new ArgumentNullException("eventHubName");
-            }
-            if (receiverConnectionString == null)
-            {
-                throw new ArgumentNullException("receiverConnectionString");
-            }
-
-            this._receiverCreds[eventHubName] = new ReceiverCreds
-            {
-                EventHubConnectionString = receiverConnectionString
-            };
-        }
-
         // Lookup a listener for receiving events given the name provided in the [EventHubTrigger] attribute. 
         internal EventProcessorHost GetEventProcessorHost(IConfiguration config, string eventHubName, string receiverConnectionString, string consumerGroup)
         {

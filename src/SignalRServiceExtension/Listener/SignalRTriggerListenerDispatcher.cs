@@ -13,11 +13,11 @@ using Microsoft.Extensions.Configuration.EnvironmentVariables;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // A app scoped singleton dispatcher to diliver EventData to correct functions
+    // A app scoped singleton dispatcher to deliver EventData to correct functions
     public class SignalRTriggerListenerDispatcher
     {
-        private readonly ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionData>> _arrtibuteDictionary =
-            new ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionData>>();
+        private readonly ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionContext>> _arrtibuteDictionary =
+            new ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionContext>>();
 
         private readonly ISignalRExtensionProtocols _protocols;
 
@@ -28,14 +28,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void RegisterFunction(string functionId, Type attributeType, string hubName, ListenerFactoryContext context, string target = null)
         {
-            _arrtibuteDictionary.AddOrUpdate(attributeType, type => new HashSet<SignalRTriggerFunctionData> {new SignalRTriggerFunctionData(context)
+            _arrtibuteDictionary.AddOrUpdate(attributeType, type => new HashSet<SignalRTriggerFunctionContext> {new SignalRTriggerFunctionContext(context)
             {
                 Hub = hubName,
                 Target = target
-
             }}, (type, set) =>
             {
-                set.Add(new SignalRTriggerFunctionData(context)
+                set.Add(new SignalRTriggerFunctionContext(context)
                 {
                     Hub = hubName,
                     Target = target
@@ -46,7 +45,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task DispatchListener(EventData input, CancellationTokenSource cts)
         {
-            HashSet<SignalRTriggerFunctionData> relatedFunctionsByType = null;
+            HashSet<SignalRTriggerFunctionContext> relatedFunctionsByType = null;
 
             if (!_protocols.TryParseMessage(input, out var message))
             {
@@ -74,7 +73,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return;
             }
 
-            var relatedFunctions = relatedFunctionsByType.Where(data => SignalRTriggerFunctionData.Filter(data, message));
+            var relatedFunctions = relatedFunctionsByType.Where(data => SignalRTriggerFunctionContext.Filter(data, message));
 
             foreach (var functionData in relatedFunctions)
             {

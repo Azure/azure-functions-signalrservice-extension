@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalROptions _options;
         private readonly ILogger _logger;
         private bool _started;
-        private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
+        private readonly SemaphoreSlim _listenerLock = new SemaphoreSlim(1);
         private readonly SignalRTriggerListenerDispatcher _dispatcher;
 
         public SignalRTriggerSingletonListener(EventProcessorHost eventProcessorHost, SignalRTriggerListenerDispatcher dispatcher, SignalROptions options, ILogger logger)
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_started)
             {
-                await _semaphoreSlim.WaitAsync();
+                await _listenerLock.WaitAsync();
                 try
                 {
                     if (!_started)
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }
                 finally
                 {
-                    _semaphoreSlim.Release();
+                    _listenerLock.Release();
                 }
             }
         }
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (_started)
             {
-                await _semaphoreSlim.WaitAsync();
+                await _listenerLock.WaitAsync();
                 try
                 {
                     if (_started)
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }
                 finally
                 {
-                    _semaphoreSlim.Release();
+                    _listenerLock.Release();
                 }
             }
         }
@@ -133,9 +133,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             public async Task ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
             {
+                // Checkpoint if we have any events.
+                // Don't checkpoint if no events. This can reset the sequence counter to 0.
                 if (messages.Any())
                 {
-                    // We set checkpoint at first, so the process can garantee each message to be consumed at most once
+                    // We set checkpoint at first. This can guarantee each message to be consumed at most once
                     await _checkpointer.CheckpointAsync(context);
                 }
 
