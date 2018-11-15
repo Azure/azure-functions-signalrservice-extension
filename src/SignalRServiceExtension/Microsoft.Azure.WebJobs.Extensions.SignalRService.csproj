@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols.csproj" />
   </ItemGroup>
 
 </Project>

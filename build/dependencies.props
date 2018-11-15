@@ -13,6 +13,8 @@
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
     <MicrosoftAzureEventHubsProcessorPackageVersion>2.2.1</MicrosoftAzureEventHubsProcessorPackageVersion>
+    <MicrosoftExtensionsLoggingPackageVersion>2.1.1</MicrosoftExtensionsLoggingPackageVersion>
+    <MicrosoftNETSdkFunctionsPackageVersion>1.0.23</MicrosoftNETSdkFunctionsPackageVersion>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>
