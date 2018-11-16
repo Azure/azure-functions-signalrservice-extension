@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -182,6 +184,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Headers.AcceptCharset.Clear();
             request.Headers.AcceptCharset.Add(new StringWithQualityHeaderValue("UTF-8"));
+            request.Headers.Add("Asrs-User-Agent", GetProductInfo());
 
             if (body != null)
             {
@@ -189,6 +192,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 request.Content = new StringContent(content, Encoding.UTF8, "application/json");
             }
             return httpClient.SendAsync(request);
+        }
+
+        private static string GetProductInfo()
+        {
+            var assembly = typeof(AzureSignalRClient).GetTypeInfo().Assembly;
+            var packageId = assembly.GetName().Name;
+            var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            var runtime = RuntimeInformation.FrameworkDescription?.Trim();
+            var operatingSystem = RuntimeInformation.OSDescription?.Trim();
+            var processorArchitecture = RuntimeInformation.ProcessArchitecture.ToString().Trim();
+
+            return $"{packageId}/{version} ({runtime}; {operatingSystem}; {processorArchitecture})";
         }
     }
 }
