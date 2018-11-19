@@ -66,7 +66,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             IListener listener =
-                SignalRTriggerSingletonListenerFactory.Instance.CreateListener(_host, context, _attributeType, _hubName, _options,
+                SignalRTriggerSharedListenerFactory.Instance.CreateListener(_host, context, _attributeType, _hubName, _options,
                     _logger, _target);
             return Task.FromResult(listener);
         }

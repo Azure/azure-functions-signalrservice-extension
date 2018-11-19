@@ -13,17 +13,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // A host scoped singleton listener
-    public class SignalRTriggerSingletonListener : IListener, IEventProcessorFactory
+    // A host scoped shared listener
+    public class SignalRTriggerSharedListener : IListener, IEventProcessorFactory
     {
         private readonly EventProcessorHost _eventProcessorHost;
         private readonly SignalROptions _options;
         private readonly ILogger _logger;
         private bool _started;
         private readonly SemaphoreSlim _listenerLock = new SemaphoreSlim(1);
-        private readonly SignalRTriggerListenerDispatcher _dispatcher;
+        private readonly ISignalRTriggerListenerDispatcher _dispatcher;
 
-        public SignalRTriggerSingletonListener(EventProcessorHost eventProcessorHost, SignalRTriggerListenerDispatcher dispatcher, SignalROptions options, ILogger logger)
+        public SignalRTriggerSharedListener(EventProcessorHost eventProcessorHost, ISignalRTriggerListenerDispatcher dispatcher, SignalROptions options, ILogger logger)
         {
             _eventProcessorHost = eventProcessorHost;
             _options = options;
@@ -102,9 +102,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             private readonly ILogger _logger;
             private bool _disposed;
             private ICheckpointer _checkpointer;
-            private readonly SignalRTriggerListenerDispatcher _dispatcher;
+            private readonly ISignalRTriggerListenerDispatcher _dispatcher;
 
-            public EventProcessor(SignalROptions options, ILogger logger, SignalRTriggerListenerDispatcher dispatcher, ICheckpointer checkpointer = null)
+            public EventProcessor(SignalROptions options, ILogger logger, ISignalRTriggerListenerDispatcher dispatcher, ICheckpointer checkpointer = null)
             {
                 _options = options;
                 _logger = logger;
@@ -148,7 +148,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         break;
                     }
 
-                    await _dispatcher.DispatchListener(message, _cts);
+                    await _dispatcher.DispatchListener(message, _cts.Token);
 
                     // Dispose message to help with memory pressure. If this is missed, the finalizer thread will still get them.
                     message.Dispose();

@@ -14,7 +14,7 @@ using Microsoft.Extensions.Configuration.EnvironmentVariables;
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     // A app scoped singleton dispatcher to deliver EventData to correct functions
-    public class SignalRTriggerListenerDispatcher
+    public class SignalRTriggerListenerDispatcher : ISignalRTriggerListenerDispatcher
     {
         private readonly ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionContext>> _arrtibuteDictionary =
             new ConcurrentDictionary<Type, HashSet<SignalRTriggerFunctionContext>>();
@@ -43,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             });
         }
 
-        public async Task DispatchListener(EventData input, CancellationTokenSource cts)
+        public async Task DispatchListener(EventData input, CancellationToken token)
         {
             HashSet<SignalRTriggerFunctionContext> relatedFunctionsByType = null;
 
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     {
                         TriggerValue = message
                     };
-                    await context.Executor.TryExecuteAsync(triggeredInput, cts.Token);
+                    await context.Executor.TryExecuteAsync(triggeredInput, token);
                 }
             }
         }

@@ -20,13 +20,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public EventProcessorOptions EventProcessorOptions { get; }
 
-        private readonly Dictionary<string, ReceiverCreds> _receiverCreds = new Dictionary<string, ReceiverCreds>(StringComparer.OrdinalIgnoreCase);
-
         public const string LeaseContainerName = "azure-webjobs-signalr";
 
-        // Use a tuple to identify a host: (EventHub, ConnectionString, ConsumerGroup)
+        // Use a tuple to identify a host: (path, ConnectionString, ConsumerGroup)
         // As SignalROption is singleton, _hosts is singleton across the function app.
-        private readonly ConcurrentDictionary<(string, string, string), EventProcessorHost> _hosts = new ConcurrentDictionary<(string, string, string), EventProcessorHost>();
+        private readonly ConcurrentDictionary<(string path, string connectionString, string consumerGroup), EventProcessorHost> _hosts = new ConcurrentDictionary<(string, string, string), EventProcessorHost>();
 
         public SignalROptions()
         {
@@ -151,15 +149,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return string.Format(CultureInfo.InvariantCulture, "::{0:X4}", ordinalValue);
             }
-        }
-
-        private class ReceiverCreds
-        {
-            // Required.  
-            public string EventHubConnectionString { get; set; }
-
-            // Optional. If not found, use the stroage from JobHostConfiguration
-            public string StorageConnectionString { get; set; }
         }
     }
 }
