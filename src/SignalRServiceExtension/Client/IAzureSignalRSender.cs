@@ -10,5 +10,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         Task SendToAll(string hubName, SignalRData data);
         Task SendToUser(string hubName, string userId, SignalRData data);
+        Task SendToGroup(string hubName, string group, SignalRData data);
+        Task AddUserToGroup(string hubName, string userId, string groupName);
+        Task RemoveUserFromGroup(string hubName, string userId, string groupName);
     }
 }

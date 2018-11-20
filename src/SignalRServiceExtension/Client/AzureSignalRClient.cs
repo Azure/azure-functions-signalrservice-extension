@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -21,16 +23,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal string BaseEndpoint { get; }
         internal string AccessKey { get; }
+        internal string Version { get; set; }
 
         internal AzureSignalRClient(string connectionString, HttpClient httpClient)
         {
-            (BaseEndpoint, AccessKey) = ParseConnectionString(connectionString);
+            (BaseEndpoint, AccessKey, Version) = ParseConnectionString(connectionString);
             this.httpClient = httpClient;
         }
 
         internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, IEnumerable<Claim> claims = null)
         {
-            var hubUrl = $"{BaseEndpoint}:5001/client/?hub={hubName}";
+            var hubUrl = string.IsNullOrEmpty(Version) ? $"{BaseEndpoint}:5001/client/?hub={hubName}" : $"{BaseEndpoint}/client/?hub={hubName}";
             var identity = new ClaimsIdentity(claims);
             var token = GenerateJwtBearer(null, hubUrl, identity, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
@@ -42,12 +45,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal SignalRConnectionInfo GetServerConnectionInfo(string hubName, string additionalPath = "")
         {
-            var hubUrl = $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}";
+            var hubUrl = string.IsNullOrEmpty(Version) ? $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}" : $"{BaseEndpoint}/api/v1/hubs/{hubName}";
             var audienceUrl = $"{hubUrl}{additionalPath}";
             var token = GenerateJwtBearer(null, audienceUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
             {
-                Url = hubUrl,
+                Url = audienceUrl,
                 AccessToken = token
             };
         }
@@ -55,7 +58,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public Task SendToAll(string hubName, SignalRData data)
         {
             var connectionInfo = GetServerConnectionInfo(hubName);
-            return PostJsonAsync(connectionInfo.Url, data, connectionInfo.AccessToken);
+            return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
         public Task SendToUser(string hubName, string userId, SignalRData data)
@@ -65,13 +68,64 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
 
-            var userIdsSegment = $"/user/{userId}";
+            var userIdsSegment = string.IsNullOrEmpty(Version) ? $"/user/{userId}" : $"/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
-            var uri = $"{connectionInfo.Url}{userIdsSegment}";
-            return PostJsonAsync(uri, data, connectionInfo.AccessToken);
+            return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
-        private (string EndPoint, string AccessKey) ParseConnectionString(string connectionString)
+        public Task SendToGroup(string hubName, string groupName, SignalRData data)
+        {
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+
+            var groupSegment = string.IsNullOrEmpty(Version) ? $"/group/{groupName}" : $"/groups/{groupName}";
+            var connectionInfo = GetServerConnectionInfo(hubName, groupSegment);
+            return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
+        }
+
+        public Task AddUserToGroup(string hubName, string userId, string groupName)
+        {
+            if (string.IsNullOrEmpty(Version))
+            {
+                throw new ArgumentException($"API AddUserToGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
+            }
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
+            }
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+
+            var userGroupSegment = $"/groups/{groupName}/users/{userId}";
+            var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
+            return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Put);
+        }
+
+        public Task RemoveUserFromGroup(string hubName, string userId, string groupName)
+        {
+            if (string.IsNullOrEmpty(Version))
+            {
+                throw new ArgumentException($"API RemoveUserFromGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
+            }
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
+            }
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+
+            var userGroupSegment = $"/groups/{groupName}/users/{userId}";
+            var connectionInfo = GetServerConnectionInfo(hubName, userGroupSegment);
+            return RequestAsync(connectionInfo.Url, null, connectionInfo.AccessToken, HttpMethod.Delete);
+        }
+
+        private static (string EndPoint, string AccessKey, string Version) ParseConnectionString(string connectionString)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -88,8 +142,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException("No access key present in SignalR Service connection string");
             }
+            var versionKeyMatch = Regex.Match(connectionString, @"Version=([^;]+)", RegexOptions.IgnoreCase);
 
-            return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value);
+            Version version;
+            if (versionKeyMatch.Success && !System.Version.TryParse(versionKeyMatch.Groups[1].Value, out version))
+            {
+                throw new ArgumentException("Invalid version format in SignalR Service connection string");
+            }
+
+            return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value, versionKeyMatch.Groups[1].Value);
         }
 
         private string GenerateJwtBearer(string issuer, string audience, ClaimsIdentity subject, DateTime? expires, string signingKey)
@@ -110,11 +171,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return jwtTokenHandler.WriteToken(token);
         }
 
-        private Task<HttpResponseMessage> PostJsonAsync(string url, object body, string bearer)
+        private Task<HttpResponseMessage> RequestAsync(string url, object body, string bearer, HttpMethod httpMethod)
         {
             var request = new HttpRequestMessage
             {
-                Method = HttpMethod.Post,
+                Method = httpMethod,
                 RequestUri = new Uri(url)
             };
 
@@ -123,10 +184,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Headers.AcceptCharset.Clear();
             request.Headers.AcceptCharset.Add(new StringWithQualityHeaderValue("UTF-8"));
+            request.Headers.Add("Asrs-User-Agent", GetProductInfo());
 
-            var content = JsonConvert.SerializeObject(body);
-            request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+            if (body != null)
+            {
+                var content = JsonConvert.SerializeObject(body);
+                request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+            }
             return httpClient.SendAsync(request);
+        }
+
+        private static string GetProductInfo()
+        {
+            var assembly = typeof(AzureSignalRClient).GetTypeInfo().Assembly;
+            var packageId = assembly.GetName().Name;
+            var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+            var runtime = RuntimeInformation.FrameworkDescription?.Trim();
+            var operatingSystem = RuntimeInformation.OSDescription?.Trim();
+            var processorArchitecture = RuntimeInformation.ProcessArchitecture.ToString().Trim();
+
+            return $"{packageId}/{version} ({runtime}; {operatingSystem}; {processorArchitecture})";
         }
     }
 }
