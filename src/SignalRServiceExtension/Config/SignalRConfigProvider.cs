@@ -27,11 +27,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
 
-        public IConfiguration Config;
         private readonly SignalROptions _options;
         private readonly INameResolver _nameResolver;
         private static readonly HttpClient HttpClient = new HttpClient();
         private readonly ILogger _logger;
+
+        public IConfiguration Config { get; set; }
 
         public SignalRConfigProvider(
             IConfiguration config,
@@ -73,10 +74,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // Register trigger binding provider
             var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _options,_logger);
-            var rule = context.AddBindingRule<SignalRInvocationMessageTriggerAttribute>();
+            var rule = context.AddBindingRule<SignalRTriggerAttribute>();
             rule.BindToTrigger<SignalRExtensionMessage>(triggerBindingProvider);
             rule.AddConverter<string, SignalRExtensionMessage>(str => JsonConvert.DeserializeObject<SignalRExtensionMessage>(str));
-            rule.AddConverter<SignalRExtensionMessage, string>(input => Encoding.UTF8.GetString(input.Body.Array));
+            rule.AddConverter<SignalRExtensionMessage, string>(input => Encoding.UTF8.GetString(input.Body.ToArray()));
             rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.FromObject(input.Body));
 
             _logger.LogInformation("SignalRService binding initialized");

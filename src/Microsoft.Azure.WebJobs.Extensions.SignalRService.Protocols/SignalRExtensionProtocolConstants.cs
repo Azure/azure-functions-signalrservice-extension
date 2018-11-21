@@ -13,6 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
         public const string ConnectionId = "ConnectionId";
         public const string Hub = "Hub";
         public const string Target = "Target";
+        public const string ProtocolVersion = "ProtocolVersion";
 
         public const string MessageType = "MessageType";
     }

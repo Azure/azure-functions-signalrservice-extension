@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using Moq;
+using Newtonsoft.Json.Linq;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests.Listener
@@ -104,7 +105,8 @@ namespace SignalRServiceExtension.Tests.Listener
                     "Argument2"
                 }
             };
-            return _protocols.BuildMessage(messageType, hub, Guid.NewGuid().ToString(), obj);
+            var bytes = Encoding.UTF8.GetBytes(JObject.FromObject(obj).ToString());
+            return _protocols.BuildMessage(messageType, hub, Guid.NewGuid().ToString(), bytes);
         }
     }
 }

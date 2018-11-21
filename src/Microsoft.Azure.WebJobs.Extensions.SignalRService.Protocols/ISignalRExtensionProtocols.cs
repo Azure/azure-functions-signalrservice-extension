@@ -26,6 +26,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
         /// <param name="connectionId">The client connection id</param>
         /// <param name="body">The message body</param>
         /// <returns>A <see cref="EventData"/> to sent to Event Hub</returns>
-        EventData BuildMessage(int messageType, string hub, string connectionId, object body);
+        EventData BuildMessage(int messageType, string hub, string connectionId, byte[] body);
     }
 }

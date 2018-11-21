@@ -12,6 +12,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
 
         public bool TryParseMessage(EventData input, out SignalRExtensionMessage message)
         {
+            if (!input.Properties.TryGetValue(SignalRExtensionProtocolConstants.ProtocolVersion, out var protocolVersion) ||
+                (int)protocolVersion != Version)
+            {
+                message = null;
+                return false;
+            }
+
             if (!input.Properties.TryGetValue(SignalRExtensionProtocolConstants.MessageType, out var messageType))
             {
                 message = null;
@@ -35,16 +42,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
             }
         }
 
-        public EventData BuildMessage(int messageType, string hub, string connectionId, object body)
+        public EventData BuildMessage(int messageType, string hub, string connectionId, byte[] body)
         {
-            JObject o = JObject.FromObject(body);
-            
-            var date = new EventData(Encoding.UTF8.GetBytes(o.ToString()));
-            date.Properties.Add(SignalRExtensionProtocolConstants.ConnectionId, connectionId);
-            date.Properties.Add(SignalRExtensionProtocolConstants.MessageType, messageType);
-            date.Properties.Add(SignalRExtensionProtocolConstants.Hub, hub);
+            var data = new EventData(body);
+            data.Properties.Add(SignalRExtensionProtocolConstants.ConnectionId, connectionId);
+            data.Properties.Add(SignalRExtensionProtocolConstants.MessageType, messageType);
+            data.Properties.Add(SignalRExtensionProtocolConstants.Hub, hub);
+            data.Properties.Add(SignalRExtensionProtocolConstants.ProtocolVersion, Version);
 
-            return date;
+            return data;
         }
     }
 }

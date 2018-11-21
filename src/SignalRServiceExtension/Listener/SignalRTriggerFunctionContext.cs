@@ -24,13 +24,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             bool isMarch = true;
             if (!string.IsNullOrWhiteSpace(data.Hub))
             {
-                isMarch = data.Hub == message.Hub;
+                isMarch = data.Hub.Equals(message.Hub, StringComparison.OrdinalIgnoreCase);
             }
 
             if (!string.IsNullOrWhiteSpace(data.Target) &&
                 message.MessageType == SignalRExtensionProtocolConstants.InvocationType)
             {
-                isMarch = isMarch && data.Target.Equals(((InvocationExtensionMessage) message).Target, StringComparison.OrdinalIgnoreCase);
+                isMarch = isMarch && data.Target == ((InvocationExtensionMessage) message).Target;
             }
 
             return isMarch;

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols
     /// </summary>
     public abstract class SignalRExtensionMessage
     {
-        public SignalRExtensionMessage(EventData data)
+        protected SignalRExtensionMessage(EventData data)
         {
             data.Properties.TryGetValue(SignalRExtensionProtocolConstants.ConnectionId, out var connectionId);
             data.Properties.TryGetValue(SignalRExtensionProtocolConstants.Hub, out var hub);
