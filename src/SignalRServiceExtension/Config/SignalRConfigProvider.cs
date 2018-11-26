@@ -76,9 +76,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var triggerBindingProvider = new SignalRTriggerAttributeBindingProvider(Config, _nameResolver, _options,_logger);
             var rule = context.AddBindingRule<SignalRTriggerAttribute>();
             rule.BindToTrigger<SignalRExtensionMessage>(triggerBindingProvider);
-            rule.AddConverter<string, SignalRExtensionMessage>(str => JsonConvert.DeserializeObject<SignalRExtensionMessage>(str));
             rule.AddConverter<SignalRExtensionMessage, string>(input => Encoding.UTF8.GetString(input.Body.ToArray()));
-            rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.FromObject(input.Body));
+            rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.Parse(Encoding.UTF8.GetString(input.Body.ToArray())));
 
             _logger.LogInformation("SignalRService binding initialized");
         }
