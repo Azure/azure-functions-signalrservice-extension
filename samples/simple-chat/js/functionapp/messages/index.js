@@ -3,8 +3,8 @@
 
 module.exports = function (context, req) {
   context.bindings.signalRMessages = [{
-    "userId": req.query.recipient,
-    "groupName": req.query.groupname,
+    "userId": req.body.recipient,
+    "groupName": req.body.groupname,
     "target": "newMessage",
     "arguments": [ req.body ]
   }];

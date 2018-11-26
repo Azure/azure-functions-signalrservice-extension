@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -43,18 +44,19 @@ namespace FunctionApp
         [FunctionName("group")]
         public static Task Group(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var action = message.action.Equals("add", StringComparison.OrdinalIgnoreCase) ? GroupAction.Add : GroupAction.Remove;
 
 
-            return signalRMessages.AddAsync(
-                new SignalRMessage
+            return signalRGroupActions.AddAsync(
+                new SignalRGroupAction
                 {
                     UserId = message.recipient,
                     GroupName = message.groupname,
-                    Action = message.action
+                    Action = action
                 });
         }
 

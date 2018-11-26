@@ -17,7 +17,7 @@
     },
     {
       "type": "signalR",
-      "name": "signalRMessages",
+      "name": "signalRGroupActions",
       "hubName": "simplechat",
       "direction": "out"
     }

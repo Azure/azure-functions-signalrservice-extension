@@ -26,7 +26,7 @@
         <hr />
         <div id='groupchecked'>
           <input type="checkbox" id="checkbox" v-model="checked">
-          <label for="checkbox">{{ this.defaultgroup }}</label>
+          <label for="checkbox">Send To Default Group: {{ this.defaultgroup }}</label>
         </div>
         <form v-on:submit.prevent="sendNewMessage(checked)">
           <input type="text" v-model="newMessage" id="message-box" class="form-control" placeholder="Type message here..." />
@@ -75,13 +75,12 @@
   <script>
     const data = {
       username: '',
-      defaultgroup: 'SuperStar',
+      defaultgroup: 'AzureSignalR',
       checked: false,
       newMessage: '',
       messages: [],
       ready: false
     };
-
     const app = new Vue({
       el: '#app',
       data: data,
@@ -102,7 +101,7 @@
           }
         },
         addToGroup: function (recipient) {
-          var r = confirm('Remove user ' + recipient + ' from group: ' + this.defaultgroup);
+          var r = confirm('Add user ' + recipient + ' to group: ' + this.defaultgroup);
           if(r) {
             addGroup(this.username, recipient, this.defaultgroup);
           }
@@ -115,52 +114,41 @@
         }
       }
     });
-
     const apiBaseUrl = prompt('Enter the Azure Function app base URL', window.apiBaseUrl);
-
     data.username = prompt("Enter your username");
     if (!data.username) {
       alert("No username entered. Reload page and try again.");
       throw "No username entered";
     }
-
     getConnectionInfo().then(info => {
       // make compatible with old and new SignalRConnectionInfo
       info.accessToken = info.accessToken || info.accessKey;
       info.url = info.url || info.endpoint;
-
       data.ready = true;
       const options = {
         accessTokenFactory: () => info.accessToken
       };
-
       const connection = new signalR.HubConnectionBuilder()
         .withUrl(info.url, options)
         .configureLogging(signalR.LogLevel.Information)
         .build();
-
       connection.on('newMessage', newMessage);
       connection.onclose(() => console.log('disconnected'));
-
       console.log('connecting...');
       connection.start()
         .then(() => console.log('connected!'))
         .catch(console.error);
-
     }).catch(alert);
-
     function getAxiosConfig() {
       const config = {
         headers: {'x-ms-signalr-userid': data.username}
       };
       return config;
     }
-
     function getConnectionInfo() {
       return axios.post(`${apiBaseUrl}/api/negotiate`, null , getAxiosConfig())
         .then(resp => resp.data);
     }
-
     function sendMessage(sender, recipient, groupname, messageText) {
       return axios.post(`${apiBaseUrl}/api/messages`, {
         recipient: recipient,
@@ -170,25 +158,26 @@
         text: messageText
       }, getAxiosConfig()).then(resp => resp.data);
     }
-
     function addGroup(sender, recipient, groupName) {
       return axios.post(`${apiBaseUrl}/api/group`, {
         action: "add",
         recipient: recipient,
-        groupname: groupName,
-        sender: sender
-      }, getAxiosConfig()).then(resp => resp.data);
+        groupname: groupName
+      }, getAxiosConfig()).then(resp => {
+          if(resp.status == 200) {
+            confirm("Add Successfully")
+          }});
     }
-
     function removeGroup(sender, recipient, groupName) {
       return axios.post(`${apiBaseUrl}/api/group`, {
         action: "remove",
         recipient: recipient,
-        groupname: groupName,
-        sender: sender
-      }, getAxiosConfig()).then(resp => resp.data);
+        groupname: groupName
+      }, getAxiosConfig()).then(resp => {
+          if(resp.status == 200) {
+            confirm("Remove Successfully")
+          }});
     }
-
     let counter = 0;
     function newMessage(message) {
       message.id = counter++; // vue transitions need an id
