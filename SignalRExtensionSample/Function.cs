@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace SignalRExtensionSample
 {
@@ -36,6 +37,22 @@ namespace SignalRExtensionSample
             SignalRExtensionMessage message, string ConnectionId, ILogger logger)
         {
             logger.LogInformation($"SignalRHub1 receive message: {Encoding.UTF8.GetString(message.Body.Array)}");
+        }
+
+        [FunctionName("InvocationFunction3")]
+        public static void Invocation3([SignalRInvocationMessageTrigger("EventHub", Hub = "SignalRHub1", Target = "TestMethod", Connection = "ConnectionString")]
+            CustomerClass message, ILogger logger)
+        {
+            logger.LogInformation($"SignalRHub1 receive message: {message.ConnectionId}");
+        }
+
+        public class CustomerClass
+        {
+            [JsonProperty]
+            public string ConnectionId { get; set; }
+
+            [JsonProperty]
+            public string Target { get; set; }
         }
     }
 }

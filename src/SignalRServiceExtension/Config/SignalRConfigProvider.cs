@@ -78,6 +78,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             rule.BindToTrigger<SignalRExtensionMessage>(triggerBindingProvider);
             rule.AddConverter<SignalRExtensionMessage, string>(input => Encoding.UTF8.GetString(input.Body.ToArray()));
             rule.AddConverter<SignalRExtensionMessage, JObject>(input => JObject.Parse(Encoding.UTF8.GetString(input.Body.ToArray())));
+            rule.AddOpenConverter<SignalRExtensionMessage, OpenType>(typeof(TriggerOpenTypeConverter<>));
 
             _logger.LogInformation("SignalRService binding initialized");
         }
@@ -142,6 +143,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }
 
                 return base.IsMatch(type, context);
+            }
+        }
+
+        private class TriggerOpenTypeConverter<T> : IConverter<SignalRExtensionMessage, T>
+        {
+            public T Convert(SignalRExtensionMessage input)
+            {
+                return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(input.Body.ToArray()));
             }
         }
     }
