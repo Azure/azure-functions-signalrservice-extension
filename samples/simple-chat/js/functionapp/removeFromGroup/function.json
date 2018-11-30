@@ -5,7 +5,10 @@
       "authLevel": "anonymous",
       "type": "httpTrigger",
       "direction": "in",
-      "name": "req"
+      "name": "req",
+      "methods": [
+        "post"
+      ]
     },
     {
       "type": "http",
@@ -13,11 +16,10 @@
       "name": "res"
     },
     {
-      "type": "signalRConnectionInfo",
-      "name": "connectionInfo",
-      "userId": "{headers.x-ms-signalr-userid}",
+      "type": "signalR",
+      "name": "signalRGroupActions",
       "hubName": "simplechat",
-      "direction": "in"
+      "direction": "out"
     }
   ]
 }
