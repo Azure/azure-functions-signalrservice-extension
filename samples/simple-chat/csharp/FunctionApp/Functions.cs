@@ -41,14 +41,13 @@ namespace FunctionApp
                 });
         }
 
-        [FunctionName("group")]
-        public static Task Group(
+        [FunctionName("addToGroup")]
+        public static Task AddToGroup(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var action = message.action.Equals("add", StringComparison.OrdinalIgnoreCase) ? GroupAction.Add : GroupAction.Remove;
 
 
             return signalRGroupActions.AddAsync(
@@ -56,7 +55,25 @@ namespace FunctionApp
                 {
                     UserId = message.recipient,
                     GroupName = message.groupname,
-                    Action = action
+                    Action = GroupAction.Add
+                });
+        }
+
+        [FunctionName("removeFromGroup")]
+        public static Task RemoveFromGroup(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+        {
+
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+
+
+            return signalRGroupActions.AddAsync(
+                new SignalRGroupAction
+                {
+                    UserId = message.recipient,
+                    GroupName = message.groupname,
+                    Action = GroupAction.Remove
                 });
         }
 
@@ -65,7 +82,6 @@ namespace FunctionApp
             public string sender { get; set; }
             public string text { get; set; }
             public string groupname { get; set; }
-            public string action { get; set; }
             public string recipient { get; set; }
             public bool isPrivate { get; set; }
         }

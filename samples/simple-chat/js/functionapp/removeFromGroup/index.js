@@ -5,7 +5,7 @@ module.exports = function (context, req) {
   context.bindings.signalRGroupActions = [{
     "userId": req.body.recipient,
     "groupName": req.body.groupname,
-    "action": req.body.action
+    "action": "remove"
   }];
   context.done();
 };

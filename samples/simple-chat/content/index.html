@@ -159,8 +159,7 @@
       }, getAxiosConfig()).then(resp => resp.data);
     }
     function addGroup(sender, recipient, groupName) {
-      return axios.post(`${apiBaseUrl}/api/group`, {
-        action: "add",
+      return axios.post(`${apiBaseUrl}/api/addToGroup`, {
         recipient: recipient,
         groupname: groupName
       }, getAxiosConfig()).then(resp => {
@@ -169,8 +168,7 @@
           }});
     }
     function removeGroup(sender, recipient, groupName) {
-      return axios.post(`${apiBaseUrl}/api/group`, {
-        action: "remove",
+      return axios.post(`${apiBaseUrl}/api/removeFromGroup`, {
         recipient: recipient,
         groupname: groupName
       }, getAxiosConfig()).then(resp => {
