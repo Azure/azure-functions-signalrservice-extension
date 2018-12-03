@@ -7,7 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace SignalRExtensionSample
+namespace FunctionApp
 {
     public static class Function
     {

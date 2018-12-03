@@ -22,9 +22,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.props = version.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRExtensionSample", "SignalRExtensionSample\SignalRExtensionSample.csproj", "{12F9AF2B-C256-4FB4-A7C0-674A4AF23176}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionApp", "samples\trigger-with-eventhub\FunctionApp.csproj", "{12F9AF2B-C256-4FB4-A7C0-674A4AF23176}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols", "src\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols.csproj", "{2695AD91-DF1D-4DF1-9D70-186CB928DD1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols", "src\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols\Microsoft.Azure.WebJobs.Extensions.SignalRService.Protocols.csproj", "{2695AD91-DF1D-4DF1-9D70-186CB928DD1A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +91,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{27EBF417-718B-40A2-808B-EF6538AEEDC7} = {7005F387-A2ED-42B0-8CE1-41639A6D1E51}
 		{CFFE1AEB-0D5A-458E-AA45-8F312B1F37F3} = {D6082274-DF4A-455D-9EF3-090C74BC96A1}
+		{2695AD91-DF1D-4DF1-9D70-186CB928DD1A} = {7005F387-A2ED-42B0-8CE1-41639A6D1E51}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {227AD9AE-1447-4D8C-A014-50ABEC8E005C}
