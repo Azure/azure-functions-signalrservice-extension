@@ -33,7 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, IEnumerable<Claim> claims = null)
         {
-            var hubUrl = string.IsNullOrEmpty(Version) ? $"{BaseEndpoint}:5001/client/?hub={hubName}" : $"{BaseEndpoint}/client/?hub={hubName}";
+            var hubUrl = $"{BaseEndpoint}/client/?hub={hubName}";
             var identity = new ClaimsIdentity(claims);
             var token = GenerateJwtBearer(null, hubUrl, identity, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
@@ -45,7 +45,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal SignalRConnectionInfo GetServerConnectionInfo(string hubName, string additionalPath = "")
         {
-            var hubUrl = string.IsNullOrEmpty(Version) ? $"{BaseEndpoint}:5002/api/v1-preview/hub/{hubName}" : $"{BaseEndpoint}/api/v1/hubs/{hubName}";
+            var hubUrl = $"{BaseEndpoint}/api/v1/hubs/{hubName}";
             var audienceUrl = $"{hubUrl}{additionalPath}";
             var token = GenerateJwtBearer(null, audienceUrl, null, DateTime.UtcNow.AddMinutes(30), AccessKey);
             return new SignalRConnectionInfo
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
 
-            var userIdsSegment = string.IsNullOrEmpty(Version) ? $"/user/{userId}" : $"/users/{userId}";
+            var userIdsSegment = $"/users/{userId}";
             var connectionInfo = GetServerConnectionInfo(hubName, userIdsSegment);
             return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
@@ -80,17 +80,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
 
-            var groupSegment = string.IsNullOrEmpty(Version) ? $"/group/{groupName}" : $"/groups/{groupName}";
+            var groupSegment = $"/groups/{groupName}";
             var connectionInfo = GetServerConnectionInfo(hubName, groupSegment);
             return RequestAsync(connectionInfo.Url, data, connectionInfo.AccessToken, HttpMethod.Post);
         }
 
         public Task AddUserToGroup(string hubName, string userId, string groupName)
         {
-            if (string.IsNullOrEmpty(Version))
-            {
-                throw new ArgumentException($"API AddUserToGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
-            }
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
@@ -107,10 +103,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task RemoveUserFromGroup(string hubName, string userId, string groupName)
         {
-            if (string.IsNullOrEmpty(Version))
-            {
-                throw new ArgumentException($"API RemoveUserFromGroup is supported after Version = 1.0, check SignalR connection string to verify Version information");
-            }
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
