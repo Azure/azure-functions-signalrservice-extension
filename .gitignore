@@ -348,3 +348,11 @@ ASALocalRun/
 
 # Java output
 */target/*
+
+# Java IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.checkstyle
