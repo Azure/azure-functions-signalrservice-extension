@@ -1,0 +1,20 @@
+{
+  "scriptFile" : "..\\azure-functions-java-signalrtests-1.0-SNAPSHOT.jar",
+  "entryPoint" : "com.microsoft.azure.functions.signalrtests.Functions.negotiate",
+  "bindings" : [ {
+    "type" : "httpTrigger",
+    "direction" : "in",
+    "name" : "req",
+    "methods" : [ "POST", "GET" ],
+    "authLevel" : "ANONYMOUS"
+  }, {
+    "type" : "SignalRConnectionInfoInput",
+    "direction" : "in",
+    "name" : "",
+    "hubName" : "simplechat"
+  }, {
+    "type" : "http",
+    "direction" : "out",
+    "name" : "$return"
+  } ]
+}

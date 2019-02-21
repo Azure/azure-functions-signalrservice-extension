@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "AzureSignalRConnectionString": "Endpoint=https://jixineastus.service.signalr.net;AccessKey=G7QsXBiciST5wVmU3J4MGze0P5+pQDIMWDRwegl9q4g=;Version=1.0;",
+    "FUNCTIONS_WORKER_RUNTIME": "java"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*",
+    "CORSCredentials": true
+  }
+}
