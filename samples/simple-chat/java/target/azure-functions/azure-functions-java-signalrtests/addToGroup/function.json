@@ -1,6 +1,6 @@
 {
   "scriptFile" : "..\\azure-functions-java-signalrtests-1.0-SNAPSHOT.jar",
-  "entryPoint" : "com.functions.Functions.sendMessage",
+  "entryPoint" : "com.functions.Functions.addToGroup",
   "bindings" : [ {
     "type" : "httpTrigger",
     "direction" : "in",
@@ -10,7 +10,7 @@
   }, {
     "type" : "SignalR",
     "direction" : "out",
-    "name" : "sendMessages",
+    "name" : "addToGroup",
     "hubName" : "simplechat"
   } ]
 }

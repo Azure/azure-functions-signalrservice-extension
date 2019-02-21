@@ -1,6 +1,6 @@
 {
   "scriptFile" : "..\\azure-functions-java-signalrtests-1.0-SNAPSHOT.jar",
-  "entryPoint" : "com.microsoft.azure.functions.signalrtests.Functions.negotiate",
+  "entryPoint" : "com.functions.Functions.negotiate",
   "bindings" : [ {
     "type" : "httpTrigger",
     "direction" : "in",
@@ -8,10 +8,11 @@
     "methods" : [ "POST", "GET" ],
     "authLevel" : "ANONYMOUS"
   }, {
-    "type" : "SignalRConnectionInfoInput",
+    "type" : "SignalRConnectionInfo",
     "direction" : "in",
-    "name" : "",
-    "hubName" : "simplechat"
+    "name" : "connectionInfo",
+    "hubName" : "simplechat",
+    "userId" : "{headers.x-ms-signalr-userid}"
   }, {
     "type" : "http",
     "direction" : "out",
