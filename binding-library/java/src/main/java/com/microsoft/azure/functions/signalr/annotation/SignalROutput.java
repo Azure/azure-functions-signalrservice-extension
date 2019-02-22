@@ -19,15 +19,21 @@ import com.microsoft.azure.functions.annotation.CustomBinding;
 @Retention(RetentionPolicy.RUNTIME)
 @CustomBinding(direction = "out", name = "signalRMessage", type = "SignalR")
 public @interface SignalROutput {
-   /**
+    /**
      * The variable name used in function.json.
      * @return The variable name used in function.json.
      */
-   String name() default "";
+    String name() default "";
 
-   /**
+    /**
+     * Defines the app setting name that contains the Azure SignalR Service connection string.
+     * @return The app setting name of the connection string.
+     */
+    String connectionStringSetting() default "";
+
+    /**
      * Defines the name of the hub in Azure SignalR Service to which to connect.
      * @return The hub name.
      */
-   String hubName();
+    String hubName();
 }

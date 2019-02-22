@@ -25,19 +25,25 @@ import com.microsoft.azure.functions.annotation.CustomBinding;
 @CustomBinding(direction = "in", name = "connectionInfo", type = "SignalRConnectionInfo")
 public @interface SignalRConnectionInfoInput {
 
-   /**
-    * The variable name used in function.json.
-    * @return The variable name used in function.json.
-    */
-   String name() default "";
+    /**
+     * The variable name used in function.json.
+     * @return The variable name used in function.json.
+     */
+    String name() default "";
 
-   /**
-    * Defines the name of the hub in Azure SignalR Service to which to connect.
-    * @return The hub name.
-    */
-   String hubName();
+    /**
+     * Defines the app setting name that contains the Azure SignalR Service connection string.
+     * @return The app setting name of the connection string.
+     */
+    String connectionStringSetting() default "";
 
-   /**
+    /**
+     * Defines the name of the hub in Azure SignalR Service to which to connect.
+     * @return The hub name.
+     */
+    String hubName();
+ 
+    /**
      * Defines the user ID to associate with the connection. Typically uses a 
      * binding expression such as {x-ms-client-principal-name} (the principal name 
      * from App Service Authentication).

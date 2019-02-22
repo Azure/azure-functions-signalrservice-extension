@@ -1,3 +1,43 @@
+# SignalR Service Library for Azure Java Functions
+This repo contains SignalR serivce library for building Azure Java Functions. Visit the [complete documentation of Azure Functions - Java Developer Guide](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java) for more details.
+
+## azure-functions-maven plugin
+[How to use azure-functions-maven plugin to create, update, deploy and test azure java functions](https://docs.microsoft.com/en-us/java/api/overview/azure/maven/azure-functions-maven-plugin/readme?view=azure-java-stable)
+
+## Prerequisites
+
+* Java 8
+* [Azure Function Core Tools](https://github.com/Azure/azure-functions-core-tools) (V2)
+* Maven 3.0 or above
+* [Azure Function Maven Plugin](https://github.com/Microsoft/azure-maven-plugins/) (1.3.0-SNAPSHOT or above)
+
+### Sample
+
+Here is an example of a HttpTrigger Azure function using SignalR service in Java:
+
+```java
+package com.example;
+
+import com.microsoft.azure.functions.*;
+import com.microsoft.azure.functions.annotation.*;
+import com.microsoft.azure.functions.signalr.*;
+import com.microsoft.azure.functions.signalr.annotation.*;
+
+public class Functions {
+    @FunctionName("negotiate")
+    public SignalRConnectionInfo negotiate(
+            @HttpTrigger(
+                name = "req", 
+                methods = { HttpMethod.POST, HttpMethod.GET },
+                authLevel = AuthorizationLevel.ANONYMOUS) 
+                HttpRequestMessage<Optional<String>> req,
+            @SignalRConnectionInfoInput(name = "connectionInfo", hubName = "simplechat") SignalRConnectionInfo connectionInfo) {
+                
+        return connectionInfo;
+    }
+}|
+```
+Take a look at [SimpleChatRoom](https://github.com/Azure/azure-functions-signalrservice-extension/tree/dev/samples/simple-chat/java) for other using cases.
 
 # Contributing
 

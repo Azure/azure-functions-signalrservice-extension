@@ -15,3 +15,4 @@ addons:
     - maven
 script:
 - "./build.sh --ci /p:BuildNumber=$((10000+TRAVIS_BUILD_NUMBER))"
+- mvn clean package -f ./binding-library/java/pom.xml
