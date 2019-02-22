@@ -14,4 +14,5 @@ addons:
     - libunwind8
 script:
 - "./build.sh --ci /p:BuildNumber=$((10000+TRAVIS_BUILD_NUMBER))"
+- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V || travis_terminate 1
 - mvn clean package -f binding-library\java\pom.xml
