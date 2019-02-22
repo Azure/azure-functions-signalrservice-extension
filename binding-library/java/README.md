@@ -1,9 +1,6 @@
 # SignalR Service Library for Azure Java Functions
 This repo contains SignalR serivce library for building Azure Java Functions. Visit the [complete documentation of Azure Functions - Java Developer Guide](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java) for more details.
 
-## azure-functions-maven plugin
-[How to use azure-functions-maven plugin to create, update, deploy and test azure java functions](https://docs.microsoft.com/en-us/java/api/overview/azure/maven/azure-functions-maven-plugin/readme?view=azure-java-stable)
-
 ## Prerequisites
 
 * Java 8
