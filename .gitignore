@@ -335,7 +335,7 @@ ASALocalRun/
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*/.vscode/*
+**/.vscode/*
 
 # Package Files #
 *.jar
@@ -347,7 +347,7 @@ ASALocalRun/
 *.factorypath
 
 # Java output
-*/target/*
+**/target/*
 
 # Java IDE
 .idea/
