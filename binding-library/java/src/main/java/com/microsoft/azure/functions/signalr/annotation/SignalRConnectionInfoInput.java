@@ -22,14 +22,14 @@ import com.microsoft.azure.functions.annotation.CustomBinding;
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@CustomBinding(direction = "in", name = "connectionInfo", type = "SignalRConnectionInfo")
+@CustomBinding(direction = "in", name = "", type = "SignalRConnectionInfo")
 public @interface SignalRConnectionInfoInput {
 
     /**
      * The variable name used in function.json.
      * @return The variable name used in function.json.
      */
-    String name() default "";
+    String name();
 
     /**
      * Defines the app setting name that contains the Azure SignalR Service connection string.
