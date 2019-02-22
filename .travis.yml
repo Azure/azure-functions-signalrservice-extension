@@ -8,11 +8,12 @@ dotnet: 2.1.301
 os:
 - linux
 - osx
+before_install:
+  - sudo apt-get install maven
 addons:
   apt:
     packages:
     - libunwind8
 script:
 - "./build.sh --ci /p:BuildNumber=$((10000+TRAVIS_BUILD_NUMBER))"
-- mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V || travis_terminate 1
 - mvn clean package -f binding-library\java\pom.xml
