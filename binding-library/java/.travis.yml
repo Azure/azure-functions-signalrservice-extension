@@ -1,0 +1,15 @@
+language: java
+branches:
+  only:
+  - dev
+jdk:
+  - oraclejdk8
+os:
+- linux
+- osx
+addons:
+  apt:
+    packages:
+    - maven
+script:
+- mvn clean package
