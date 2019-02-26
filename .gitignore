@@ -329,8 +329,30 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
+# Visual Studio Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+**/.vscode/*
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.factorypath
+
+# Java output
+**/target/*
+
+# Java IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.checkstyle
