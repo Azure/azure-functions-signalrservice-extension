@@ -5,7 +5,6 @@ import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.signalr.annotation.*;
 import com.microsoft.azure.functions.signalr.*;
-import com.google.gson.*;
 
 public class Functions {
     @FunctionName("negotiate")
@@ -26,17 +25,13 @@ public class Functions {
                 name = "req", 
                 methods = { HttpMethod.POST },
                 authLevel = AuthorizationLevel.ANONYMOUS) 
-                HttpRequestMessage<Object> req,
+                HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "sendMessages", hubName = "simplechat") OutputBinding<SignalRMessage> signalRMessage) {
-        
-        String body = req.getBody().toString();
-        Gson g = new Gson();
-        ChatMessage chatMessage = g.fromJson(body, ChatMessage.class);
 
         SignalRMessage message = new SignalRMessage();
         message.target = "newMessage";
-        message.groupName = chatMessage.groupname;
-        message.userId = chatMessage.recipient;
+        message.groupName = req.getBody().groupname;
+        message.userId = req.getBody().recipient;
         message.arguments.add(req.getBody());
         signalRMessage.setValue(message);
     }
@@ -47,16 +42,12 @@ public class Functions {
                 name = "req", 
                 methods = { HttpMethod.POST },
                 authLevel = AuthorizationLevel.ANONYMOUS) 
-                HttpRequestMessage<Object> req,
+                HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "addToGroup", hubName = "simplechat") OutputBinding<SignalRGroupAction> signalRGroupAction) {
-        
-        String body = req.getBody().toString();
-        Gson g = new Gson();
-        ChatMessage chatMessage = g.fromJson(body, ChatMessage.class);
 
         SignalRGroupAction groupAction = new SignalRGroupAction();
-        groupAction.groupName = chatMessage.groupname;
-        groupAction.userId = chatMessage.recipient;
+        groupAction.groupName = req.getBody().groupname;
+        groupAction.userId = req.getBody().recipient;
         groupAction.action = "add";
         signalRGroupAction.setValue(groupAction);
     }
@@ -67,16 +58,12 @@ public class Functions {
                 name = "req", 
                 methods = { HttpMethod.POST },
                 authLevel = AuthorizationLevel.ANONYMOUS) 
-                HttpRequestMessage<Object> req,
+                HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "removeFromGroup", hubName = "simplechat") OutputBinding<SignalRGroupAction> signalRGroupAction) {
-        
-        String body = req.getBody().toString();
-        Gson g = new Gson();
-        ChatMessage chatMessage = g.fromJson(body, ChatMessage.class);
 
         SignalRGroupAction groupAction = new SignalRGroupAction();
-        groupAction.groupName = chatMessage.groupname;
-        groupAction.userId = chatMessage.recipient;
+        groupAction.groupName = req.getBody().groupname;
+        groupAction.userId = req.getBody().recipient;
         groupAction.action = "remove";
         signalRGroupAction.setValue(groupAction);
     }
