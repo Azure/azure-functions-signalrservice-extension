@@ -6,7 +6,7 @@
 
     <groupId>com.microsoft.azure.functions</groupId>
     <artifactId>azure-functions-java-library-signalr</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Microsoft Azure Functions Java SignalR Types</name>
