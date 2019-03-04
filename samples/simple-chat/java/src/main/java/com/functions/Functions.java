@@ -28,11 +28,9 @@ public class Functions {
                 HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "sendMessages", hubName = "simplechat") OutputBinding<SignalRMessage> signalRMessage) {
 
-        SignalRMessage message = new SignalRMessage();
-        message.target = "newMessage";
+        SignalRMessage message = new SignalRMessage("newMessage", req.getBody());
         message.groupName = req.getBody().groupname;
         message.userId = req.getBody().recipient;
-        message.arguments.add(req.getBody());
         signalRMessage.setValue(message);
     }
 
@@ -45,10 +43,7 @@ public class Functions {
                 HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "addToGroup", hubName = "simplechat") OutputBinding<SignalRGroupAction> signalRGroupAction) {
 
-        SignalRGroupAction groupAction = new SignalRGroupAction();
-        groupAction.groupName = req.getBody().groupname;
-        groupAction.userId = req.getBody().recipient;
-        groupAction.action = "add";
+        SignalRGroupAction groupAction = new SignalRGroupAction("add", req.getBody().groupname, req.getBody().recipient);
         signalRGroupAction.setValue(groupAction);
     }
 
@@ -61,10 +56,7 @@ public class Functions {
                 HttpRequestMessage<ChatMessage> req,
             @SignalROutput(name = "removeFromGroup", hubName = "simplechat") OutputBinding<SignalRGroupAction> signalRGroupAction) {
 
-        SignalRGroupAction groupAction = new SignalRGroupAction();
-        groupAction.groupName = req.getBody().groupname;
-        groupAction.userId = req.getBody().recipient;
-        groupAction.action = "remove";
+        SignalRGroupAction groupAction = new SignalRGroupAction("remove", req.getBody().groupname, req.getBody().recipient);
         signalRGroupAction.setValue(groupAction);
     }
 
