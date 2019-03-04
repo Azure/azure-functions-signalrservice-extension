@@ -13,6 +13,25 @@ package com.microsoft.azure.functions.signalr;
  * @since 1.0.0
  */
 public class SignalRGroupAction {
+
+    /**
+     * Constructor
+     */
+    public SignalRGroupAction() {
+    }
+
+    /**
+     * Constructor
+     * @param action    Action to take ("add" or "remove")
+     * @param groupName Group to add user to or remove user from
+     * @param userId    User to add to or remove from group
+     */
+    public SignalRGroupAction(String action, String groupName, String userId) {
+        this.action = action;
+        this.groupName = groupName;
+        this.userId = userId;
+    }
+
     /**
      * User to add to or remove from group
      */
