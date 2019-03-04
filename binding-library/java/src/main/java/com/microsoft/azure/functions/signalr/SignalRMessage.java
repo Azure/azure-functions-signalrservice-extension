@@ -6,6 +6,7 @@
 package com.microsoft.azure.functions.signalr;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,9 +32,7 @@ public class SignalRMessage {
      */
     public SignalRMessage(String target, Object... arguments) {
         this.target = target;
-        for (Object arg: arguments) {
-            this.arguments.add(arg);
-        }
+        this.arguments.addAll(Arrays.asList(arguments));
     }
 
     /**
