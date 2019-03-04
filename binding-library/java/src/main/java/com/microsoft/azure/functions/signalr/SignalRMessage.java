@@ -16,6 +16,26 @@ import java.util.List;
  * @since 1.0.0
  */
 public class SignalRMessage {
+
+    /**
+     * Constructor
+     */
+    public SignalRMessage() {
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param target    Target method to invoke on clients
+     * @param arguments Arguments to pass to target method
+     */
+    public SignalRMessage(String target, Object... arguments) {
+        this.target = target;
+        for (Object arg: arguments) {
+            this.arguments.add(arg);
+        }
+    }
+
     /**
      * User to send the message to
      */
