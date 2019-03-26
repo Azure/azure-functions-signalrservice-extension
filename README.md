@@ -28,7 +28,6 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 
 ### Current limitations
 
-- Only supports broadcasting at this time, cannot invoke methods on a subset of connections, users, or groups
 - Functions cannot be triggered by client invocation of server methods (clients need to call an HTTP endpoint or post messages to a Event Grid, etc, to trigger a function)
 
 ## Prerequisites
