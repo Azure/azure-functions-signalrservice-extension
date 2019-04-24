@@ -50,12 +50,12 @@
                     <span class="text-info small"><strong>{{ message.sender }}</strong></span>
                   </a>
                   <a href="#" v-on:click.prevent="addToGroup(message.sender)">
-                    <span class="badge badge-primary">AddGroup</small>
+                    <span class="badge badge-primary">AddGroup</span>
                   </a>
                   <a href="#" v-on:click.prevent="removeFromGroup(message.sender)">
-                      <span class="badge badge-primary">RemoveGroup</small>
+                      <span class="badge badge-primary">RemoveGroup</span>
                     </a>
-                  <span v-if="message.isPrivate" class="badge badge-secondary">private message</small>
+                  <span v-if="message.isPrivate" class="badge badge-secondary">private message</span>
                 </div>
                 <div>
                   {{ message.text }}
@@ -64,11 +64,10 @@
             </div>
           </div>
         </div>
-      </div>
     </transition-group>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
 
