@@ -8,9 +8,9 @@
     <MicrosoftAzureWebJobsPackageVersion>3.0.4</MicrosoftAzureWebJobsPackageVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
-    <SystemIdentityModelTokensJwtPackageVersion>5.1.4</SystemIdentityModelTokensJwtPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
+    <MicrosoftAzureSignalRManagement>1.0.0-preview1-10351</MicrosoftAzureSignalRManagement>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>
