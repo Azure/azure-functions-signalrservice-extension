@@ -46,19 +46,19 @@
             <div>
               <div style="display: inline-block; padding-left: 12px;">
                 <div>
-                  <a href="#" v-on:click.prevent="sendPrivateMessage(message.sender)">
-                    <span class="text-info small"><strong>{{ message.sender }}</strong></span>
+                  <a href="#" v-on:click.prevent="sendPrivateMessage(message.Sender)">
+                    <span class="text-info small"><strong>{{ message.Sender }}</strong></span>
                   </a>
-                  <a href="#" v-on:click.prevent="addToGroup(message.sender)">
+                  <a href="#" v-on:click.prevent="addToGroup(message.Sender)">
                     <span class="badge badge-primary">AddGroup</span>
                   </a>
-                  <a href="#" v-on:click.prevent="removeFromGroup(message.sender)">
+                  <a href="#" v-on:click.prevent="removeFromGroup(message.Sender)">
                       <span class="badge badge-primary">RemoveGroup</span>
                     </a>
-                  <span v-if="message.isPrivate" class="badge badge-secondary">private message</span>
+                  <span v-if="message.IsPrivate" class="badge badge-secondary">private message</span>
                 </div>
                 <div>
-                  {{ message.text }}
+                  {{ message.Text }}
                 </div>
               </div>
             </div>
