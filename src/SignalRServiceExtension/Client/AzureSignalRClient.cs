@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly IServiceHubContextStore serviceHubContextStore;
         private readonly IServiceManager serviceManager;
 
-        internal AzureSignalRClient(string connectionString, IServiceHubContextStore serviceHubContextStore, IServiceManager serviceManager)
+        internal AzureSignalRClient(IServiceHubContextStore serviceHubContextStore, IServiceManager serviceManager)
         {
             this.serviceHubContextStore = serviceHubContextStore;
             this.serviceManager = serviceManager;
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return new SignalRConnectionInfo
             {
                 Url = serviceManager.GetClientEndpoint(hubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(hubName, userId, lifeTime: TimeSpan.FromMinutes(30))
+                AccessToken = serviceManager.GenerateClientAccessToken(hubName, userId)
             };
         }
 
@@ -87,64 +87,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
             var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
-        }
-
-        private static (string EndPoint, string AccessKey, string Version) ParseConnectionString(string connectionString)
-        {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new ArgumentException("SignalR Service connection string is empty");
-            }
-
-            var endpointMatch = Regex.Match(connectionString, @"endpoint=([^;]+)", RegexOptions.IgnoreCase);
-            if (!endpointMatch.Success)
-            {
-                throw new ArgumentException("No endpoint present in SignalR Service connection string");
-            }
-            var accessKeyMatch = Regex.Match(connectionString, @"accesskey=([^;]+)", RegexOptions.IgnoreCase);
-            if (!accessKeyMatch.Success)
-            {
-                throw new ArgumentException("No access key present in SignalR Service connection string");
-            }
-            var versionKeyMatch = Regex.Match(connectionString, @"Version=([^;]+)", RegexOptions.IgnoreCase);
-
-            Version version;
-            if (versionKeyMatch.Success && !System.Version.TryParse(versionKeyMatch.Groups[1].Value, out version))
-            {
-                throw new ArgumentException("Invalid version format in SignalR Service connection string");
-            }
-
-            return (endpointMatch.Groups[1].Value, accessKeyMatch.Groups[1].Value, versionKeyMatch.Groups[1].Value);
-        }
-
-        private string GenerateJwtBearer(string issuer, string audience, ClaimsIdentity subject, DateTime? expires, string signingKey)
-        {
-            SigningCredentials credentials = null;
-            if (!string.IsNullOrEmpty(signingKey))
-            {
-                var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signingKey));
-                credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            }
-            var jwtTokenHandler = new JwtSecurityTokenHandler();
-            var token = jwtTokenHandler.CreateJwtSecurityToken(
-                issuer: issuer,
-                audience: audience,
-                subject: subject,
-                expires: expires,
-                signingCredentials: credentials);
-            return jwtTokenHandler.WriteToken(token);
-        }
-
-        private static string GetProductInfo()
-        {
-            var assembly = typeof(AzureSignalRClient).GetTypeInfo().Assembly;
-            var packageId = assembly.GetName().Name;
-            var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-            var runtime = RuntimeInformation.FrameworkDescription?.Trim();
-            var operatingSystem = RuntimeInformation.OSDescription?.Trim();
-            var processorArchitecture = RuntimeInformation.ProcessArchitecture.ToString().Trim();
-
-            return $"{packageId}/{version} ({runtime}; {operatingSystem}; {processorArchitecture})";
         }
     }
 }

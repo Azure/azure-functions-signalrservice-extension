@@ -112,7 +112,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(attribute.ConnectionStringSetting, serviceHubContextStore, serviceManager);
+            var signalR = new AzureSignalRClient(serviceHubContextStore, serviceManager);
             return signalR.GetClientConnectionInfo(attribute.HubName, attribute.UserId);
         }
 
@@ -125,7 +125,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
             var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new AzureSignalRClient(connectionString, serviceHubContextStore, serviceManager);
+            return new AzureSignalRClient(serviceHubContextStore, serviceManager);
         }
 
         private class SignalROpenType : OpenType.Poco
