@@ -9,6 +9,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public string ConnectionString { get; set; }
         public string HubName { get; set; }
-        public ServiceTransportType ServiceTransportType { get; set; } = ServiceTransportType.Persistent;
+        public ServiceTransportType AzureSignalRServiceTransportType { get; set; } = ServiceTransportType.Transient;
     }
 }

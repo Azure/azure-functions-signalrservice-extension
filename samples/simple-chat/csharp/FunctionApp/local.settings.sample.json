@@ -5,7 +5,7 @@
     "AzureWebJobsDashboard": "",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureSignalRConnectionString": "<signalr-connection-string>",
-    "ServiceTransportType": "Persistent"
+    "AzureSignalRServiceTransportType": "Transient"
   },
   "Host": {
     "LocalHttpPort": 7071,

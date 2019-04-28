@@ -21,7 +21,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class SignalRConfigProvider : IExtensionConfigProvider
     {
         internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
-        private const string ServiceTransportTypeName = "ServiceTransportType";
+        private const string ServiceTransportTypeName = "AzureSignalRServiceTransportType";
         private static IServiceHubContextStore serviceHubContextStore;
         private static IServiceManager serviceManager;
         private readonly SignalROptions options;
@@ -55,17 +55,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var serviceTransportTypeStr = nameResolver.Resolve(ServiceTransportTypeName);
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {
-                options.ServiceTransportType = transport;
+                options.AzureSignalRServiceTransportType = transport;
             }
             else
             {
-                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.ServiceTransportType} instead.");
+                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
             }
 
             serviceManager = new ServiceManagerBuilder().WithOptions(o =>
             {
                 o.ConnectionString = options.ConnectionString;
-                o.ServiceTransportType = options.ServiceTransportType;
+                o.ServiceTransportType = options.AzureSignalRServiceTransportType;
             }).Build();
             serviceHubContextStore = new ServiceHubContextStore(serviceManager, loggerFactory);
 
