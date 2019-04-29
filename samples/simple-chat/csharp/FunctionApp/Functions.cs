@@ -34,8 +34,8 @@ namespace FunctionApp
             return signalRMessages.AddAsync(
                 new SignalRMessage
                 {
-                    UserId = message.recipient,
-                    GroupName = message.groupname,
+                    UserId = message.Recipient,
+                    GroupName = message.Groupname,
                     Target = "newMessage",
                     Arguments = new[] { message }
                 });
@@ -53,8 +53,8 @@ namespace FunctionApp
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
-                    UserId = message.recipient,
-                    GroupName = message.groupname,
+                    UserId = message.Recipient,
+                    GroupName = message.Groupname,
                     Action = GroupAction.Add
                 });
         }
@@ -71,19 +71,19 @@ namespace FunctionApp
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
-                    UserId = message.recipient,
-                    GroupName = message.groupname,
+                    UserId = message.Recipient,
+                    GroupName = message.Groupname,
                     Action = GroupAction.Remove
                 });
         }
 
         public class ChatMessage
         {
-            public string sender { get; set; }
-            public string text { get; set; }
-            public string groupname { get; set; }
-            public string recipient { get; set; }
-            public bool isPrivate { get; set; }
+            public string Sender { get; set; }
+            public string Text { get; set; }
+            public string Groupname { get; set; }
+            public string Recipient { get; set; }
+            public bool IsPrivate { get; set; }
         }
     }
 }
