@@ -46,7 +46,7 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 1. In a new folder, create a new Azure Functions app.
     - `func init`
 1. Install this Functions extension.
-    - `func extensions install -p Microsoft.Azure.WebJobs.Extensions.SignalRService -v 1.0.0-preview1-10002`
+    - `func extensions install -p Microsoft.Azure.WebJobs.Extensions.SignalRService -v 1.0.0`
 
 ### Add application setting for SignalR connection string
 
