@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Claims;
@@ -17,6 +18,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class AzureSignalRClient : IAzureSignalRSender
     {
+        private static readonly string[] SystemClaims =
+        {
+            "aud", // Audience claim, used by service to make sure token is matched with target resource.
+            "exp", // Expiration time claims. A token is valid only before its expiration time.
+            "iat", // Issued At claim. Added by default. It is not validated by service.
+            "nbf"  // Not Before claim. Added by default. It is not validated by service.
+        };
         private readonly IServiceHubContextStore serviceHubContextStore;
         private readonly IServiceManager serviceManager;
 
@@ -26,12 +34,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.serviceManager = serviceManager;
         }
 
-        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, string userId)
+        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, string userId, string idToken, string[] claimTypeList)
         {
+            IEnumerable<Claim> selectedClaims = null;
+            if (idToken != null && claimTypeList != null && claimTypeList.Length > 0)
+            {
+                var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(idToken);
+                selectedClaims = from claim in jwtToken.Claims
+                                 where claimTypeList.Contains(claim.Type)
+                                 select claim;
+            }
+
             return new SignalRConnectionInfo
             {
                 Url = serviceManager.GetClientEndpoint(hubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(hubName, userId)
+                AccessToken = serviceManager.GenerateClientAccessToken(
+                    hubName, userId, AddPrefixToDupClaimType(selectedClaims, Constants.AzureSignalRUserPrefix).ToList())
             };
         }
 
@@ -87,6 +105,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
             var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
+        }
+
+        private static IEnumerable<Claim> AddPrefixToDupClaimType(IEnumerable<Claim> customerClaims, string prefix)
+        {
+            if (customerClaims != null)
+            {
+                foreach (var claim in customerClaims)
+                {
+                    // Add AzureSignalRUserPrefix if customer's claim name is duplicated with SignalR system claims.
+                    // And split it when return from SignalR Service.
+                    if (SystemClaims.Contains(claim.Type))
+                    {
+                        yield return new Claim(prefix + claim.Type, claim.Value);
+                    }
+                    else
+                    {
+                        yield return claim;
+                    }
+                }
+            }
         }
     }
 }

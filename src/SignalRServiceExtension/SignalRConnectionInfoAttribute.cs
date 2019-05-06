@@ -20,5 +20,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         [AutoResolve]
         public string UserId { get; set; }
+
+        [AutoResolve]
+        public string IdToken { get; set; }
+
+        public string[] ClaimTypeList { get; set; }
     }
 }
