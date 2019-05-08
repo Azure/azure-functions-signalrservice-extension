@@ -46,29 +46,28 @@
             <div>
               <div style="display: inline-block; padding-left: 12px;">
                 <div>
-                  <a href="#" v-on:click.prevent="sendPrivateMessage(message.sender)">
-                    <span class="text-info small"><strong>{{ message.sender }}</strong></span>
+                  <a href="#" v-on:click.prevent="sendPrivateMessage(message.Sender)">
+                    <span class="text-info small"><strong>{{ message.Sender || message.sender }}</strong></span>
                   </a>
-                  <a href="#" v-on:click.prevent="addToGroup(message.sender)">
-                    <span class="badge badge-primary">AddGroup</small>
+                  <a href="#" v-on:click.prevent="addToGroup(message.Sender || message.sender)">
+                    <span class="badge badge-primary">AddGroup</span>
                   </a>
-                  <a href="#" v-on:click.prevent="removeFromGroup(message.sender)">
-                      <span class="badge badge-primary">RemoveGroup</small>
+                  <a href="#" v-on:click.prevent="removeFromGroup(message.Sender || message.sender)">
+                      <span class="badge badge-primary">RemoveGroup</span>
                     </a>
-                  <span v-if="message.isPrivate" class="badge badge-secondary">private message</small>
+                  <span v-if="message.IsPrivate  || message.isPrivate" class="badge badge-secondary">private message</span>
                 </div>
                 <div>
-                  {{ message.text }}
+                  {{ message.Text || message.text }}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
     </transition-group>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
 
