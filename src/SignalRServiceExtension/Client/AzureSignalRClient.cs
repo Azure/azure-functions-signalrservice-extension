@@ -18,6 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class AzureSignalRClient : IAzureSignalRSender
     {
+        public const string AzureSignalRUserPrefix = "asrs.u.";
         private static readonly string[] SystemClaims =
         {
             "aud", // Audience claim, used by service to make sure token is matched with target resource.
@@ -34,13 +35,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.serviceManager = serviceManager;
         }
 
-        internal SignalRConnectionInfo GetClientConnectionInfo(string hubName, string userId, string idToken, string[] claimTypeList)
+        public SignalRConnectionInfo GetClientConnectionInfo(string hubName, string userId, string idToken, string[] claimTypeList)
         {
-            IEnumerable<Claim> selectedClaims = null;
+            IEnumerable<Claim> customerClaims = null;
             if (idToken != null && claimTypeList != null && claimTypeList.Length > 0)
             {
                 var jwtToken = new JwtSecurityTokenHandler().ReadJwtToken(idToken);
-                selectedClaims = from claim in jwtToken.Claims
+                customerClaims = from claim in jwtToken.Claims
                                  where claimTypeList.Contains(claim.Type)
                                  select claim;
             }
@@ -49,7 +50,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 Url = serviceManager.GetClientEndpoint(hubName),
                 AccessToken = serviceManager.GenerateClientAccessToken(
-                    hubName, userId, AddPrefixToDupClaimType(selectedClaims, Constants.AzureSignalRUserPrefix).ToList())
+                    hubName, userId, BuildJwtClaims(customerClaims, AzureSignalRUserPrefix).ToList())
             };
         }
 
@@ -107,7 +108,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
         }
 
-        private static IEnumerable<Claim> AddPrefixToDupClaimType(IEnumerable<Claim> customerClaims, string prefix)
+        private static IEnumerable<Claim> BuildJwtClaims(IEnumerable<Claim> customerClaims, string prefix)
         {
             if (customerClaims != null)
             {
