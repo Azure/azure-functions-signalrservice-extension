@@ -1,13 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Management;
-
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public interface IServiceHubContextStore
+    public static class StaticServiceHubContextStore
     {
-        ValueTask<IServiceHubContext> GetOrAddAsync(string hubName);
+        public static IServiceHubContextStore ServiceHubContextStore { get; internal set; }
     }
 }
