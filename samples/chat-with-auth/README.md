@@ -2,7 +2,7 @@
 
 This sample application shows how to build a chat room application using Azure SignalR Service and serverless architecture. When you open the homepage of the application, you will login first and then you can chat with others.
 
-A live demo can be found [here](https://wanlauthchat.azurewebsites.net/).
+A live demo can be found [here](<https://azure-signalr-serverless-auth-chatroom.azurewebsites.net/>).
 
 ## How Does It Work
 
