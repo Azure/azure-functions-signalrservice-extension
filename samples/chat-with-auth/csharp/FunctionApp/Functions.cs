@@ -21,7 +21,7 @@ namespace FunctionApp
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
-            [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-name}")]
+            [SignalRConnectionInfo(HubName = "authchat", UserId = "{headers.x-ms-client-principal-name}", IdToken = "{headers.X-MS-TOKEN-AAD-ID-TOKEN}", ClaimTypeList = new string[] { "email" })]
                 SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
