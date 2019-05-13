@@ -17,7 +17,9 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 ### Supported scenarios
 
 - Allow clients to serverlessly connect to a SignalR Service hub without requiring an ASP.NET Core backend
-- Use Azure Functions (any language supported by V2) to broadcast messages to all clients connected to a SignalR Service hub
+- Use Azure Functions (any language supported by V2) to broadcast messages to all clients connected to a SignalR Service hub.
+- Use Azure Functions (any language supported by V2) to send messages to a single user, or all the users in a group.
+- Use Azure Functions (any language supported by V2) to manage group users like add/remove a single user in a group.
 - Example scenarios include: broadcast messages to a SignalR Service hub on HTTP requests and events from Cosmos DB change feed, Event Hub, Event Grid, etc
 
 ### Bindings
@@ -28,6 +30,7 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 
 ### Current limitations
 
+- Cannot invoke methods on a subset of connections.
 - Functions cannot be triggered by client invocation of server methods (clients need to call an HTTP endpoint or post messages to a Event Grid, etc, to trigger a function)
 
 ## Prerequisites
