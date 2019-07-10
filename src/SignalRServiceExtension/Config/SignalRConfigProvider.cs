@@ -22,7 +22,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
         private const string ServiceTransportTypeName = "AzureSignalRServiceTransportType";
-        private static IServiceHubContextStore serviceHubContextStore;
         private static IServiceManager serviceManager;
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
@@ -67,7 +66,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 o.ConnectionString = options.ConnectionString;
                 o.ServiceTransportType = options.AzureSignalRServiceTransportType;
             }).Build();
-            serviceHubContextStore = new ServiceHubContextStore(serviceManager, loggerFactory);
+            StaticServiceHubContextStore.ServiceHubContextStore = new ServiceHubContextStore(serviceManager, loggerFactory);
 
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
@@ -112,7 +111,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(serviceHubContextStore, serviceManager);
+            var signalR = new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, serviceManager);
             return signalR.GetClientConnectionInfo(attribute.HubName, attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
         }
 
@@ -125,7 +124,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
             var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new AzureSignalRClient(serviceHubContextStore, serviceManager);
+            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, serviceManager);
         }
 
         private class SignalROpenType : OpenType.Poco

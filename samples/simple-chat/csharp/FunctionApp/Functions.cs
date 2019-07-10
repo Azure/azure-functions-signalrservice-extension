@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
@@ -21,6 +22,16 @@ namespace FunctionApp
             [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
+        }
+
+        [FunctionName("broadcast")]
+        public static async Task Broadcast(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+        {
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var serviceHubContext = await StaticServiceHubContextStore.GetOrAddAsync("simplechat");
+            await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 
         [FunctionName("messages")]
