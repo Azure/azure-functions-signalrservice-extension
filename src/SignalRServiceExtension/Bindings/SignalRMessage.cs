@@ -8,6 +8,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [JsonObject]
     public class SignalRMessage
     {
+        [JsonProperty("connectionId")]
+        public string ConnectionId { get; set; }
         [JsonProperty("userId")]
         public string UserId { get; set; }
         [JsonProperty("groupName")]

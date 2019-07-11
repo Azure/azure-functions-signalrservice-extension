@@ -150,5 +150,74 @@ namespace SignalRServiceExtension.Tests
 
             await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
         }
+
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsSendToUser()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+
+            await collector.AddAsync(new SignalRMessage
+            {
+                ConnectionId = "connection1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
+
+            signalRSenderMock.Verify(
+                c => c.SendToConnection("chathub", "connection1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
+
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsAddConnectionToGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                ConnectionId = "connection1",
+                GroupName = "group1",
+                Action = GroupAction.Add
+            });
+
+            signalRSenderMock.Verify(
+                c => c.AddConnectionToGroup("chathub", "connection1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("chathub", actualData.Arguments[0]);
+            Assert.Equal("connection1", actualData.Arguments[1]);
+            Assert.Equal("group1", actualData.Arguments[2]);
+        }
+
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsRemoveConnectionFromGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                ConnectionId = "connection1",
+                GroupName = "group1",
+                Action = GroupAction.Remove
+            });
+
+            signalRSenderMock.Verify(
+                c => c.RemoveConnectionFromGroup("chathub", "connection1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("chathub", actualData.Arguments[0]);
+            Assert.Equal("connection1", actualData.Arguments[1]);
+            Assert.Equal("group1", actualData.Arguments[2]);
+        }
     }
 }

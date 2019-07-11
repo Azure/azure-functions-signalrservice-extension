@@ -60,6 +60,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.Clients.All.SendCoreAsync(data.Target, data.Arguments);
         }
 
+        public async Task SendToConnection(string hubName, string connectionId, SignalRData data)
+        {
+            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            await serviceHubContext.Clients.Client(connectionId).SendCoreAsync(data.Target, data.Arguments);
+        }
+
         public async Task SendToUser(string hubName, string userId, SignalRData data)
         {
             if (string.IsNullOrEmpty(userId))
@@ -106,6 +112,34 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
             var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
+        }
+
+        public async Task AddConnectionToGroup(string hubName, string connectionId, string groupName)
+        {
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                throw new ArgumentException($"{nameof(connectionId)} cannot be null or empty");
+            }
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            await serviceHubContext.Groups.AddToGroupAsync(connectionId, groupName);
+        }
+
+        public async Task RemoveConnectionFromGroup(string hubName, string connectionId, string groupName)
+        {
+            if (string.IsNullOrEmpty(connectionId))
+            {
+                throw new ArgumentException($"{nameof(connectionId)} cannot be null or empty");
+            }
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            await serviceHubContext.Groups.RemoveFromGroupAsync(connectionId, groupName);
         }
 
         private static IEnumerable<Claim> BuildJwtClaims(IEnumerable<Claim> customerClaims, string prefix)

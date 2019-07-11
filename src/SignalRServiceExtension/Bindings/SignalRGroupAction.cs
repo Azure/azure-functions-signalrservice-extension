@@ -10,7 +10,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [JsonObject]
     public class SignalRGroupAction
     {
-        [JsonProperty("userId"), JsonRequired]
+        [JsonProperty("connectionId")]
+        public string ConnectionId { get; set; }
+        [JsonProperty("userId")]
         public string UserId { get; set; }
         [JsonProperty("groupName"), JsonRequired]
         public string GroupName { get; set; }

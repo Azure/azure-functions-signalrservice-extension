@@ -43,7 +43,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     throw new ArgumentException("GroupName and UserId can not be specified at the same time.");
                 }
 
-                if (!string.IsNullOrEmpty(message.UserId))
+                if (!string.IsNullOrEmpty(message.ConnectionId))
+                {
+                    await client.SendToConnection(hubName, message.ConnectionId, data).ConfigureAwait(false);
+                }
+                else if (!string.IsNullOrEmpty(message.UserId))
                 {
                     await client.SendToUser(hubName, message.UserId, data).ConfigureAwait(false);
                 }
@@ -59,13 +63,28 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             else if (convertItem.GetType() == typeof(SignalRGroupAction))
             {
                 SignalRGroupAction groupAction = convertItem as SignalRGroupAction;
-                if (groupAction.Action == GroupAction.Add)
+
+                if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddConnectionToGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveConnectionFromGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
                 }
             }
             else
