@@ -38,11 +38,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     Arguments = message.Arguments
                 };
 
-                if (!string.IsNullOrEmpty(message.UserId) && !string.IsNullOrEmpty(message.GroupName))
-                {
-                    throw new ArgumentException("GroupName and UserId can not be specified at the same time.");
-                }
-
                 if (!string.IsNullOrEmpty(message.ConnectionId))
                 {
                     await client.SendToConnection(hubName, message.ConnectionId, data).ConfigureAwait(false);
@@ -75,7 +70,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         await client.RemoveConnectionFromGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
                     }
                 }
-                else
+                else if (!string.IsNullOrEmpty(groupAction.UserId))
                 {
                     if (groupAction.Action == GroupAction.Add)
                     {
@@ -85,6 +80,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     {
                         await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
                     }
+                }
+                else
+                {
+                    throw new ArgumentException($"ConnectionId and UserId cannot be null or empty together");
                 }
             }
             else

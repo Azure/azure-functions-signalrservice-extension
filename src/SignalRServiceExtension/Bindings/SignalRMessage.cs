@@ -5,6 +5,14 @@ using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    /// <summary>
+    /// Class that contains parameters needed for sending messages.
+    /// There are three kinds of scope to send, and if more than one
+    /// scopes are set, it will be resolved by the following order:
+    ///     1. ConnectionId
+    ///     2. UserId
+    ///     3. GroupName
+    /// </summary>
     [JsonObject]
     public class SignalRMessage
     {

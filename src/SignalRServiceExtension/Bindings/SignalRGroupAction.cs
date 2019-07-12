@@ -7,6 +7,13 @@ using System.Runtime.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    /// <summary>
+    /// Class that contains parameters needed for group operations.
+    /// Either the group operation on connectionId or userId is supported.
+    /// If connectionId and userId are both set, it will be resolved by the following order:
+    ///     1. ConnectionId
+    ///     2. UserId
+    /// </summary>
     [JsonObject]
     public class SignalRGroupAction
     {

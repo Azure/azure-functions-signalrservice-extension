@@ -135,20 +135,27 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public async Task AddAsync_SendMessage_WithBothUserIdAndGroupNameThrowException()
+        public async Task AddAsync_SendMessage_WithBothUserIdAndGroupName_UsePriorityOrder()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
 
-            var item = new SignalRMessage
+            await collector.AddAsync(new SignalRMessage
             {
                 UserId = "user1",
                 GroupName = "group1",
                 Target = "newMessage",
                 Arguments = new object[] { "arg1", "arg2" }
-            };
+            });
 
-            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
+            signalRSenderMock.Verify(
+                c => c.SendToUser("chathub", "user1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
         }
 
         [Fact]
@@ -218,6 +225,21 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("chathub", actualData.Arguments[0]);
             Assert.Equal("connection1", actualData.Arguments[1]);
             Assert.Equal("group1", actualData.Arguments[2]);
+        }
+
+        [Fact]
+        public async Task AddAsync_GroupOperation_WithoutParametersThrowException()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+
+            var item = new SignalRGroupAction
+            {
+                GroupName = "group1",
+                Action = GroupAction.Add
+            };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
         }
     }
 }
