@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace FunctionApp
 {
@@ -64,6 +67,7 @@ namespace FunctionApp
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
+                    ConnectionId = message.ConnectionId,
                     UserId = message.Recipient,
                     GroupName = message.Groupname,
                     Action = GroupAction.Add
@@ -82,10 +86,37 @@ namespace FunctionApp
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
+                    ConnectionId = message.ConnectionId,
                     UserId = message.Recipient,
                     GroupName = message.Groupname,
                     Action = GroupAction.Remove
                 });
+        }
+
+        public static class EventGridTriggerCSharp
+        {
+            [FunctionName("onConnection")]
+            public static Task EventGridTest([EventGridTrigger]EventGridEvent eventGridEvent,
+                [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            {
+                if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
+                {
+                    var message = ((JObject) eventGridEvent.Data).ToObject<SignalREvent>();
+
+                    return signalRMessages.AddAsync(
+                        new SignalRMessage
+                        {
+                            ConnectionId = message.ConnectionId,
+                            Target = "newConnection",
+                            Arguments = new[] { new ChatMessage
+                            {
+                                ConnectionId = message.ConnectionId,
+                            }}
+                        });
+                }
+
+                return Task.CompletedTask;
+            }
         }
 
         public class ChatMessage
@@ -94,7 +125,16 @@ namespace FunctionApp
             public string Text { get; set; }
             public string Groupname { get; set; }
             public string Recipient { get; set; }
+            public string ConnectionId { get; set; }
             public bool IsPrivate { get; set; }
+        }
+
+        public class SignalREvent
+        {
+            public DateTime Timestamp { get; set; }
+            public string HubName { get; set; }
+            public string ConnectionId { get; set; }
+            public string UserId { get; set; }
         }
     }
 }
