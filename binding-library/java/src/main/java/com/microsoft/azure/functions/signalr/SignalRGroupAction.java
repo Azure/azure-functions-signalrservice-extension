@@ -26,11 +26,17 @@ public class SignalRGroupAction {
      * @param groupName Group to add user to or remove user from
      * @param userId    User to add to or remove from group
      */
-    public SignalRGroupAction(String action, String groupName, String userId) {
+    public SignalRGroupAction(String action, String groupName, String userId, String connectionId) {
         this.action = action;
         this.groupName = groupName;
         this.userId = userId;
+        this.connectionId = connectionId;
     }
+
+    /**
+     * Connection to add to or remove from group
+     */
+    public String connectionId = "";
 
     /**
      * User to add to or remove from group
