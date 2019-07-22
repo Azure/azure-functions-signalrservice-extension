@@ -54,7 +54,7 @@
                   <a href="#" v-on:click.prevent="sendPrivateMessage(message.Sender)">
                     <span class="text-info small"><strong>{{ message.Sender || message.sender }}</strong></span>
                   </a>
-                  <span v-if="message.ConnectionId || message.connectionId" class="badge badge-secondary">ConnectionId: {{ message.ConnectionId || message.connectionId }}</span>
+                  <span v-if="message.ConnectionId || message.connectionId" class="badge badge-secondary">Connection: {{ message.ConnectionId || message.connectionId }}</span>
                   <a href="#" v-on:click.prevent="addToGroup(null, message.Sender || message.sender)">
                     <span class="badge badge-primary">AddGroup</span>
                   </a>

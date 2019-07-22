@@ -3,9 +3,9 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.EventGrid.Models;
 using Microsoft.Azure.WebJobs;
@@ -42,7 +42,6 @@ namespace FunctionApp
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
             return signalRMessages.AddAsync(
@@ -63,11 +62,12 @@ namespace FunctionApp
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
+            var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
 
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
-                    ConnectionId = message.ConnectionId,
+                    ConnectionId = decodedfConnectionId,
                     UserId = message.Recipient,
                     GroupName = message.Groupname,
                     Action = GroupAction.Add
@@ -82,6 +82,7 @@ namespace FunctionApp
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
+            var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
 
             return signalRGroupActions.AddAsync(
                 new SignalRGroupAction
@@ -92,6 +93,27 @@ namespace FunctionApp
                     Action = GroupAction.Remove
                 });
         }
+
+        private static string GetBase64EncodedString(string source)
+        {
+            if (string.IsNullOrEmpty(source))
+            {
+                return source;
+            }
+
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(source));
+        }
+
+        private static string GetBase64DecodedString(string source)
+        {
+            if (string.IsNullOrEmpty(source))
+            {
+                return source;
+            }
+
+            return Encoding.UTF8.GetString(Convert.FromBase64String(source)); 
+        }
+
 
         public static class EventGridTriggerCSharp
         {
@@ -110,7 +132,9 @@ namespace FunctionApp
                             Target = "newConnection",
                             Arguments = new[] { new ChatMessage
                             {
-                                ConnectionId = message.ConnectionId,
+                                // ConnectionId is not recommand to send to client directly.
+                                // Here's a simple encryption for an easier sample.
+                                ConnectionId = GetBase64EncodedString(message.ConnectionId),
                             }}
                         });
                 }
