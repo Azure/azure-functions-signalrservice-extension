@@ -38,12 +38,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     Arguments = message.Arguments
                 };
 
-                if (!string.IsNullOrEmpty(message.UserId) && !string.IsNullOrEmpty(message.GroupName))
+                if (!string.IsNullOrEmpty(message.ConnectionId))
                 {
-                    throw new ArgumentException("GroupName and UserId can not be specified at the same time.");
+                    await client.SendToConnection(hubName, message.ConnectionId, data).ConfigureAwait(false);
                 }
-
-                if (!string.IsNullOrEmpty(message.UserId))
+                else if (!string.IsNullOrEmpty(message.UserId))
                 {
                     await client.SendToUser(hubName, message.UserId, data).ConfigureAwait(false);
                 }
@@ -59,13 +58,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             else if (convertItem.GetType() == typeof(SignalRGroupAction))
             {
                 SignalRGroupAction groupAction = convertItem as SignalRGroupAction;
-                if (groupAction.Action == GroupAction.Add)
+
+                if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddConnectionToGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveConnectionFromGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(groupAction.UserId))
+                {
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    throw new ArgumentException($"ConnectionId and UserId cannot be null or empty together");
                 }
             }
             else
