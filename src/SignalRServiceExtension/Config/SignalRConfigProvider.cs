@@ -4,6 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -15,8 +18,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    [Extension("SignalR")]
-    internal class SignalRConfigProvider : IExtensionConfigProvider
+    [Extension("SignalR", "signalr")]
+    internal class SignalRConfigProvider : IExtensionConfigProvider, IAsyncConverter<HttpRequestMessage, HttpResponseMessage>
     {
         public IConfiguration Configuration { get; }
 
@@ -24,6 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
+        private readonly SignalRTriggerRouter _router;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -36,8 +40,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
             Configuration = configuration;
+            this._router = new SignalRTriggerRouter();
         }
 
+        // GetWebhookHandler() need this Obsolete
+        [Obsolete("preview")]
         public void Initialize(ExtensionConfigContext context)
         {
             if (context == null)
@@ -62,11 +69,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
 
+            var url = context.GetWebhookHandler();
+            logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
+
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
+            // Trigger binding rule
+            context.AddBindingRule<SignalRTriggerAttribute>()
+                .BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_router));
+
+            // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
@@ -76,6 +91,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
 
             logger.LogInformation("SignalRService binding initialized");
+        }
+
+        public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
+        {
+            return _router.ProcessAsync(input, cancellationToken);
         }
 
         public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)
