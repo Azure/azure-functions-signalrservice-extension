@@ -67,6 +67,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
+            // Trigger binding rule
+            context.AddBindingRule<SignalRTriggerAttribute>()
+                .BindToTrigger<SignalRTriggerContext>(new SignalRTriggerBindingProvider());
+
+            // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
