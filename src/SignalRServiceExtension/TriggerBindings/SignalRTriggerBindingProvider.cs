@@ -13,8 +13,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRTriggerBindingProvider : ITriggerBindingProvider
     {
-        public SignalRTriggerBindingProvider()
+        private readonly SignalRConfigProvider _configProvider;
+
+        public SignalRTriggerBindingProvider(SignalRConfigProvider configProvider)
         {
+            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -31,7 +34,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, attribute));
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, attribute, _configProvider));
         }
     }
 
@@ -40,11 +43,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ParameterInfo _parameterInfo;
         private readonly SignalRTriggerAttribute _attribute;
         private readonly BindingDataProvider _bindingDataProvider;
+        private readonly SignalRConfigProvider _configProvider;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, SignalRConfigProvider configProvider)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
+            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
             _bindingDataProvider = BindingDataProvider.FromTemplate(_attribute.HubName);
         }
 
@@ -52,10 +57,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var bindingData = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-            var data = value as SignalRTriggerContext;
-            if (data != null)
+            if (value is SignalRTriggerContext data)
             {
+                bindingData.Add("SignalRTrigger", data);
 
+                var bindingDataFromHubName = _bindingDataProvider.GetBindingData(data.HubName);
+                if (bindingDataFromHubName != null)
+                {
+                    foreach (var item in bindingDataFromHubName)
+                    {
+                        bindingData[item.Key] = item.Value;
+                    }
+                }
             }
 
             return Task.FromResult<ITriggerData>(new TriggerData(bindingData));
@@ -68,12 +81,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException(nameof(context));
             }
 
-            return Task.FromResult<IListener>(new SignalRListener());
+            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _configProvider, _attribute.HubName));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
         {
-            throw new NotImplementedException();
+            return new ParameterDescriptor
+            {
+                Name = _parameterInfo.Name,
+                DisplayHints = new ParameterDisplayHints
+                {
+                    Prompt = "Enter a hub name."
+                }
+            };
         }
 
         public Type TriggerValueType => typeof(SignalRTriggerContext);
@@ -84,7 +104,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
             contract.Add("SignalRTrigger", typeof(SignalRTriggerContext));
-            contract.Add("$return", typeof(JArray));
+            //contract.Add("$return", typeof(JArray));
 
             if (_bindingDataProvider.Contract != null)
             {
