@@ -110,10 +110,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 {
                     HubName = hubName,
                     Url = serviceManager.GetClientEndpoint(hubName),
-                    UserId = req.Headers.TryGetValues("x-ms-signalr-userid", out var values) ? values.FirstOrDefault() : null,
-                    Claims = new Dictionary<string, string>()
+                    UserId = NegotiateUtils.GetUserId(req),
+                    Claims = NegotiateUtils.GetClaims(req),
                 };
-                var context = (HttpContext)req.Properties["HttpContext"];
+
                 // TODO: select out listener that match the pattern
                 if (_listeners.TryGetValue(hubName, out var listener))
                 {
