@@ -26,7 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var userId = httpContext?.User?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 
             if (string.IsNullOrEmpty(userId) &&
-                req.Headers.TryGetValues("x-ms-signalr-userid", out var values))
+                req.Headers.TryGetValues("x-ms-client-principal-name", out var values))
             {
                 userId = values.FirstOrDefault();
             }

@@ -26,7 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
 
-        Dictionary<string, SignalRListener> _listeners = new Dictionary<string, SignalRListener>();
+        Dictionary<string, SignalRListener> _listeners = new Dictionary<string, SignalRListener>(StringComparer.OrdinalIgnoreCase);
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -97,8 +97,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
         {
-            var response = ProcessAsync(input);
-            return await response;
+            return await ProcessAsync(input);
         }
 
         private async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
@@ -117,13 +116,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 // TODO: select out listener that match the pattern
                 if (_listeners.TryGetValue(hubName, out var listener))
                 {
-                    await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
+                    var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
                     {
                         TriggerValue = signalRTriggerContext
                     }, CancellationToken.None);
+
+                }
+                else
+                {
+                    return new HttpResponseMessage(HttpStatusCode.NotFound);
                 }
             }
-            return new HttpResponseMessage(HttpStatusCode.Accepted);
+            else
+            {
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            }
+            
         }
 
         private bool TryGetHubName(string path, out string hubName)
