@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.TriggerBindings;
+using System.Security.Claims;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -76,7 +78,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // Trigger binding rule
             context.AddBindingRule<SignalRTriggerAttribute>()
-                .BindToTrigger<SignalRTriggerContext>(new SignalRTriggerBindingProvider(this));
+                .BindToTrigger<SignalRContext>(new SignalRTriggerBindingProvider(this));
 
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
@@ -105,12 +107,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var path = req.RequestUri.AbsolutePath;
             if (TryGetHubName(path, out var hubName))
             {
-                var signalRTriggerContext = new SignalRTriggerContext
+                var signalRTriggerEvent = new SignalRTriggerEvent
                 {
-                    HubName = hubName,
-                    Url = serviceManager.GetClientEndpoint(hubName),
-                    UserId = NegotiateUtils.GetUserId(req),
-                    Claims = NegotiateUtils.GetClaims(req),
+                    Context = new SignalRContext
+                    {
+                        HubName = hubName,
+                        Url = serviceManager.GetClientEndpoint(hubName),
+                        UserId = NegotiateUtils.GetUserId(req),
+                        Claims = NegotiateUtils.GetClaims(req),
+                    },
+                    ContextTcs = new TaskCompletionSource<SignalRContext>(TaskCreationOptions.RunContinuationsAsynchronously),
                 };
 
                 // TODO: select out listener that match the pattern
@@ -118,9 +124,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 {
                     var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
                     {
-                        TriggerValue = signalRTriggerContext
+                        TriggerValue = signalRTriggerEvent
                     }, CancellationToken.None);
 
+                    var context = await signalRTriggerEvent.ContextTcs.Task;
+                    var accessToken = GenerateClientAccessToken(serviceManager, context);
+                    
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent()
+                    };
                 }
                 else
                 {
@@ -132,6 +145,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
             
+        }
+
+        private string GenerateClientAccessToken(IServiceManager serviceManager, SignalRContext context)
+        {
+            var claims = context.Claims?.Select(c => new Claim(c.Key, c.Value)).ToList();
+            return serviceManager.GenerateClientAccessToken(context.HubName, context.UserId, claims);
         }
 
         private bool TryGetHubName(string path, out string hubName)

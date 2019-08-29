@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class SignalRTriggerContext
+    public class SignalRContext
     {
         /// <summary>
         /// The Url to redirect
