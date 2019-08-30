@@ -11,6 +11,7 @@ using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService.TriggerBindings;
@@ -28,7 +29,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
 
-        Dictionary<string, SignalRListener> _listeners = new Dictionary<string, SignalRListener>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SignalRListener> _listeners = new Dictionary<string, SignalRListener>(StringComparer.OrdinalIgnoreCase);
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -77,6 +78,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
             // Trigger binding rule
+            // TODO: Add more convert type
             context.AddBindingRule<SignalRTriggerAttribute>()
                 .BindToTrigger<SignalRContext>(new SignalRTriggerBindingProvider(this));
 
@@ -112,7 +114,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     Context = new SignalRContext
                     {
                         HubName = hubName,
-                        Url = serviceManager.GetClientEndpoint(hubName),
                         UserId = NegotiateUtils.GetUserId(req),
                         Claims = NegotiateUtils.GetClaims(req),
                     },
@@ -128,11 +129,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     }, CancellationToken.None);
 
                     var context = await signalRTriggerEvent.ContextTcs.Task;
-                    var accessToken = GenerateClientAccessToken(serviceManager, context);
+                    var accessToken = GenerateClientAccessToken(req, serviceManager, context);
                     
                     return new HttpResponseMessage(HttpStatusCode.OK)
                     {
-                        Content = new StringContent()
+                        Content = new StringContent(JsonConvert.SerializeObject(new SignalRConnectionInfo()
+                        {
+                            Url = serviceManager.GetClientEndpoint(context.HubName),
+                            AccessToken = accessToken,
+                        }))
                     };
                 }
                 else
@@ -144,13 +149,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
-            
         }
 
-        private string GenerateClientAccessToken(IServiceManager serviceManager, SignalRContext context)
+        private string GenerateClientAccessToken(HttpRequestMessage req, IServiceManager serviceManager, SignalRContext context)
         {
             var claims = context.Claims?.Select(c => new Claim(c.Key, c.Value)).ToList();
-            return serviceManager.GenerateClientAccessToken(context.HubName, context.UserId, claims);
+            return serviceManager.GenerateClientAccessToken(context.HubName, context.UserId, NegotiateUtils.GetClaimsForJwtToken(req, claims, context.UserId));
         }
 
         private bool TryGetHubName(string path, out string hubName)

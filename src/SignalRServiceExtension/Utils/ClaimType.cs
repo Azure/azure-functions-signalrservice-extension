@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // Copied from Azure SignalR SDK
     internal static class ClaimType
     {
         public const string AzureSignalRSysPrefix = "asrs.s.";

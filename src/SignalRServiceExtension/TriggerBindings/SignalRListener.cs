@@ -1,13 +1,12 @@
-﻿using Microsoft.Azure.WebJobs.Host.Listeners;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
+using Microsoft.Azure.WebJobs.Host.Listeners;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // Take EventGridListener as reference.
     internal class SignalRListener: IListener
     {
         public ITriggeredFunctionExecutor Executor { private set; get; }
@@ -24,6 +23,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void Dispose()
         {
+            // TODO unsubscribe
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -39,6 +39,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void Cancel()
         {
+            // TODO cancel any outstanding tasks initiated by this listener
         }
     }
 }
