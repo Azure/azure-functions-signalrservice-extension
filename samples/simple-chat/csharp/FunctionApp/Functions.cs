@@ -30,7 +30,7 @@ namespace FunctionApp
         [FunctionName("broadcast")]
         public static async Task Broadcast(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [SignalR(HubName = "simplechat", ConnectionStringSetting = "AzureSignalRConnectionString")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
             var serviceHubContext = await StaticServiceHubContextStore.GetOrAddAsync("simplechat");
@@ -111,7 +111,7 @@ namespace FunctionApp
                 return source;
             }
 
-            return Encoding.UTF8.GetString(Convert.FromBase64String(source)); 
+            return Encoding.UTF8.GetString(Convert.FromBase64String(source));
         }
 
 
@@ -123,7 +123,7 @@ namespace FunctionApp
             {
                 if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
                 {
-                    var message = ((JObject) eventGridEvent.Data).ToObject<SignalREvent>();
+                    var message = ((JObject)eventGridEvent.Data).ToObject<SignalREvent>();
 
                     return signalRMessages.AddAsync(
                         new SignalRMessage

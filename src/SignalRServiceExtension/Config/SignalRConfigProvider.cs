@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -8,21 +11,12 @@ using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     [Extension("SignalR")]
     internal class SignalRConfigProvider : IExtensionConfigProvider
     {
-        internal const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
-        private const string ServiceTransportTypeName = "AzureSignalRServiceTransportType";
-        private static IServiceManager serviceManager;
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
@@ -48,10 +42,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (string.IsNullOrEmpty(options.ConnectionString))
             {
-                options.ConnectionString = nameResolver.Resolve(AzureSignalRConnectionStringName);
+                options.ConnectionString = nameResolver.Resolve(Constants.AzureSignalRConnectionStringName);
             }
 
-            var serviceTransportTypeStr = nameResolver.Resolve(ServiceTransportTypeName);
+            var serviceTransportTypeStr = nameResolver.Resolve(Constants.ServiceTransportTypeName);
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {
                 options.AzureSignalRServiceTransportType = transport;
@@ -61,11 +55,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
             }
 
-            serviceManager = new ServiceManagerBuilder().WithOptions(o =>
-            {
-                o.ConnectionString = options.ConnectionString;
-                o.ServiceTransportType = options.AzureSignalRServiceTransportType;
-            }).Build();
+            var serviceManager = CreateServiceManager(options.ConnectionString);
             StaticServiceHubContextStore.ServiceHubContextStore = new ServiceHubContextStore(serviceManager, loggerFactory);
 
             context.AddConverter<string, JObject>(JObject.FromObject)
@@ -82,6 +72,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
 
             logger.LogInformation("SignalRService binding initialized");
+        }
+
+        public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)
+        {
+            var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
+            var hubName = FirstOrDefault(attributeHubName, options.HubName);
+
+            if (StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager == null)
+            {
+                StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager = CreateServiceManager(connectionString);
+            }
+
+            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, hubName);
+        }
+
+        private IServiceManager CreateServiceManager(string connectionString)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                return null;
+            }
+
+            return new ServiceManagerBuilder().WithOptions(o =>
+            {
+                o.ConnectionString = connectionString;
+                o.ServiceTransportType = options.AzureSignalRServiceTransportType;
+            }).Build();
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -105,26 +122,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException(
-                    $"The SignalR Service connection string must be set either via an '{AzureSignalRConnectionStringName}' app setting, via an '{AzureSignalRConnectionStringName}' environment variable, or directly in code via {nameof(SignalROptions)}.{nameof(SignalROptions.ConnectionString)} or {attributeConnectionStringName}.");
+                    $"The SignalR Service connection string must be set either via an '{Constants.AzureSignalRConnectionStringName}' app setting, via an '{Constants.AzureSignalRConnectionStringName}' environment variable, or directly in code via {nameof(SignalROptions)}.{nameof(SignalROptions.ConnectionString)} or {attributeConnectionStringName}.");
+
+            }
+
+            if (!string.IsNullOrEmpty(attributeConnectionString) &&
+                !string.IsNullOrEmpty(options.ConnectionString) &&
+                attributeConnectionString != options.ConnectionString)
+            {
+                throw new NotSupportedException("Different Azure SignalR connection strings are set via app setting and attribute are not supported.");
             }
         }
 
         private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
         {
-            var signalR = new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, serviceManager);
-            return signalR.GetClientConnectionInfo(attribute.HubName, attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
+            var client = GetAzureSignalRClient(attribute.ConnectionStringSetting, attribute.HubName);
+            return client.GetClientConnectionInfo(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
         }
 
         private string FirstOrDefault(params string[] values)
         {
             return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
-        }
-
-        internal AzureSignalRClient GetClient(SignalRAttribute attribute)
-        {
-            var connectionString = FirstOrDefault(attribute.ConnectionStringSetting, options.ConnectionString);
-            var hubName = FirstOrDefault(attribute.HubName, options.HubName);
-            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, serviceManager);
         }
 
         private class SignalROpenType : OpenType.Poco

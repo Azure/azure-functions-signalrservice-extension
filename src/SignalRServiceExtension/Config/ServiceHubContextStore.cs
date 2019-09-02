@@ -12,18 +12,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class ServiceHubContextStore : IServiceHubContextStore
     {
         private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>();
-        private readonly IServiceManager serviceManager;
         private readonly ILoggerFactory loggerFactory;
+
+        public IServiceManager ServiceManager { get; set; }
 
         public ServiceHubContextStore(IServiceManager serviceManager, ILoggerFactory loggerFactory)
         {
-            this.serviceManager = serviceManager;
+            ServiceManager = serviceManager;
             this.loggerFactory = loggerFactory;
         }
 
         public ValueTask<IServiceHubContext> GetOrAddAsync(string hubName)
         {
-            var pair = store.GetOrAdd(hubName, (new Lazy<Task<IServiceHubContext>>(() => serviceManager.CreateHubContextAsync(hubName, loggerFactory)), default));
+            var pair = store.GetOrAdd(hubName, 
+                (new Lazy<Task<IServiceHubContext>>(
+                    () => ServiceManager.CreateHubContextAsync(hubName, loggerFactory)), default));
             return GetAsyncCore(hubName, pair);
         }
 

@@ -32,8 +32,8 @@ namespace SignalRServiceExtension.Tests
                 })
                 .Build();
             var serviceHubContextStore = new ServiceHubContextStore(serviceManager, null);
-            var azureSignalRClient = new AzureSignalRClient(serviceHubContextStore, serviceManager);
-            var connectionInfo = azureSignalRClient.GetClientConnectionInfo(hubName, userId, idToken, claimTypeList);
+            var azureSignalRClient = new AzureSignalRClient(serviceHubContextStore, hubName);
+            var connectionInfo = azureSignalRClient.GetClientConnectionInfo(userId, idToken, claimTypeList);
 
             Assert.Equal(connectionInfo.Url, $"{hubUrl}/client/?hub={hubName.ToLower()}");
 

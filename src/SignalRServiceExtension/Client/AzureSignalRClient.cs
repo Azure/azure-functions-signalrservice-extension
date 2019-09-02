@@ -16,6 +16,10 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    /// <summary>
+    /// AzureSignalRClient used for negotiation, pulishing messages and managing group membership.
+    /// It will be created for each function request.
+    /// </summary>
     internal class AzureSignalRClient : IAzureSignalRSender
     {
         public const string AzureSignalRUserPrefix = "asrs.u.";
@@ -28,14 +32,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         };
         private readonly IServiceHubContextStore serviceHubContextStore;
         private readonly IServiceManager serviceManager;
+        private readonly string hubName;
 
-        internal AzureSignalRClient(IServiceHubContextStore serviceHubContextStore, IServiceManager serviceManager)
+        internal AzureSignalRClient(IServiceHubContextStore serviceHubContextStore, string hubName)
         {
             this.serviceHubContextStore = serviceHubContextStore;
-            this.serviceManager = serviceManager;
+            this.serviceManager = serviceHubContextStore.ServiceManager;
+            this.hubName = hubName;
         }
 
-        public SignalRConnectionInfo GetClientConnectionInfo(string hubName, string userId, string idToken, string[] claimTypeList)
+        public SignalRConnectionInfo GetClientConnectionInfo(string userId, string idToken, string[] claimTypeList)
         {
             IEnumerable<Claim> customerClaims = null;
             if (idToken != null && claimTypeList != null && claimTypeList.Length > 0)
@@ -54,19 +60,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public async Task SendToAll(string hubName, SignalRData data)
+        public async Task SendToAll(SignalRData data)
         {
             var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
             await serviceHubContext.Clients.All.SendCoreAsync(data.Target, data.Arguments);
         }
 
-        public async Task SendToConnection(string hubName, string connectionId, SignalRData data)
+        public async Task SendToConnection(string connectionId, SignalRData data)
         {
             var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
             await serviceHubContext.Clients.Client(connectionId).SendCoreAsync(data.Target, data.Arguments);
         }
 
-        public async Task SendToUser(string hubName, string userId, SignalRData data)
+        public async Task SendToUser(string userId, SignalRData data)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -76,7 +82,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.Clients.User(userId).SendCoreAsync(data.Target, data.Arguments);
         }
 
-        public async Task SendToGroup(string hubName, string groupName, SignalRData data)
+        public async Task SendToGroup(string groupName, SignalRData data)
         {
             if (string.IsNullOrEmpty(groupName))
             {
@@ -86,7 +92,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.Clients.Group(groupName).SendCoreAsync(data.Target, data.Arguments);
         }
 
-        public async Task AddUserToGroup(string hubName, string userId, string groupName)
+        public async Task AddUserToGroup(string userId, string groupName)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -100,7 +106,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.UserGroups.AddToGroupAsync(userId, groupName);
         }
 
-        public async Task RemoveUserFromGroup(string hubName, string userId, string groupName)
+        public async Task RemoveUserFromGroup(string userId, string groupName)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -114,7 +120,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
         }
 
-        public async Task AddConnectionToGroup(string hubName, string connectionId, string groupName)
+        public async Task AddConnectionToGroup(string connectionId, string groupName)
         {
             if (string.IsNullOrEmpty(connectionId))
             {
@@ -128,7 +134,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.Groups.AddToGroupAsync(connectionId, groupName);
         }
 
-        public async Task RemoveConnectionFromGroup(string hubName, string connectionId, string groupName)
+        public async Task RemoveConnectionFromGroup(string connectionId, string groupName)
         {
             if (string.IsNullOrEmpty(connectionId))
             {
