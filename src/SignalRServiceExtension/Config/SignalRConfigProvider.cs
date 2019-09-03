@@ -121,16 +121,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException(
-                    $"The SignalR Service connection string must be set either via an '{Constants.AzureSignalRConnectionStringName}' app setting, via an '{Constants.AzureSignalRConnectionStringName}' environment variable, or directly in code via {nameof(SignalROptions)}.{nameof(SignalROptions.ConnectionString)} or {attributeConnectionStringName}.");
-
+                throw new InvalidOperationException(string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributeConnectionStringName));
             }
 
             if (!string.IsNullOrEmpty(attributeConnectionString) &&
                 !string.IsNullOrEmpty(options.ConnectionString) &&
                 attributeConnectionString != options.ConnectionString)
             {
-                throw new NotSupportedException("Different Azure SignalR connection strings are set via app setting and attribute are not supported.");
+                throw new NotSupportedException(ErrorMessages.DifferentConnectionStringsErrorMessage);
             }
         }
 

@@ -5,14 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Claims;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
