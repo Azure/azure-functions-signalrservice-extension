@@ -11,235 +11,233 @@ namespace SignalRServiceExtension.Tests
 {
     public class SignalRAsyncCollectorTests
     {
-        //[Fact]
-        //public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+        private const string DefaultHubName = "chathub";
 
-        //    await collector.AddAsync(new SignalRMessage
-        //    {
-        //        Target = "newMessage",
-        //        Arguments = new object[] { "arg1", "arg2" }
-        //    });
+        [Fact]
+        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(c => c.SendToAll("chathub", It.IsAny<SignalRData>()), Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
-        //    Assert.Equal("newMessage", actualData.Target);
-        //    Assert.Equal("arg1", actualData.Arguments[0]);
-        //    Assert.Equal("arg2", actualData.Arguments[1]);
-        //}
+            await collector.AddAsync(new SignalRMessage
+            {
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithUserId_CallsSendToUser()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(c => c.SendToAll(It.IsAny<SignalRData>()), Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRMessage
-        //    {
-        //        UserId = "userId1",
-        //        Target = "newMessage",
-        //        Arguments = new object[] { "arg1", "arg2" }
-        //    });
+        [Fact]
+        public async Task AddAsync_WithUserId_CallsSendToUser()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.SendToUser("chathub", "userId1", It.IsAny<SignalRData>()),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
-        //    Assert.Equal("newMessage", actualData.Target);
-        //    Assert.Equal("arg1", actualData.Arguments[0]);
-        //    Assert.Equal("arg2", actualData.Arguments[1]);
-        //}
+            await collector.AddAsync(new SignalRMessage
+            {
+                UserId = "userId1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithUserId_CallsSendToGroup()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.SendToUser("userId1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRMessage
-        //    {
-        //        GroupName = "group1",
-        //        Target = "newMessage",
-        //        Arguments = new object[] { "arg1", "arg2" }
-        //    });
+        [Fact]
+        public async Task AddAsync_WithUserId_CallsSendToGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.SendToGroup("chathub", "group1", It.IsAny<SignalRData>()),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
-        //    Assert.Equal("newMessage", actualData.Target);
-        //    Assert.Equal("arg1", actualData.Arguments[0]);
-        //    Assert.Equal("arg2", actualData.Arguments[1]);
-        //}
+            await collector.AddAsync(new SignalRMessage
+            {
+                GroupName = "group1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithUserId_CallsAddUserToGroup()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.SendToGroup("group1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRGroupAction
-        //    {
-        //        UserId = "userId1",
-        //        GroupName = "group1",
-        //        Action = GroupAction.Add
-        //    });
+        [Fact]
+        public async Task AddAsync_WithUserId_CallsAddUserToGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.AddUserToGroup("chathub", "userId1", "group1"),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = signalRSenderMock.Invocations[0];
-        //    Assert.Equal("chathub", actualData.Arguments[0]);
-        //    Assert.Equal("userId1", actualData.Arguments[1]);
-        //    Assert.Equal("group1", actualData.Arguments[2]);
-        //}
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                UserId = "userId1",
+                GroupName = "group1",
+                Action = GroupAction.Add
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithUserId_CallsRemoveUserFromGroup()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.AddUserToGroup("userId1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("userId1", actualData.Arguments[0]);
+            Assert.Equal("group1", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRGroupAction
-        //    {
-        //        UserId = "userId1",
-        //        GroupName = "group1",
-        //        Action = GroupAction.Remove
-        //    });
+        [Fact]
+        public async Task AddAsync_WithUserId_CallsRemoveUserFromGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.RemoveUserFromGroup("chathub", "userId1", "group1"),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = signalRSenderMock.Invocations[0];
-        //    Assert.Equal("chathub", actualData.Arguments[0]);
-        //    Assert.Equal("userId1", actualData.Arguments[1]);
-        //    Assert.Equal("group1", actualData.Arguments[2]);
-        //}
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                UserId = "userId1",
+                GroupName = "group1",
+                Action = GroupAction.Remove
+            });
 
-        //[Fact]
-        //public async Task AddAsync_InvalidTypeThrowException()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<object[]>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.RemoveUserFromGroup("userId1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("userId1", actualData.Arguments[0]);
+            Assert.Equal("group1", actualData.Arguments[1]);
+        }
 
-        //    var item = new object[] { "arg1", "arg2" };
+        [Fact]
+        public async Task AddAsync_InvalidTypeThrowException()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<object[]>(signalRSenderMock.Object);
 
-        //    await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
-        //}
+            var item = new object[] { "arg1", "arg2" };
 
-        //[Fact]
-        //public async Task AddAsync_SendMessage_WithBothUserIdAndGroupName_UsePriorityOrder()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
+        }
 
-        //    await collector.AddAsync(new SignalRMessage
-        //    {
-        //        UserId = "user1",
-        //        GroupName = "group1",
-        //        Target = "newMessage",
-        //        Arguments = new object[] { "arg1", "arg2" }
-        //    });
+        [Fact]
+        public async Task AddAsync_SendMessage_WithBothUserIdAndGroupName_UsePriorityOrder()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.SendToUser("chathub", "user1", It.IsAny<SignalRData>()),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
-        //    Assert.Equal("newMessage", actualData.Target);
-        //    Assert.Equal("arg1", actualData.Arguments[0]);
-        //    Assert.Equal("arg2", actualData.Arguments[1]);
-        //}
+            await collector.AddAsync(new SignalRMessage
+            {
+                UserId = "user1",
+                GroupName = "group1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithConnectionId_CallsSendToUser()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.SendToUser("user1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRMessage
-        //    {
-        //        ConnectionId = "connection1",
-        //        Target = "newMessage",
-        //        Arguments = new object[] { "arg1", "arg2" }
-        //    });
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsSendToUser()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.SendToConnection("chathub", "connection1", It.IsAny<SignalRData>()),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[2];
-        //    Assert.Equal("newMessage", actualData.Target);
-        //    Assert.Equal("arg1", actualData.Arguments[0]);
-        //    Assert.Equal("arg2", actualData.Arguments[1]);
-        //}
+            await collector.AddAsync(new SignalRMessage
+            {
+                ConnectionId = "connection1",
+                Target = "newMessage",
+                Arguments = new object[] { "arg1", "arg2" }
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithConnectionId_CallsAddConnectionToGroup()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.SendToConnection("connection1", It.IsAny<SignalRData>()),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = (SignalRData)signalRSenderMock.Invocations[0].Arguments[1];
+            Assert.Equal("newMessage", actualData.Target);
+            Assert.Equal("arg1", actualData.Arguments[0]);
+            Assert.Equal("arg2", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRGroupAction
-        //    {
-        //        ConnectionId = "connection1",
-        //        GroupName = "group1",
-        //        Action = GroupAction.Add
-        //    });
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsAddConnectionToGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.AddConnectionToGroup("chathub", "connection1", "group1"),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = signalRSenderMock.Invocations[0];
-        //    Assert.Equal("chathub", actualData.Arguments[0]);
-        //    Assert.Equal("connection1", actualData.Arguments[1]);
-        //    Assert.Equal("group1", actualData.Arguments[2]);
-        //}
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                ConnectionId = "connection1",
+                GroupName = "group1",
+                Action = GroupAction.Add
+            });
 
-        //[Fact]
-        //public async Task AddAsync_WithConnectionId_CallsRemoveConnectionFromGroup()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.AddConnectionToGroup("connection1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("connection1", actualData.Arguments[0]);
+            Assert.Equal("group1", actualData.Arguments[1]);
+        }
 
-        //    await collector.AddAsync(new SignalRGroupAction
-        //    {
-        //        ConnectionId = "connection1",
-        //        GroupName = "group1",
-        //        Action = GroupAction.Remove
-        //    });
+        [Fact]
+        public async Task AddAsync_WithConnectionId_CallsRemoveConnectionFromGroup()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-        //    signalRSenderMock.Verify(
-        //        c => c.RemoveConnectionFromGroup("chathub", "connection1", "group1"),
-        //        Times.Once);
-        //    signalRSenderMock.VerifyNoOtherCalls();
-        //    var actualData = signalRSenderMock.Invocations[0];
-        //    Assert.Equal("chathub", actualData.Arguments[0]);
-        //    Assert.Equal("connection1", actualData.Arguments[1]);
-        //    Assert.Equal("group1", actualData.Arguments[2]);
-        //}
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                ConnectionId = "connection1",
+                GroupName = "group1",
+                Action = GroupAction.Remove
+            });
 
-        //[Fact]
-        //public async Task AddAsync_GroupOperation_WithoutParametersThrowException()
-        //{
-        //    var signalRSenderMock = new Mock<IAzureSignalRSender>();
-        //    var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object, "chathub");
+            signalRSenderMock.Verify(
+                c => c.RemoveConnectionFromGroup("connection1", "group1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("connection1", actualData.Arguments[0]);
+            Assert.Equal("group1", actualData.Arguments[1]);
+        }
 
-        //    var item = new SignalRGroupAction
-        //    {
-        //        GroupName = "group1",
-        //        Action = GroupAction.Add
-        //    };
+        [Fact]
+        public async Task AddAsync_GroupOperation_WithoutParametersThrowException()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-        //    await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
-        //}
+            var item = new SignalRGroupAction
+            {
+                GroupName = "group1",
+                Action = GroupAction.Add
+            };
+
+            await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
+        }
     }
 }
