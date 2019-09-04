@@ -12,7 +12,7 @@ using Microsoft.Azure.SignalR.Management;
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
-    /// AzureSignalRClient used for negotiation, pulishing messages and managing group membership.
+    /// AzureSignalRClient used for negotiation, publishing messages and managing group membership.
     /// It will be created for each function request.
     /// </summary>
     internal class AzureSignalRClient : IAzureSignalRSender
