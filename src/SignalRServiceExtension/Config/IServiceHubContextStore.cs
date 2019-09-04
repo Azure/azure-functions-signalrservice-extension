@@ -6,7 +6,7 @@ using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal interface IServiceHubContextStore
+    public interface IServiceHubContextStore
     {
         ValueTask<IServiceHubContext> GetOrAddAsync(string hubName);
 

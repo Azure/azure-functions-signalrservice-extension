@@ -8,6 +8,7 @@ using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
@@ -17,6 +18,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Extension("SignalR")]
     internal class SignalRConfigProvider : IExtensionConfigProvider
     {
+        public IConfiguration Configuration { get; }
+
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
@@ -25,12 +28,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
             INameResolver nameResolver,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IConfiguration configuration)
         {
             this.options = options.Value;
             this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
+            Configuration = configuration;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -55,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
             }
 
-            StaticServiceHubContextStore.ServiceHubContextStore = new ServiceHubContextStore(null, loggerFactory);
+            StaticServiceManagerStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
 
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
@@ -78,26 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
             var hubName = FirstOrDefault(attributeHubName, options.HubName);
 
-            if (StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager == null)
-            {
-                StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager = CreateServiceManager(connectionString);
-            }
-
-            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceHubContextStore, hubName);
-        }
-
-        private IServiceManager CreateServiceManager(string connectionString)
-        {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                return null;
-            }
-
-            return new ServiceManagerBuilder().WithOptions(o =>
-            {
-                o.ConnectionString = connectionString;
-                o.ServiceTransportType = options.AzureSignalRServiceTransportType;
-            }).Build();
+            return new AzureSignalRClient(StaticServiceManagerStore.ServiceManagerStore, connectionString, hubName);
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -121,13 +107,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException(string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributeConnectionStringName));
-            }
-
-            if (!string.IsNullOrEmpty(attributeConnectionString) &&
-                !string.IsNullOrEmpty(options.ConnectionString) &&
-                attributeConnectionString != options.ConnectionString)
-            {
-                throw new NotSupportedException(ErrorMessages.DifferentConnectionStringsErrorMessage);
             }
         }
 

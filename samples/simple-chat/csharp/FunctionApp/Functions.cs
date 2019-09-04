@@ -33,7 +33,7 @@ namespace FunctionApp
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceHubContextStore.GetOrAddAsync("simplechat");
+            var serviceHubContext = await StaticServiceManagerStore.GetOrAdd().GetOrAddAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 

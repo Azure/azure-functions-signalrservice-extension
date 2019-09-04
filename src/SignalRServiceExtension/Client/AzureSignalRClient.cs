@@ -25,15 +25,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             "iat", // Issued At claim. Added by default. It is not validated by service.
             "nbf"  // Not Before claim. Added by default. It is not validated by service.
         };
-        private readonly IServiceHubContextStore serviceHubContextStore;
-        private readonly IServiceManager serviceManager;
+        private readonly IServiceManagerStore serviceManagerStore;
         private readonly string hubName;
+        private readonly string connectionString;
 
-        internal AzureSignalRClient(IServiceHubContextStore serviceHubContextStore, string hubName)
+        internal AzureSignalRClient(IServiceManagerStore serviceManagerStore, string connectionString, string hubName)
         {
-            this.serviceHubContextStore = serviceHubContextStore;
-            this.serviceManager = serviceHubContextStore.ServiceManager;
+            this.serviceManagerStore = serviceManagerStore;
             this.hubName = hubName;
+            this.connectionString = connectionString;
         }
 
         public SignalRConnectionInfo GetClientConnectionInfo(string userId, string idToken, string[] claimTypeList)
@@ -47,6 +47,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                                  select claim;
             }
 
+            var serviceManager = serviceManagerStore.GetOrAddByConnectionString(connectionString).ServiceManager;
+
             return new SignalRConnectionInfo
             {
                 Url = serviceManager.GetClientEndpoint(hubName),
@@ -57,13 +59,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task SendToAll(SignalRData data)
         {
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Clients.All.SendCoreAsync(data.Target, data.Arguments);
         }
 
         public async Task SendToConnection(string connectionId, SignalRData data)
         {
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Clients.Client(connectionId).SendCoreAsync(data.Target, data.Arguments);
         }
 
@@ -73,7 +75,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Clients.User(userId).SendCoreAsync(data.Target, data.Arguments);
         }
 
@@ -83,7 +85,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Clients.Group(groupName).SendCoreAsync(data.Target, data.Arguments);
         }
 
@@ -97,7 +99,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.UserGroups.AddToGroupAsync(userId, groupName);
         }
 
@@ -111,7 +113,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
         }
 
@@ -125,7 +127,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Groups.AddToGroupAsync(connectionId, groupName);
         }
 
@@ -139,7 +141,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceHubContextStore.GetOrAddAsync(hubName);
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetOrAddAsync(hubName);
             await serviceHubContext.Groups.RemoveFromGroupAsync(connectionId, groupName);
         }
 
