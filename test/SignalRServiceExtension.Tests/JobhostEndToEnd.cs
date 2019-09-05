@@ -180,7 +180,7 @@ namespace SignalRServiceExtension.Tests
             public async Task Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 await SimulateSendingMessage(signalRMessages);
-                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
+                Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
 
@@ -189,7 +189,7 @@ namespace SignalRServiceExtension.Tests
             public async Task Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 await SimulateSendingMessage(signalRMessages);
-                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
+                Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
             }
         }
 
@@ -198,13 +198,13 @@ namespace SignalRServiceExtension.Tests
             public async Task Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 await SimulateSendingMessage(signalRMessages);
-                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
+                Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
             }
 
             public async Task Func2([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 await SimulateSendingMessage(signalRMessages);
-                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
+                Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
         #endregion
