@@ -60,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
             }
 
-            StaticServiceManagerStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
+            StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
 
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
@@ -83,7 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
             var hubName = FirstOrDefault(attributeHubName, options.HubName);
 
-            return new AzureSignalRClient(StaticServiceManagerStore.ServiceManagerStore, connectionString, hubName);
+            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceManagerStore, connectionString, hubName);
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)

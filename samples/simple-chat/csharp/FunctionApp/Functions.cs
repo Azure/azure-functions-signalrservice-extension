@@ -34,7 +34,7 @@ namespace FunctionApp
         //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
         //    [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
         //{
-        //    var accessToken = StaticServiceManagerStore.Get().ServiceManager
+        //    var accessToken = StaticServiceHubContextStore.Get().ServiceManager
         //        .GenerateClientAccessToken(
         //            "simplechat",
         //            req.Query["userid"],
@@ -49,7 +49,7 @@ namespace FunctionApp
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceManagerStore.Get().GetAsync("simplechat");
+            var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 
