@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.EventGrid.Models;
+using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -29,17 +30,22 @@ namespace FunctionApp
             return connectionInfo;
         }
 
+        //// Each function must have a unique name, you can uncomment this one and comment the above GetSignalRInfo() function to have a try.
+        //// This "negotiate" function shows how to utilize ServiceManager to generate access token and client url to Azure SignalR service.
         //[FunctionName("negotiate")]
         //public static SignalRConnectionInfo GetSignalRInfo(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-        //    [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
+        //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
         //{
-        //    var accessToken = StaticServiceHubContextStore.Get().ServiceManager
+        //    var userId = req.Query["userid"];
+        //    var hubName = req.Query["hubname"];
+        //    var connectionInfo = new SignalRConnectionInfo();
+        //    var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
+        //    connectionInfo.AccessToken = serviceManager
         //        .GenerateClientAccessToken(
-        //            "simplechat",
-        //            req.Query["userid"],
+        //            hubName,
+        //            userId,
         //            new List<Claim> { new Claim("claimType", "claimValue") });
-        //    connectionInfo.AccessToken = accessToken;
+        //    connectionInfo.Url = serviceManager.GetClientEndpoint(hubName);
         //    return connectionInfo;
         //}
 

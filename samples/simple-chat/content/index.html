@@ -173,7 +173,7 @@
         return config;
       }
       function getConnectionInfo() {
-        return axios.post(`${apiBaseUrl}/api/negotiate`, null, getAxiosConfig())
+        return axios.post(`${apiBaseUrl}/api/negotiate?userid=${data.username}&hubname=simplechat`, null, getAxiosConfig())
           .then(resp => resp.data);
       }
       function sendMessage(sender, recipient, groupname, messageText) {
