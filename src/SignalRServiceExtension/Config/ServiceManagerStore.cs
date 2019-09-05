@@ -33,6 +33,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return store.GetOrAdd(connectionString, CreateHubContextStore);
         }
 
+        // test only
+        public IServiceHubContextStore GetByConfigurationKey(string configurationKey)
+        {
+            string connectionString = configuration[configurationKey];
+            return store.ContainsKey(connectionString) ? store[connectionString] : null;
+        }
+
         private IServiceHubContextStore CreateHubContextStore(string connectionString)
         {
             var serviceManager = CreateServiceManager(connectionString);

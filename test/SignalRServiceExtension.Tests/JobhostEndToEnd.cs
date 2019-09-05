@@ -23,7 +23,7 @@ namespace SignalRServiceExtension.Tests
 {
     public class JobhostEndToEnd
     {
-        private const string AttributeConnectionStringName = "AttributeConnectionStringName";
+        private const string AttrConnStrConfigKey = "AttributeConnectionStringName";
         private const string DefaultUserId = "UserId";
         private const string DefaultHubName = "TestHub";
         private const string DefaultEndpoint = "http://abc.com";
@@ -37,7 +37,7 @@ namespace SignalRServiceExtension.Tests
 
         public static Dictionary<string, string> ConnStrInsideOfAttrConfigDict = new Dictionary<string, string>
         {
-            [AttributeConnectionStringName] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey] = DefaultAttributeConnectionString,
         };
 
         public static Dictionary<string, string> ConnStrOutsideOfAttrConfigDict = new Dictionary<string, string>
@@ -47,13 +47,13 @@ namespace SignalRServiceExtension.Tests
 
         public static Dictionary<string, string> DiffConfigKeySameConnStrConfigDict = new Dictionary<string, string>
         {
-            [AttributeConnectionStringName] = DefaultConnectionString,
+            [AttrConnStrConfigKey] = DefaultConnectionString,
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
         public static Dictionary<string, string> DiffConfigKeyDiffConnStrConfigDict = new Dictionary<string, string>
         {
-            [AttributeConnectionStringName] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey] = DefaultAttributeConnectionString,
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
@@ -155,33 +155,56 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal(_curConfigDict[expectedConfigurationKey], actualConnectionString);
         }
 
+        private static async Task SimulateSendingMessage(IAsyncCollector<SignalRMessage> signalRMessages)
+        {
+            try
+            {
+                await signalRMessages.AddAsync(
+                    new SignalRMessage
+                    {
+                        UserId = DefaultUserId,
+                        GroupName = "",
+                        Target = "newMessage",
+                        Arguments = new[] { "message" }
+                    });
+            }
+            catch
+            {
+                // ignore all the exception, since we only want to test whether the service manager for specific is added in the service manager store
+            }
+        }
+
         #region SignalRAttributeTests
         public class SignalRFunctionsWithConnectionString
         {
-            public void Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            public async Task Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(AttributeConnectionStringName).ServiceManager);
+                await SimulateSendingMessage(signalRMessages);
+                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
 
         public class SignalRFunctionsWithoutConnectionString
         {
-            public void Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            public async Task Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
+                await SimulateSendingMessage(signalRMessages);
+                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
             }
         }
 
         public class SignalRFunctionsWithMultipleConnectionStrings
         {
-            public void Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            public async Task Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
+                await SimulateSendingMessage(signalRMessages);
+                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(Constants.AzureSignalRConnectionStringName));
             }
 
-            public void Func2([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            public async Task Func2([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
+                await SimulateSendingMessage(signalRMessages);
+                Assert.NotNull(((ServiceManagerStore)StaticServiceManagerStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
         #endregion
@@ -189,9 +212,9 @@ namespace SignalRServiceExtension.Tests
         #region SignalRConnectionInfoAttributeTests
         public class SignalRConnectionInfoFunctionsWithConnectionString
         {
-            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] SignalRConnectionInfo connectionInfo)
+            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] SignalRConnectionInfo connectionInfo)
             {
-                UpdateFunctionOutConnectionString(connectionInfo, AttributeConnectionStringName);
+                UpdateFunctionOutConnectionString(connectionInfo, AttrConnStrConfigKey);
             }
         }
 
@@ -210,9 +233,9 @@ namespace SignalRServiceExtension.Tests
                 UpdateFunctionOutConnectionString(connectionInfo, Constants.AzureSignalRConnectionStringName);
             }
 
-            public void Func2([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] SignalRConnectionInfo connectionInfo)
+            public void Func2([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] SignalRConnectionInfo connectionInfo)
             {
-                UpdateFunctionOutConnectionString(connectionInfo, AttributeConnectionStringName);
+                UpdateFunctionOutConnectionString(connectionInfo, AttrConnStrConfigKey);
             }
         }
         #endregion
