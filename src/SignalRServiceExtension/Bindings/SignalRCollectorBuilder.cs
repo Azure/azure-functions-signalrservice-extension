@@ -14,8 +14,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public IAsyncCollector<T> Convert(SignalRAttribute attribute)
         {
-            var client = configProvider.GetClient(attribute);
-            return new SignalRAsyncCollector<T>(client, attribute.HubName);
+            var client = configProvider.GetAzureSignalRClient(attribute.ConnectionStringSetting, attribute.HubName);
+            return new SignalRAsyncCollector<T>(client);
         }
     }
 }

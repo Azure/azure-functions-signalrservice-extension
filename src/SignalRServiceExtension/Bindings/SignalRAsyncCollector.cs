@@ -10,13 +10,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRAsyncCollector<T> : IAsyncCollector<T>
     {
         private readonly IAzureSignalRSender client;
-        private readonly string hubName;
         private readonly SignalROutputConverter converter;
 
-        internal SignalRAsyncCollector(IAzureSignalRSender client, string hubName)
+        internal SignalRAsyncCollector(IAzureSignalRSender client)
         {
             this.client = client;
-            this.hubName = hubName;
             converter = new SignalROutputConverter();
         }
 
@@ -40,19 +38,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
                 if (!string.IsNullOrEmpty(message.ConnectionId))
                 {
-                    await client.SendToConnection(hubName, message.ConnectionId, data).ConfigureAwait(false);
+                    await client.SendToConnection(message.ConnectionId, data).ConfigureAwait(false);
                 }
                 else if (!string.IsNullOrEmpty(message.UserId))
                 {
-                    await client.SendToUser(hubName, message.UserId, data).ConfigureAwait(false);
+                    await client.SendToUser(message.UserId, data).ConfigureAwait(false);
                 }
                 else if (!string.IsNullOrEmpty(message.GroupName))
                 {
-                    await client.SendToGroup(hubName, message.GroupName, data).ConfigureAwait(false);
+                    await client.SendToGroup(message.GroupName, data).ConfigureAwait(false);
                 }
                 else
                 {
-                    await client.SendToAll(hubName, data).ConfigureAwait(false);
+                    await client.SendToAll(data).ConfigureAwait(false);
                 }
             }
             else if (convertItem.GetType() == typeof(SignalRGroupAction))
@@ -63,22 +61,22 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 {
                     if (groupAction.Action == GroupAction.Add)
                     {
-                        await client.AddConnectionToGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                        await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
                     }
                     else
                     {
-                        await client.RemoveConnectionFromGroup(hubName, groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                        await client.RemoveConnectionFromGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
                     }
                 }
                 else if (!string.IsNullOrEmpty(groupAction.UserId))
                 {
                     if (groupAction.Action == GroupAction.Add)
                     {
-                        await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                        await client.AddUserToGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
                     }
                     else
                     {
-                        await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                        await client.RemoveUserFromGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
                     }
                 }
                 else
