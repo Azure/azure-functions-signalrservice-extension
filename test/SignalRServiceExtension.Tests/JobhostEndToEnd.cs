@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
@@ -16,6 +17,7 @@ using SignalRServiceExtension.Tests.Utils;
 using SignalRServiceExtension.Tests.Utils.Loggings;
 using Xunit;
 using Xunit.Abstractions;
+using Xunit.Sdk;
 
 namespace SignalRServiceExtension.Tests
 {
@@ -30,8 +32,7 @@ namespace SignalRServiceExtension.Tests
         private const string DefaultConnectionStringFormat = "Endpoint={0};AccessKey={1};Version=1.0;";
         private static readonly string DefaultConnectionString = string.Format(DefaultConnectionStringFormat, DefaultEndpoint, DefaultAccessKey);
         private static readonly string DefaultAttributeConnectionString = string.Format(DefaultConnectionStringFormat, DefaultEndpoint, DefaultAttributeAccessKey);
-        private static IServiceManager _functionOutServiceManager;
-        private static string _functionOutConnectionString;
+        private static Dictionary<string, string> _curConfigDict;
         private readonly ITestOutputHelper _output;
 
         public static Dictionary<string, string> ConnStrInsideOfAttrConfigDict = new Dictionary<string, string>
@@ -44,53 +45,50 @@ namespace SignalRServiceExtension.Tests
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString,
         };
 
-        public static Dictionary<string, string> SameConnStrInsideAndOutsideOfAttrConfigDict = new Dictionary<string, string>
+        public static Dictionary<string, string> DiffConfigKeySameConnStrConfigDict = new Dictionary<string, string>
         {
             [AttributeConnectionStringName] = DefaultConnectionString,
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
-        public static Dictionary<string, string> DiffConnStrInsideAndOutsideOfAttrConfigDict = new Dictionary<string, string>
+        public static Dictionary<string, string> DiffConfigKeyDiffConnStrConfigDict = new Dictionary<string, string>
         {
             [AttributeConnectionStringName] = DefaultAttributeConnectionString,
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
-        public static IEnumerable<object[]> SignalRAttributeTestData => new List<object[]>
-        {
-            /* connection string only defined inside of attribute */
-            new object[] { typeof(SignalRFunctionsWithConnectionString), ConnStrInsideOfAttrConfigDict, null},
-            
-            /* connection string only defined outside of attribute */
-            new object[] { typeof(SignalRFunctionsWithoutConnectionString), ConnStrOutsideOfAttrConfigDict, null},
-            
-            /* connection string defined both inside and outside of attribute, and both of the connection strings are the same */
-            new object[] { typeof(SignalRFunctionsWithConnectionString), SameConnStrInsideAndOutsideOfAttrConfigDict, null},
-            
-            /* connection string defined both inside and outside of attribute, and both of the connection strings are different */
-            new object[] { typeof(SignalRFunctionsWithConnectionString), DiffConnStrInsideAndOutsideOfAttrConfigDict, ErrorMessages.DifferentConnectionStringsErrorMessage},
-            
-            /* connection string is not defined anywhere */
-            new object[] { typeof(SignalRFunctionsWithoutConnectionString), null, string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, $"{nameof(SignalRAttribute)}.{nameof(SignalRAttribute.ConnectionStringSetting)}")},
+        public static Dictionary<string, string>[] TestConfigDicts = {
+            ConnStrInsideOfAttrConfigDict,
+            ConnStrOutsideOfAttrConfigDict,
+            DiffConfigKeySameConnStrConfigDict,
+            DiffConfigKeyDiffConnStrConfigDict,
+            null,
+            DiffConfigKeyDiffConnStrConfigDict,
         };
 
-        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => new List<object[]>
+        public static Type[] TestClassTypesForSignalRAttribute =
         {
-            /* connection string only defined inside of attribute */
-            new object[] { typeof(SignalRConnectionInfoFunctionsWithConnectionString), ConnStrInsideOfAttrConfigDict, null, DefaultAttributeConnectionString},
-            
-            /* connection string only defined outside of attribute */
-            new object[] { typeof(SignalRConnectionInfoFunctionsWithoutConnectionString), ConnStrOutsideOfAttrConfigDict, null, DefaultConnectionString},
-            
-            /* connection string defined both inside and outside of attribute, and both of the connection strings are the same */
-            new object[] { typeof(SignalRConnectionInfoFunctionsWithConnectionString), SameConnStrInsideAndOutsideOfAttrConfigDict, null, DefaultConnectionString},
-            
-            /* connection string defined both inside and outside of attribute, and both of the connection strings are different */
-            new object[] { typeof(SignalRConnectionInfoFunctionsWithConnectionString), DiffConnStrInsideAndOutsideOfAttrConfigDict, ErrorMessages.DifferentConnectionStringsErrorMessage, null},
-            
-            /* connection string is not defined anywhere */
-            new object[] { typeof(SignalRConnectionInfoFunctionsWithoutConnectionString), null, string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, $"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"), null},
+            typeof(SignalRFunctionsWithConnectionString),
+            typeof(SignalRFunctionsWithoutConnectionString),
+            typeof(SignalRFunctionsWithConnectionString),
+            typeof(SignalRFunctionsWithConnectionString),
+            typeof(SignalRFunctionsWithoutConnectionString),
+            typeof(SignalRFunctionsWithMultipleConnectionStrings),
         };
+
+        public static Type[] TestClassTypesForSignalRConnectionInfoAttribute =
+        {
+            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
+            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
+            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
+            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
+            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
+            typeof(SignalRConnectionInfoFunctionsWithMultipleConnectionStrings),
+        };
+
+        public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRAttribute)}.{nameof(SignalRAttribute.ConnectionStringSetting)}"));
+
+        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => GenerateTestData(TestClassTypesForSignalRConnectionInfoAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"));
 
         public JobhostEndToEnd(ITestOutputHelper output)
         {
@@ -99,30 +97,19 @@ namespace SignalRServiceExtension.Tests
 
         [Theory]
         [MemberData(nameof(SignalRAttributeTestData))]
-        public async Task ValidSignalRAttributeConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict, string expectedErrorMessage)
-        {
-            var host = TestHelpers.NewHost(classType, configuration: configDict, loggerProvider: new XunitLoggerProvider(_output));
-            if (expectedErrorMessage == null)
-            {
-                await host.GetJobHost().CallAsync($"{classType.Name}.Func");
-                Assert.NotNull(_functionOutServiceManager);
-            }
-            else
-            {
-                var indexException = await Assert.ThrowsAsync<FunctionIndexingException>(() => host.StartAsync());
-                Assert.Equal(expectedErrorMessage, indexException.InnerException.Message);
-            }
-        }
-
-        [Theory]
         [MemberData(nameof(SignalRConnectionInfoAttributeTestData))]
-        public async Task ValidSignalRConnectionInfoAttributeConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict, string expectedErrorMessage, string expectedConnectionString)
+        public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict, string expectedErrorMessage)
         {
+            if (configDict != null)
+            {
+                configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
+            }
+            _curConfigDict = configDict;
             var host = TestHelpers.NewHost(classType, configuration: configDict, loggerProvider: new XunitLoggerProvider(_output));
             if (expectedErrorMessage == null)
             {
-                await host.GetJobHost().CallAsync($"{classType.Name}.Func");
-                Assert.Equal(expectedConnectionString, _functionOutConnectionString);
+                await Task.WhenAll(from method in classType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                                   select host.GetJobHost().CallAsync($"{classType.Name}.{method.Name}"));
             }
             else
             {
@@ -131,7 +118,29 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        private static void UpdateFunctionOutConnectionString(SignalRConnectionInfo connectionInfo)
+        public static string[] GenerateTestExpectedErrorMessages(string attributePropertyName) => new string[]
+        {
+            null,
+            null,
+            null,
+            null,
+            string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributePropertyName),
+            null,
+        };
+
+        public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts, string[] expectedErrorMessages)
+        {
+            if (classType.Length != expectedErrorMessages.Length || classType.Length != configDicts.Length)
+            {
+                throw  new ArgumentException($"Length of {nameof(classType)}, {nameof(configDicts)} and {nameof(expectedErrorMessages)} are not the same.");
+            }
+            for (var i = 0; i < expectedErrorMessages.Length; i++)
+            {
+                yield return new object[] { classType[i], configDicts[i], expectedErrorMessages[i] };
+            }
+        }
+
+        private static void UpdateFunctionOutConnectionString(SignalRConnectionInfo connectionInfo, string expectedConfigurationKey)
         {
             var handler = new JwtSecurityTokenHandler();
             var accessKeys = new List<string> { DefaultAccessKey, DefaultAttributeAccessKey };
@@ -142,30 +151,16 @@ namespace SignalRServiceExtension.Tests
                                                                                                             select new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             handler.ValidateToken(connectionInfo.AccessToken, validationParameters, out var validatedToken);
             var validatedAccessKey = Encoding.UTF8.GetString((validatedToken.SigningKey as SymmetricSecurityKey)?.Key);
-            _functionOutConnectionString = string.Format(DefaultConnectionStringFormat, DefaultEndpoint, validatedAccessKey);
+            var actualConnectionString = string.Format(DefaultConnectionStringFormat, DefaultEndpoint, validatedAccessKey);
+            Assert.Equal(_curConfigDict[expectedConfigurationKey], actualConnectionString);
         }
 
+        #region SignalRAttributeTests
         public class SignalRFunctionsWithConnectionString
         {
             public void Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                _functionOutServiceManager = StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager;
-            }
-        }
-
-        public class SignalRConnectionInfoFunctionsWithConnectionString
-        {
-            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] SignalRConnectionInfo connectionInfo)
-            {
-                UpdateFunctionOutConnectionString(connectionInfo);
-            }
-        }
-
-        public class SignalRConnectionInfoFunctionsWithoutConnectionString
-        {
-            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName)] SignalRConnectionInfo connectionInfo)
-            {
-                UpdateFunctionOutConnectionString(connectionInfo);
+                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(AttributeConnectionStringName).ServiceManager);
             }
         }
 
@@ -173,8 +168,53 @@ namespace SignalRServiceExtension.Tests
         {
             public void Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
-                _functionOutServiceManager = StaticServiceHubContextStore.ServiceHubContextStore.ServiceManager;
+                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
             }
         }
+
+        public class SignalRFunctionsWithMultipleConnectionStrings
+        {
+            public void Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            {
+                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
+            }
+
+            public void Func2([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
+            {
+                Assert.NotNull(StaticServiceManagerStore.GetOrAdd(Constants.AzureSignalRConnectionStringName).ServiceManager);
+            }
+        }
+        #endregion
+
+        #region SignalRConnectionInfoAttributeTests
+        public class SignalRConnectionInfoFunctionsWithConnectionString
+        {
+            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] SignalRConnectionInfo connectionInfo)
+            {
+                UpdateFunctionOutConnectionString(connectionInfo, AttributeConnectionStringName);
+            }
+        }
+
+        public class SignalRConnectionInfoFunctionsWithoutConnectionString
+        {
+            public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName)] SignalRConnectionInfo connectionInfo)
+            {
+                UpdateFunctionOutConnectionString(connectionInfo, Constants.AzureSignalRConnectionStringName);
+            }
+        }
+
+        public class SignalRConnectionInfoFunctionsWithMultipleConnectionStrings
+        {
+            public void Func1([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] SignalRConnectionInfo connectionInfo)
+            {
+                UpdateFunctionOutConnectionString(connectionInfo, Constants.AzureSignalRConnectionStringName);
+            }
+
+            public void Func2([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttributeConnectionStringName)] SignalRConnectionInfo connectionInfo)
+            {
+                UpdateFunctionOutConnectionString(connectionInfo, AttributeConnectionStringName);
+            }
+        }
+        #endregion
     }
 }
