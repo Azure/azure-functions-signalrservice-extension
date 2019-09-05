@@ -23,6 +23,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// The <see cref="IServiceManager"/> is used to create <see cref="IServiceHubContext"/>.
         /// </summary>
-        IServiceManager ServiceManager { get; set; }
+        IServiceManager ServiceManager { get; }
     }
 }
