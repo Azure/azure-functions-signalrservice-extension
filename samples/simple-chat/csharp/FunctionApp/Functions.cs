@@ -2,7 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -27,13 +29,27 @@ namespace FunctionApp
             return connectionInfo;
         }
 
+        //[FunctionName("negotiate")]
+        //public static SignalRConnectionInfo GetSignalRInfo(
+        //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+        //    [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
+        //{
+        //    var accessToken = StaticServiceManagerStore.Get().ServiceManager
+        //        .GenerateClientAccessToken(
+        //            "simplechat",
+        //            req.Query["userid"],
+        //            new List<Claim> { new Claim("claimType", "claimValue") });
+        //    connectionInfo.AccessToken = accessToken;
+        //    return connectionInfo;
+        //}
+
         [FunctionName("broadcast")]
         public static async Task Broadcast(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceManagerStore.GetOrAdd().GetOrAddAsync("simplechat");
+            var serviceHubContext = await StaticServiceManagerStore.Get().GetAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 

@@ -22,7 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.loggerFactory = loggerFactory;
         }
 
-        public ValueTask<IServiceHubContext> GetOrAddAsync(string hubName)
+        public ValueTask<IServiceHubContext> GetAsync(string hubName)
         {
             var pair = store.GetOrAdd(hubName, 
                 (new Lazy<Task<IServiceHubContext>>(
