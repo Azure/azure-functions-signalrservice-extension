@@ -117,6 +117,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
         }
 
+        public async Task RemoveUserFromAllGroups(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
+            }
+            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(hubName);
+            await serviceHubContext.UserGroups.RemoveFromAllGroupsAsync(userId);
+        }
+
         public async Task AddConnectionToGroup(string connectionId, string groupName)
         {
             if (string.IsNullOrEmpty(connectionId))
