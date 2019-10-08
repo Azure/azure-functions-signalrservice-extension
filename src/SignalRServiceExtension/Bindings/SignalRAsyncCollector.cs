@@ -10,13 +10,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRAsyncCollector<T> : IAsyncCollector<T>
     {
         private readonly IAzureSignalRSender client;
-        private readonly string hubName;
         private readonly SignalROutputConverter converter;
 
-        internal SignalRAsyncCollector(IAzureSignalRSender client, string hubName)
+        internal SignalRAsyncCollector(IAzureSignalRSender client)
         {
             this.client = client;
-            this.hubName = hubName;
             converter = new SignalROutputConverter();
         }
 
@@ -38,34 +36,52 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     Arguments = message.Arguments
                 };
 
-                if (!string.IsNullOrEmpty(message.UserId) && !string.IsNullOrEmpty(message.GroupName))
+                if (!string.IsNullOrEmpty(message.ConnectionId))
                 {
-                    throw new ArgumentException("GroupName and UserId can not be specified at the same time.");
+                    await client.SendToConnection(message.ConnectionId, data).ConfigureAwait(false);
                 }
-
-                if (!string.IsNullOrEmpty(message.UserId))
+                else if (!string.IsNullOrEmpty(message.UserId))
                 {
-                    await client.SendToUser(hubName, message.UserId, data).ConfigureAwait(false);
+                    await client.SendToUser(message.UserId, data).ConfigureAwait(false);
                 }
                 else if (!string.IsNullOrEmpty(message.GroupName))
                 {
-                    await client.SendToGroup(hubName, message.GroupName, data).ConfigureAwait(false);
+                    await client.SendToGroup(message.GroupName, data).ConfigureAwait(false);
                 }
                 else
                 {
-                    await client.SendToAll(hubName, data).ConfigureAwait(false);
+                    await client.SendToAll(data).ConfigureAwait(false);
                 }
             }
             else if (convertItem.GetType() == typeof(SignalRGroupAction))
             {
                 SignalRGroupAction groupAction = convertItem as SignalRGroupAction;
-                if (groupAction.Action == GroupAction.Add)
+
+                if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    await client.AddUserToGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveConnectionFromGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(groupAction.UserId))
+                {
+                    if (groupAction.Action == GroupAction.Add)
+                    {
+                        await client.AddUserToGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await client.RemoveUserFromGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    await client.RemoveUserFromGroup(hubName, groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                    throw new ArgumentException($"ConnectionId and UserId cannot be null or empty together");
                 }
             }
             else

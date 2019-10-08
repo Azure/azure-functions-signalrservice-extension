@@ -36,6 +36,11 @@ public class SignalRMessage {
     }
 
     /**
+     * ConnectionId to send the message to
+     */
+    public String connectionId = "";  
+
+    /**
      * User to send the message to
      */
     public String userId = "";
