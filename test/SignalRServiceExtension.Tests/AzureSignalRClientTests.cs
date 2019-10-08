@@ -25,15 +25,9 @@ namespace SignalRServiceExtension.Tests
             var expectedName = "John Doe";
             var expectedIat = "1516239022";
             var claimTypeList = new string[] { "name", "iat" };
-            var serviceManager = new ServiceManagerBuilder()
-                .WithOptions(o =>
-                {
-                    o.ConnectionString = connectionString;
-                })
-                .Build();
-            var serviceHubContextStore = new ServiceHubContextStore(serviceManager, null);
-            var azureSignalRClient = new AzureSignalRClient(serviceHubContextStore, serviceManager);
-            var connectionInfo = azureSignalRClient.GetClientConnectionInfo(hubName, userId, idToken, claimTypeList);
+            var serviceManagerStore = new ServiceManagerStore(ServiceTransportType.Transient, null, null);
+            var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionString, hubName);
+            var connectionInfo = azureSignalRClient.GetClientConnectionInfo(userId, idToken, claimTypeList);
 
             Assert.Equal(connectionInfo.Url, $"{hubUrl}/client/?hub={hubName.ToLower()}");
 

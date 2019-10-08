@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.EventGrid.Models;
+using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -27,13 +30,32 @@ namespace FunctionApp
             return connectionInfo;
         }
 
+        //// Each function must have a unique name, you can uncomment this one and comment the above GetSignalRInfo() function to have a try.
+        //// This "negotiate" function shows how to utilize ServiceManager to generate access token and client url to Azure SignalR service.
+        //[FunctionName("negotiate")]
+        //public static SignalRConnectionInfo GetSignalRInfo(
+        //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
+        //{
+        //    var userId = req.Query["userid"];
+        //    var hubName = req.Query["hubname"];
+        //    var connectionInfo = new SignalRConnectionInfo();
+        //    var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
+        //    connectionInfo.AccessToken = serviceManager
+        //        .GenerateClientAccessToken(
+        //            hubName,
+        //            userId,
+        //            new List<Claim> { new Claim("claimType", "claimValue") });
+        //    connectionInfo.Url = serviceManager.GetClientEndpoint(hubName);
+        //    return connectionInfo;
+        //}
+
         [FunctionName("broadcast")]
         public static async Task Broadcast(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceHubContextStore.GetOrAddAsync("simplechat");
+            var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 
@@ -111,7 +133,7 @@ namespace FunctionApp
                 return source;
             }
 
-            return Encoding.UTF8.GetString(Convert.FromBase64String(source)); 
+            return Encoding.UTF8.GetString(Convert.FromBase64String(source));
         }
 
 
@@ -123,7 +145,7 @@ namespace FunctionApp
             {
                 if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
                 {
-                    var message = ((JObject) eventGridEvent.Data).ToObject<SignalREvent>();
+                    var message = ((JObject)eventGridEvent.Data).ToObject<SignalREvent>();
 
                     return signalRMessages.AddAsync(
                         new SignalRMessage
