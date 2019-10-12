@@ -28,8 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
-
-        private readonly Dictionary<string, SignalRListener> _listeners = new Dictionary<string, SignalRListener>(StringComparer.OrdinalIgnoreCase);
+        private readonly SignalRTriggerRouter _router;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -42,6 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
             Configuration = configuration;
+            this._router = new SignalRTriggerRouter();
         }
 
         [Obsolete]
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Trigger binding rule
             // TODO: Add more convert type
             context.AddBindingRule<SignalRTriggerAttribute>()
-                .BindToTrigger<SignalRContext>(new SignalRTriggerBindingProvider(this));
+                .BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(this, _router));
 
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
@@ -94,96 +94,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             logger.LogInformation("SignalRService binding initialized");
         }
 
-        internal void AddListener(string key, SignalRListener listener)
+        public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
         {
-            _listeners.Add(key, listener);
-        }
-
-        public async Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
-        {
-            return await ProcessAsync(input);
-        }
-
-        private async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
-        {
-            var path = req.RequestUri.AbsolutePath;
-            if (TryGetHubName(path, out var hubName))
-            {
-                var signalRTriggerEvent = new SignalRTriggerEvent
-                {
-                    Context = new SignalRContext
-                    {
-                        HubName = hubName,
-                        UserId = NegotiateUtils.GetUserId(req),
-                        Claims = NegotiateUtils.GetClaims(req),
-                    },
-                    ContextTcs = new TaskCompletionSource<SignalRContext>(TaskCreationOptions.RunContinuationsAsynchronously),
-                };
-
-                // TODO: select out listener that match the pattern
-                if (_listeners.TryGetValue(hubName, out var listener))
-                {
-                    var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
-                    {
-                        TriggerValue = signalRTriggerEvent
-                    }, CancellationToken.None);
-
-                    var context = await signalRTriggerEvent.ContextTcs.Task;
-                    var accessToken = GenerateClientAccessToken(req, serviceManager, context);
-                    
-                    return new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new StringContent(JsonConvert.SerializeObject(new SignalRConnectionInfo()
-                        {
-                            Url = serviceManager.GetClientEndpoint(context.HubName),
-                            AccessToken = accessToken,
-                        }))
-                    };
-                }
-                else
-                {
-                    return new HttpResponseMessage(HttpStatusCode.NotFound);
-                }
-            }
-            else
-            {
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
-            }
-        }
-
-        private string GenerateClientAccessToken(HttpRequestMessage req, IServiceManager serviceManager, SignalRContext context)
-        {
-            var claims = context.Claims?.Select(c => new Claim(c.Key, c.Value)).ToList();
-            return serviceManager.GenerateClientAccessToken(context.HubName, context.UserId, NegotiateUtils.GetClaimsForJwtToken(req, claims, context.UserId));
-        }
-
-        private bool TryGetHubName(string path, out string hubName)
-        {
-            // The url should be /runtime/webhooks/signalr/{hub}/negotiate
-            var paths = path.Split(new char[]{'/'}, StringSplitOptions.RemoveEmptyEntries);
-            if (!ValidateNegotiateUri(paths))
-            {
-                hubName = null;
-                return false;
-            }
-
-            hubName = paths[3];
-            return true;
-        }
-
-        private bool ValidateNegotiateUri(string[] paths)
-        {
-            if (paths.Length != 5)
-            {
-                return false;
-            }
-
-            if (paths[2] != "signalr" || paths[4] != "negotiate")
-            {
-                return false;
-            }
-
-            return true;
+            return _router.ProcessAsync(input);
         }
 
         public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)

@@ -11,13 +11,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public ITriggeredFunctionExecutor Executor { private set; get; }
 
-        private readonly SignalRConfigProvider _configProvider;
+        private readonly SignalRTriggerRouter _router;
         private readonly string _hubName;
+        private readonly string _methodName;
 
-        public SignalRListener(ITriggeredFunctionExecutor executor, SignalRConfigProvider configProvider, string hubName)
+        public SignalRListener(ITriggeredFunctionExecutor executor, SignalRTriggerRouter router, string hubName, string methodName)
         {
-            _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
+            _router = router ?? throw new ArgumentNullException(nameof(router));
             _hubName = hubName ?? throw new ArgumentNullException(nameof(hubName));
+            _methodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
             Executor = executor ?? throw new ArgumentNullException(nameof(executor));
         }
 
@@ -28,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _configProvider.AddListener(_hubName, this);
+            _router.AddListener((_hubName, _methodName), this);
             return Task.CompletedTask;
         }
 

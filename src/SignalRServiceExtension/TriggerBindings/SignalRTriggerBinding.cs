@@ -20,12 +20,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ParameterInfo _parameterInfo;
         private readonly SignalRTriggerAttribute _attribute;
         private readonly SignalRConfigProvider _configProvider;
+        private readonly SignalRTriggerRouter _router;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, SignalRConfigProvider configProvider)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, SignalRConfigProvider configProvider, SignalRTriggerRouter router)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
             _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
+            _router = router ?? throw new ArgumentNullException(nameof(router));
         }
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
@@ -36,12 +38,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 var bindingContext = triggerEvent.Context;
                 bindingData.Add(HubNameKey, bindingContext.HubName);
-                bindingData.Add(UserIdKey, bindingContext.UserId);
-
-                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData)
-                {
-                    ReturnValueProvider = new NegotiateResponseProvider(triggerEvent.ContextTcs)
-                });
+                
+                // TODO: If we need invocation result, we need this.
+                //return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData)
+                //{
+                //    ReturnValueProvider = new NegotiateResponseProvider(triggerEvent.ContextTcs)
+                //});
+                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData));
             }
 
             return Task.FromResult<ITriggerData>(null);
@@ -53,8 +56,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentNullException(nameof(context));
             }
+            
+            var functionNameAttribute = _parameterInfo.Member.GetCustomAttribute<FunctionNameAttribute>(false);
+            var methodName = functionNameAttribute.Name;
 
-            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _configProvider, _attribute.HubName));
+            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _router, _attribute.HubName, methodName));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
@@ -65,50 +71,58 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
+        /// <summary>
+        /// Type of object in BindAsync
+        /// </summary>
         public Type TriggerValueType => typeof(SignalRTriggerEvent);
 
         public IReadOnlyDictionary<string, Type> BindingDataContract => CreateBindingContract();
 
+        /// <summary>
+        /// Defined what other bindings can use and return value.
+        /// </summary>
         private IReadOnlyDictionary<string, Type> CreateBindingContract()
         {
             var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
-                // Functions can bind to parameter name "hubName", "userId" directly
+                // Functions can bind to parameter name "hubName" directly
                 { HubNameKey, typeof(string) },
-                { UserIdKey, typeof(string) },
-                { ReturnParameterKey, typeof(SignalRContext).MakeByRefType() },
+
+                // TODO: If we need to support invocation, uncomment it.
+                //{ ReturnParameterKey, typeof(InvocationContext).MakeByRefType() },
             };
 
             return contract;
         }
 
-        private class NegotiateResponseProvider : IValueBinder
-        {
-            private TaskCompletionSource<SignalRContext> _contextTcs;
+        // TODO: If we need to support invocation, uncomment it.
+        //private class NegotiateResponseProvider : IValueBinder
+        //{
+        //    private TaskCompletionSource<InvocationContext> _contextTcs;
 
-            public NegotiateResponseProvider(TaskCompletionSource<SignalRContext> contextTcs)
-            {
-                _contextTcs = contextTcs;
-            }
+        //    public NegotiateResponseProvider(TaskCompletionSource<InvocationContext> contextTcs)
+        //    {
+        //        _contextTcs = contextTcs;
+        //    }
 
-            public Task<object> GetValueAsync()
-            {
-                return null;
-            }
+        //    public Task<object> GetValueAsync()
+        //    {
+        //        return null;
+        //    }
 
-            public string ToInvokeString()
-            {
-                return "SignalR Trigger";
-            }
+        //    public string ToInvokeString()
+        //    {
+        //        return "SignalR Trigger";
+        //    }
 
-            public Type Type => typeof(SignalRContext).MakeByRefType();
+        //    public Type Type => typeof(InvocationContext).MakeByRefType();
 
-            public Task SetValueAsync(object value, CancellationToken cancellationToken)
-            {
-                _contextTcs.TrySetResult(value as SignalRContext);
-                return Task.CompletedTask;
-            }
-        }
+        //    public Task SetValueAsync(object value, CancellationToken cancellationToken)
+        //    {
+        //        _contextTcs.TrySetResult(value as InvocationContext);
+        //        return Task.CompletedTask;
+        //    }
+        //}
 
         private class SignalRTriggerValueProvider : IValueBinder
         {
@@ -129,7 +143,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return _value.ToString();
             }
 
-            public Type Type => typeof(SignalRContext);
+            public Type Type => typeof(InvocationContext);
 
             public Task SetValueAsync(object value, CancellationToken cancellationToken)
             {
