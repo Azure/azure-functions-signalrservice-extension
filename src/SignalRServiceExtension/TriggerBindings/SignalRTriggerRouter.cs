@@ -84,7 +84,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             // The url should be /runtime/webhooks/signalr/{hub}
             var paths = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (!ValidateNegotiateUri(paths))
+            if (!ValidateUri(paths))
             {
                 hubName = null;
                 return false;
@@ -94,7 +94,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return true;
         }
 
-        private bool ValidateNegotiateUri(string[] paths)
+        private bool ValidateUri(string[] paths)
         {
             if (paths.Length != 4)
             {
