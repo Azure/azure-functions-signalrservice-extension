@@ -124,6 +124,26 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
+        public async Task AddAsync_WithUserId_CallsRemoveUserFromAllGroups()
+        {
+            var signalRSenderMock = new Mock<IAzureSignalRSender>();
+            var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
+
+            await collector.AddAsync(new SignalRGroupAction
+            {
+                UserId = "userId1",
+                Action = GroupAction.RemoveAll
+            });
+
+            signalRSenderMock.Verify(
+                c => c.RemoveUserFromAllGroups("userId1"),
+                Times.Once);
+            signalRSenderMock.VerifyNoOtherCalls();
+            var actualData = signalRSenderMock.Invocations[0];
+            Assert.Equal("userId1", actualData.Arguments[0]);
+        }
+
+        [Fact]
         public async Task AddAsync_InvalidTypeThrowException()
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();

@@ -59,24 +59,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
                 if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    if (groupAction.Action == GroupAction.Add)
+                    switch(groupAction.Action)
                     {
-                        await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await client.RemoveConnectionFromGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                        case GroupAction.Add:
+                            await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                            break;
+                        case GroupAction.Remove:
+                            await client.RemoveConnectionFromGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                            break;
                     }
                 }
                 else if (!string.IsNullOrEmpty(groupAction.UserId))
                 {
-                    if (groupAction.Action == GroupAction.Add)
+                    switch (groupAction.Action)
                     {
-                        await client.AddUserToGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await client.RemoveUserFromGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                        case GroupAction.Add:
+                            await client.AddUserToGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                            break;
+                        case GroupAction.Remove:
+                            await client.RemoveUserFromGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                            break;
+                        case GroupAction.RemoveAll:
+                            await client.RemoveUserFromAllGroups(groupAction.UserId).ConfigureAwait(false);
+                            break;
                     }
                 }
                 else

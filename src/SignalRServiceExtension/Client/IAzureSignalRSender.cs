@@ -14,6 +14,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         Task SendToGroup(string group, SignalRData data);
         Task AddUserToGroup(string userId, string groupName);
         Task RemoveUserFromGroup(string userId, string groupName);
+        Task RemoveUserFromAllGroups(string userId);
         Task AddConnectionToGroup(string connectionId, string groupName);
         Task RemoveConnectionFromGroup(string connectionId, string groupName);
     }

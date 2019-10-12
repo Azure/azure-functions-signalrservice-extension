@@ -33,6 +33,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         [EnumMember(Value = "add")]
         Add,
         [EnumMember(Value = "remove")]
-        Remove
+        Remove,
+        [EnumMember(Value = "removeAll")]
+        RemoveAll
     }
 }
