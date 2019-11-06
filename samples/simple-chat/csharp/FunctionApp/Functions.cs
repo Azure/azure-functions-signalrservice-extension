@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -15,17 +16,25 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace FunctionApp
 {
+    public static class Constants
+    {
+        public const string HubName = "simplechat";
+    }
+
+    [Obsolete]
+    [FunctionFilter]
     public static class Functions
     {
         [FunctionName("negotiate")]
         public static SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-            [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
+            [SignalRConnectionInfo(HubName = Constants.HubName, UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
         {
             return connectionInfo;
         }
@@ -52,7 +61,7 @@ namespace FunctionApp
         [FunctionName("broadcast")]
         public static async Task Broadcast(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
             var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
@@ -62,7 +71,7 @@ namespace FunctionApp
         [FunctionName("messages")]
         public static Task SendMessage(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
@@ -79,7 +88,7 @@ namespace FunctionApp
         [FunctionName("addToGroup")]
         public static Task AddToGroup(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
@@ -99,7 +108,7 @@ namespace FunctionApp
         [FunctionName("removeFromGroup")]
         public static Task RemoveFromGroup(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
@@ -141,7 +150,7 @@ namespace FunctionApp
         {
             [FunctionName("onConnection")]
             public static Task EventGridTest([EventGridTrigger]EventGridEvent eventGridEvent,
-                [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+                [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
                 {
@@ -181,6 +190,28 @@ namespace FunctionApp
             public string HubName { get; set; }
             public string ConnectionId { get; set; }
             public string UserId { get; set; }
+        }
+    }
+
+    [Obsolete]
+    public class FunctionFilterAttribute : FunctionInvocationFilterAttribute
+    {
+        public override Task OnExecutedAsync(FunctionExecutedContext executedContext, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public override Task OnExecutingAsync(FunctionExecutingContext executingContext, CancellationToken cancellationToken)
+        {
+            // Some method to resolve the identity
+            string identity = "newUserId";//ResolveIdentitySomehow();
+            
+            // override connectionInfo argument
+            var connectionInfo = (SignalRConnectionInfo)executingContext.Arguments["connectionInfo"];
+            var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
+            connectionInfo.AccessToken = serviceManager.GenerateClientAccessToken(Constants.HubName, identity);
+            
+            return Task.CompletedTask;
         }
     }
 }
