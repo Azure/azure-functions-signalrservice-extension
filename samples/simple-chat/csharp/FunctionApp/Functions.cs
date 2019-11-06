@@ -2,118 +2,80 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security.Claims;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Azure.EventGrid.Models;
-using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Microsoft.Azure.WebJobs.Host;
 
 namespace FunctionApp
 {
-    public static class Functions
+    [Obsolete]
+    public class Functions : IFunctionInvocationFilter
     {
+        public IAccessTokenProvider TokenProvider { get; }
+
+        public Functions(IAccessTokenProvider tokenProvider)
+        {
+            TokenProvider = tokenProvider;
+        }
+
+        /* sample:
+           
+           Request: send a request with user id "myuserid" in bearer token
+
+           url (GET):  http://localhost:7071/api/negotiate
+           headers: [
+             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6Im15dXNlcmlkIiwiaWF0IjoxNTE2MjM5MDIyfQ.5GK9ykQfNGEz07VU_Lwd2QneT9gxEP44o7Zs1y63mcI"
+           ]
+
+           Expected Response:
+           {
+                "url": "<YOUR ASRS ENDPOINT>/client/?hub=simplechat",
+                "accessToken": "<payload contains "nameid": "myuserid">"
+            }
+        */
         [FunctionName("negotiate")]
-        public static SignalRConnectionInfo GetSignalRInfo(
+        public SignalRConnectionInfo GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-            [SignalRConnectionInfo(HubName = "simplechat", UserId = "{headers.x-ms-signalr-userid}")] SignalRConnectionInfo connectionInfo)
+            [SignalRConnectionInfo(HubName = Constants.HubName)] SignalRConnectionInfo connectionInfo) // todo: make HubName optional
         {
             return connectionInfo;
         }
 
-        //// Each function must have a unique name, you can uncomment this one and comment the above GetSignalRInfo() function to have a try.
-        //// This "negotiate" function shows how to utilize ServiceManager to generate access token and client url to Azure SignalR service.
-        //[FunctionName("negotiate")]
-        //public static SignalRConnectionInfo GetSignalRInfo(
-        //    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
-        //{
-        //    var userId = req.Query["userid"];
-        //    var hubName = req.Query["hubname"];
-        //    var connectionInfo = new SignalRConnectionInfo();
-        //    var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
-        //    connectionInfo.AccessToken = serviceManager
-        //        .GenerateClientAccessToken(
-        //            hubName,
-        //            userId,
-        //            new List<Claim> { new Claim("claimType", "claimValue") });
-        //    connectionInfo.Url = serviceManager.GetClientEndpoint(hubName);
-        //    return connectionInfo;
-        //}
-
-        [FunctionName("broadcast")]
-        public static async Task Broadcast(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+        public Task OnExecutedAsync(FunctionExecutedContext executedContext, CancellationToken cancellationToken)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
-            await serviceHubContext.Clients.All.SendAsync("newMessage", message);
+            return Task.CompletedTask;
         }
 
-        [FunctionName("messages")]
-        public static Task SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+        // gives customer a change to validate Function access token and add custom claims for ASRS access token.
+        // OnExecutingAsync runs before negotiate function but after arguments binding
+        public Task OnExecutingAsync(FunctionExecutingContext executingContext, CancellationToken cancellationToken)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
+            var req = (HttpRequest)executingContext.Arguments["req"];
+            var connectionInfo = (SignalRConnectionInfo)executingContext.Arguments["connectionInfo"];
 
-            return signalRMessages.AddAsync(
-                new SignalRMessage
-                {
-                    UserId = message.Recipient,
-                    GroupName = message.Groupname,
-                    Target = "newMessage",
-                    Arguments = new[] { message }
-                });
-        }
+            // validate token
+            var result = TokenProvider.ValidateToken(req);
+            
+            if (result.Status == AccessTokenStatus.Valid)
+            {
+                // resolve the identity
+                string identity = result.Principal.Identity.Name;
 
-        [FunctionName("addToGroup")]
-        public static Task AddToGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
-        {
+                // override connectionInfo argument
+                connectionInfo.AccessToken = serviceManager.GenerateClientAccessToken(Constants.HubName, identity);
+            }
+            else
+            {
+                connectionInfo.AccessToken = "Error while validating negotiate function token"; // todo: return with detailed error message
+            }
 
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-
-            var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
-
-            return signalRGroupActions.AddAsync(
-                new SignalRGroupAction
-                {
-                    ConnectionId = decodedfConnectionId,
-                    UserId = message.Recipient,
-                    GroupName = message.Groupname,
-                    Action = GroupAction.Add
-                });
-        }
-
-        [FunctionName("removeFromGroup")]
-        public static Task RemoveFromGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
-        {
-
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-
-            var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
-
-            return signalRGroupActions.AddAsync(
-                new SignalRGroupAction
-                {
-                    ConnectionId = message.ConnectionId,
-                    UserId = message.Recipient,
-                    GroupName = message.Groupname,
-                    Action = GroupAction.Remove
-                });
+            return Task.CompletedTask;
         }
 
         private static string GetBase64EncodedString(string source)
@@ -126,61 +88,9 @@ namespace FunctionApp
             return Convert.ToBase64String(Encoding.UTF8.GetBytes(source));
         }
 
-        private static string GetBase64DecodedString(string source)
+        public static class Constants
         {
-            if (string.IsNullOrEmpty(source))
-            {
-                return source;
-            }
-
-            return Encoding.UTF8.GetString(Convert.FromBase64String(source));
-        }
-
-
-        public static class EventGridTriggerCSharp
-        {
-            [FunctionName("onConnection")]
-            public static Task EventGridTest([EventGridTrigger]EventGridEvent eventGridEvent,
-                [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
-            {
-                if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
-                {
-                    var message = ((JObject)eventGridEvent.Data).ToObject<SignalREvent>();
-
-                    return signalRMessages.AddAsync(
-                        new SignalRMessage
-                        {
-                            ConnectionId = message.ConnectionId,
-                            Target = "newConnection",
-                            Arguments = new[] { new ChatMessage
-                            {
-                                // ConnectionId is not recommand to send to client directly.
-                                // Here's a simple encryption for an easier sample.
-                                ConnectionId = GetBase64EncodedString(message.ConnectionId),
-                            }}
-                        });
-                }
-
-                return Task.CompletedTask;
-            }
-        }
-
-        public class ChatMessage
-        {
-            public string Sender { get; set; }
-            public string Text { get; set; }
-            public string Groupname { get; set; }
-            public string Recipient { get; set; }
-            public string ConnectionId { get; set; }
-            public bool IsPrivate { get; set; }
-        }
-
-        public class SignalREvent
-        {
-            public DateTime Timestamp { get; set; }
-            public string HubName { get; set; }
-            public string ConnectionId { get; set; }
-            public string UserId { get; set; }
+            public const string HubName = "simplechat";
         }
     }
 }
