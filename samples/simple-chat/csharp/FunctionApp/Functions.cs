@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Text;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -29,13 +30,14 @@ namespace FunctionApp
 
            url (GET):  http://localhost:7071/api/negotiate
            headers: [
-             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6Im15dXNlcmlkIiwiaWF0IjoxNTE2MjM5MDIyfQ.5GK9ykQfNGEz07VU_Lwd2QneT9gxEP44o7Zs1y63mcI"
+             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6Im15dXNlcmlkIiwiaWF0IjoxNTE2MjM5MDIyfQ.5GK9ykQfNGEz07VU_Lwd2QneT9gxEP44o7Zs1y63mcI",
+             "myheader": "testclaim"
            ]
 
            Expected Response:
            {
                 "url": "<YOUR ASRS ENDPOINT>/client/?hub=simplechat",
-                "accessToken": "<payload contains "nameid": "myuserid">"
+                "accessToken": "<payload contains "nameid": "myuserid" and "myheader": "testclaim">"
             }
         */
         [FunctionName("negotiate")]
@@ -59,6 +61,9 @@ namespace FunctionApp
             var req = (HttpRequest)executingContext.Arguments["req"];
             var connectionInfo = (SignalRConnectionInfo)executingContext.Arguments["connectionInfo"];
 
+            // get header
+            var myHeader = req.Headers["myheader"];
+
             // validate token
             var result = TokenProvider.ValidateToken(req);
             
@@ -68,7 +73,7 @@ namespace FunctionApp
                 string identity = result.Principal.Identity.Name;
 
                 // override connectionInfo argument
-                connectionInfo.AccessToken = serviceManager.GenerateClientAccessToken(Constants.HubName, identity);
+                connectionInfo.AccessToken = serviceManager.GenerateClientAccessToken(Constants.HubName, identity, new List<Claim> {new Claim("myheader", myHeader)});
             }
             else
             {
