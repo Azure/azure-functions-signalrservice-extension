@@ -78,16 +78,6 @@ namespace FunctionApp
             return Task.CompletedTask;
         }
 
-        private static string GetBase64EncodedString(string source)
-        {
-            if (string.IsNullOrEmpty(source))
-            {
-                return source;
-            }
-
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(source));
-        }
-
         public static class Constants
         {
             public const string HubName = "simplechat";
