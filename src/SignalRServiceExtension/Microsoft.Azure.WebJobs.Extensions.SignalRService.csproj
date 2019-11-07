@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.SignalR.Management" Version="$(MicrosoftAzureSignalRManagement)" />
-    <PackageReference Include="Microsoft.Azure.WebJobs" Version="$(MicrosoftAzureWebJobsPackageVersion)" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

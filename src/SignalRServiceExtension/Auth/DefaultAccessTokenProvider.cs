@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// Validates a incoming request and extracts any <see cref="ClaimsPrincipal"/> contained within the bearer token.
     /// </summary>
     //  todo: add log
-    public class DefaultAccessTokenProvider : IAccessTokenProvider
+    internal class DefaultAccessTokenProvider : IAccessTokenProvider
     {
         private const string AuthHeaderName = "Authorization";
         private const string BearerPrefix = "Bearer ";

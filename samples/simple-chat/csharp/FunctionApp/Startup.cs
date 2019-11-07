@@ -22,7 +22,8 @@ namespace FunctionApp
             var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
 
             // Register the access token provider as a singleton, customer can register one's own
-            builder.Services.AddSingleton<IAccessTokenProvider>(s => new DefaultAccessTokenProvider(parameters =>
+            // builder.AddAuth(new AccessTokenProvider());
+            builder.AddAuth(parameters =>
             {
                 parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
                 // for sample only
@@ -31,7 +32,7 @@ namespace FunctionApp
                 parameters.ValidateIssuer = false;
                 parameters.ValidateIssuerSigningKey = false;
                 parameters.ValidateLifetime = false;
-            }));
+            });
         }
     }
 }
