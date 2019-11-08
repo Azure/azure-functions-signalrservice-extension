@@ -5,6 +5,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public interface ISignalRConnectionInfoConfigurer
     {
-        Action<AccessTokenResult, HttpRequest, SignalRConnectionDetail> Configure { get; set; }
+        Func<AccessTokenResult, HttpRequest, SignalRConnectionDetail, SignalRConnectionDetail> Configure { get; set; }
     }
 }

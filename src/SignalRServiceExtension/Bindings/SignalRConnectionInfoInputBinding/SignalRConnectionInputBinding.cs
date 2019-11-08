@@ -66,6 +66,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 Claims = azureSignalRClient.GetCustomerClaims(attribute.IdToken, attribute.ClaimTypeList),
             };
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
+            if (signalRConnectionDetail.Error != null)
+            {
+                var info = new SignalRConnectionInfo
+                {
+                    Url = null,
+                    AccessToken = "Error while validating negotiate function token",
+                };
+                return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
+            }
             var signalRConnectionInfo = azureSignalRClient.GetClientConnectionInfo(signalRConnectionDetail.UserId, signalRConnectionDetail.Claims);
             return Task.FromResult((IValueProvider)new SignalRValueProvider(signalRConnectionInfo));
         }

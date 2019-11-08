@@ -7,6 +7,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    using SignalRConnectionInfoConfigureFunc = Func<AccessTokenResult, HttpRequest, SignalRConnectionDetail, SignalRConnectionDetail>;
+
     // todo: add more DI
     public static class SignalRFunctionsHostBuilderExtensions
     {
@@ -28,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return builder;
         }
 
-        public static IFunctionsHostBuilder AddAuth(this IFunctionsHostBuilder builder, Action<TokenValidationParameters> configureTokenValidationParameters, Action<AccessTokenResult, HttpRequest, SignalRConnectionDetail> configurer)
+        public static IFunctionsHostBuilder AddAuth(this IFunctionsHostBuilder builder, Action<TokenValidationParameters> configureTokenValidationParameters, SignalRConnectionInfoConfigureFunc configurer)
         {
             if (builder == null)
             {
@@ -55,7 +57,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return builder;
         }
 
-        public static IFunctionsHostBuilder AddAuth(this IFunctionsHostBuilder builder, IAccessTokenProvider accessTokenProvider, Action<AccessTokenResult, HttpRequest, SignalRConnectionDetail> configurer)
+        public static IFunctionsHostBuilder AddAuth(this IFunctionsHostBuilder builder, IAccessTokenProvider accessTokenProvider, SignalRConnectionInfoConfigureFunc configurer)
         {
             if (builder == null)
             {
@@ -83,9 +85,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
     internal class InternalSignalRConnectionInfoConfigurer: ISignalRConnectionInfoConfigurer
     {
-        public Action<AccessTokenResult, HttpRequest, SignalRConnectionDetail> Configure { get; set; }
+        public SignalRConnectionInfoConfigureFunc Configure { get; set; }
 
-        public InternalSignalRConnectionInfoConfigurer(Action<AccessTokenResult, HttpRequest, SignalRConnectionDetail> Configure)
+        public InternalSignalRConnectionInfoConfigurer(SignalRConnectionInfoConfigureFunc Configure)
         {
             this.Configure = Configure;
         }

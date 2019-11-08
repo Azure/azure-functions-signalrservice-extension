@@ -47,8 +47,13 @@ namespace FunctionApp
                     signalRConnectionDetail.UserId = identity;
                     signalRConnectionDetail.Claims?.Add(customClaim);
 
-                    // ASRS negotiate response generated inside our binding, now you can keep your negotiate function clean
+                    // binding will generate ASRS negotiate response inside with this new signalRsignalRConnectionDetail,
+                    // now you can keep your negotiate function clean
+                    return signalRConnectionDetail;
                 }
+
+                signalRConnectionDetail.Error = "Error while validating negotiate function token";
+                return signalRConnectionDetail;
             });
         }
     }

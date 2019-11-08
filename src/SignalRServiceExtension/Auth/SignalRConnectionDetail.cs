@@ -8,5 +8,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public string UserId { get; set; }
         public IList<Claim> Claims { get; set; }
+        public string Error { get; set; }
     }
 }
