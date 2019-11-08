@@ -29,7 +29,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             IOptions<SignalROptions> options,
             INameResolver nameResolver,
             ILoggerFactory loggerFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAccessTokenProvider accessTokenProvider)
         {
             this.options = options.Value;
             this.loggerFactory = loggerFactory;

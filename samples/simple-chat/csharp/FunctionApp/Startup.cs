@@ -19,20 +19,20 @@ namespace FunctionApp
             //var issuerToken = Environment.GetEnvironmentVariable("IssuerToken");
 
             // only for sample
-            var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
+            //var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
 
             // Register the access token provider as a singleton, customer can register one's own
             // builder.AddAuth(new AccessTokenProvider());
-            builder.AddAuth(parameters =>
-            {
-                parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
-                // for sample only
-                parameters.RequireSignedTokens = false;
-                parameters.ValidateAudience = false;
-                parameters.ValidateIssuer = false;
-                parameters.ValidateIssuerSigningKey = false;
-                parameters.ValidateLifetime = false;
-            });
+            //builder.AddAuth(parameters =>
+            //{
+            //    parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
+            //    // for sample only
+            //    parameters.RequireSignedTokens = false;
+            //    parameters.ValidateAudience = false;
+            //    parameters.ValidateIssuer = false;
+            //    parameters.ValidateIssuerSigningKey = false;
+            //    parameters.ValidateLifetime = false;
+            //});
         }
     }
 }
