@@ -52,6 +52,7 @@ namespace FunctionApp
                     return signalRConnectionDetail;
                 }
 
+                // todo: improve the interface
                 signalRConnectionDetail.Error = "Error while validating negotiate function token";
                 return signalRConnectionDetail;
             });
