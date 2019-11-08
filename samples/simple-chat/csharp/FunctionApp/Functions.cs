@@ -1,29 +1,15 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.Azure.WebJobs.Host;
 
 namespace FunctionApp
 {
-    [Obsolete]
-    public class Functions : IFunctionInvocationFilter
+    public class Functions
     {
-        public IAccessTokenProvider TokenProvider { get; }
-
-        public Functions(IAccessTokenProvider tokenProvider)
-        {
-            TokenProvider = tokenProvider;
-        }
-
         /* sample:
            
            Request: send a request with user id "myuserid" in bearer token
@@ -46,41 +32,6 @@ namespace FunctionApp
             [SignalRConnectionInfo(HubName = Constants.HubName)] SignalRConnectionInfo connectionInfo) // todo: make HubName optional
         {
             return connectionInfo;
-        }
-
-        public Task OnExecutedAsync(FunctionExecutedContext executedContext, CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
-
-        // gives customer a change to validate Function access token and add custom claims for ASRS access token.
-        // OnExecutingAsync runs before negotiate function but after arguments binding
-        public Task OnExecutingAsync(FunctionExecutingContext executingContext, CancellationToken cancellationToken)
-        {
-            var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
-            var req = (HttpRequest)executingContext.Arguments["req"];
-            var connectionInfo = (SignalRConnectionInfo)executingContext.Arguments["connectionInfo"];
-
-            // get header
-            var myHeader = req.Headers["myheader"];
-
-            // validate token
-            var result = TokenProvider.ValidateToken(req);
-            
-            if (result.Status == AccessTokenStatus.Valid)
-            {
-                // resolve the identity
-                string identity = result.Principal.Identity.Name;
-
-                // override connectionInfo argument
-                connectionInfo.AccessToken = serviceManager.GenerateClientAccessToken(Constants.HubName, identity, new List<Claim> {new Claim("myheader", myHeader)});
-            }
-            else
-            {
-                connectionInfo.AccessToken = "Error while validating negotiate function token"; // todo: return with detailed error message
-            }
-
-            return Task.CompletedTask;
         }
 
         public static class Constants

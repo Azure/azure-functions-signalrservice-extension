@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Security.Claims;
 using FunctionApp;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
 [assembly: FunctionsStartup(typeof(Startup))]
@@ -19,20 +19,37 @@ namespace FunctionApp
             //var issuerToken = Environment.GetEnvironmentVariable("IssuerToken");
 
             // only for sample
-            //var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
+            var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
 
             // Register the access token provider as a singleton, customer can register one's own
             // builder.AddAuth(new AccessTokenProvider());
-            //builder.AddAuth(parameters =>
-            //{
-            //    parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
-            //    // for sample only
-            //    parameters.RequireSignedTokens = false;
-            //    parameters.ValidateAudience = false;
-            //    parameters.ValidateIssuer = false;
-            //    parameters.ValidateIssuerSigningKey = false;
-            //    parameters.ValidateLifetime = false;
-            //});
+            builder.AddAuth(parameters =>
+            {
+                parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
+                // for sample only
+                parameters.RequireSignedTokens = false;
+                parameters.ValidateAudience = false;
+                parameters.ValidateIssuer = false;
+                parameters.ValidateIssuerSigningKey = false;
+                parameters.ValidateLifetime = false;
+            }, (accessTokenResult, httpRequest, signalRConnectionDetail) =>
+            {
+                if (accessTokenResult.Status == AccessTokenStatus.Valid)
+                {
+                    // resolve the identity
+                    var identity = accessTokenResult.Principal.Identity.Name;
+
+                    // generate custom claim
+                    var myHeader = httpRequest.Headers["myheader"];
+                    var customClaim = new Claim("myheader", myHeader);
+
+                    // update connection info detail
+                    signalRConnectionDetail.UserId = identity;
+                    signalRConnectionDetail.Claims?.Add(customClaim);
+
+                    // ASRS negotiate response generated inside our binding, now you can keep your negotiate function clean
+                }
+            });
         }
     }
 }
