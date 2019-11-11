@@ -20,6 +20,7 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 - Use Azure Functions (any language supported by V2) to broadcast messages to all clients connected to a SignalR Service hub.
 - Use Azure Functions (any language supported by V2) to send messages to a single user, or all the users in a group.
 - Use Azure Functions (any language supported by V2) to manage group users like add/remove a single user in a group.
+- Use Azure Functions (any language supported by V2) to remove a user from all groups.
 - Example scenarios include: broadcast messages to a SignalR Service hub on HTTP requests and events from Cosmos DB change feed, Event Hub, Event Grid, etc
 
 ### Bindings
@@ -27,6 +28,32 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 `SignalRConnectionInfo` input binding makes it easy to generate the token required for clients to initiate a connection to Azure SignalR Service.
 
 `SignalR` output binding allows messages to be broadcast to an Azure SignalR Service hub.
+
+#### SignalRConnectionInfo Input Binding
+
+The following table explains the binding configuration properties that you set in the *function.json* file and the `SignalRConnectionInfo` attribute.
+
+|function.json property | Attribute property |Description|
+|---------|---------|----------------------|
+|**type**|| Must be set to `signalRConnectionInfo`.|
+|**direction**|| Must be set to `in`.|
+|**name**|| Variable name used in function code for connection info object. |
+|**hubName**|**HubName**| This value must be set to the name of the SignalR hub for which the connection information is generated.|
+|**userId**|**UserId**| Optional: The value of the user identifier claim to be set in the access key token. |
+|**connectionStringSetting**|**ConnectionStringSetting**| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString"). |
+|**idToken**|**IdToken**| The ID token which provide claims to be added into Azure SignalR Service token. |
+|**claimTypeList**|**ClaimTypeList**| Defines the claims in `IdToken` that will be selected into Azure SignalR Service token. |
+
+#### SignalR Output binding
+The following table explains the binding configuration properties that you set in the *function.json* file and the `SignalR` attribute.
+
+|function.json property | Attribute property |Description|
+|---------|---------|----------------------|
+|**type**|| Must be set to `signalR`.|
+|**direction**|| Must be set to `out`.|
+|**name**|| Variable name used in function code for connection info object. |
+|**hubName**|**HubName**| This value must be set to the name of the SignalR hub for which the connection information is generated.|
+|**connectionStringSetting**|**ConnectionStringSetting**| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString") |
 
 ### Current limitations
 
@@ -48,7 +75,7 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 1. In a new folder, create a new Azure Functions app.
     - `func init`
 1. Install this Functions extension.
-    - `func extensions install -p Microsoft.Azure.WebJobs.Extensions.SignalRService -v 1.0.0`
+    - `func extensions install -p Microsoft.Azure.WebJobs.Extensions.SignalRService -v 1.0.2`
 
 ### Add application setting for SignalR connection string
 
@@ -58,58 +85,269 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 
 ### Using the SignalRConnectionInfo input binding
 
-In order for a client to connect to SignalR, it needs to obtain the SignalR Service client hub URL and an access token.
+Before a client can connect to Azure SignalR Service, it must retrieve the service endpoint URL and a valid access token. The *SignalRConnectionInfo* input binding produces the SignalR Service endpoint URL and a valid token that are used to connect to the service. Because the token is time-limited and can be used to authenticate a specific user to a connection, you should not cache the token or share it between clients. An HTTP trigger using this binding can be used by clients to retrieve the connection information.
 
-1. Create a new function named `negotiate` and use the `SignalRConnectionInfo` input binding to obtain the connection information and return it. Take a look at this [sample](samples/simple-chat/js/functionapp/negotiate/).
-1. Client connects to the `negotiate` function as it's a normal SignalR hub. See [this file](samples/simple-chat/content/index.html) for a sample usage.
+See the language-specific example:
 
-Binding schema:
+* [2.x C#](#2x-c-input-examples)
+* [2.x JavaScript](#2x-javascript-input-examples)
+* [2.x Java](#2x-java-input-examples)
 
-```javascript
+For more information on how this binding is used to create a "negotiate" function that can be consumed by a SignalR client SDK, see the [Azure Functions development and configuration article](https://docs.microsoft.com/en-us/azure/azure-signalr/signalr-concept-serverless-development-config) in the SignalR Service concepts documentation.
+
+### 2.x C# input examples
+
+The following example shows a [C# function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that acquires SignalR connection information using the input binding and returns it over HTTP.
+
+```cs
+[FunctionName("negotiate")]
+public static SignalRConnectionInfo Negotiate(
+    [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req,
+    [SignalRConnectionInfo(HubName = "chat")]SignalRConnectionInfo connectionInfo)
 {
-  "type": "signalRConnectionInfo",
-  "name": "connectionInfo",
-  "hubName": "<hub_name>",
-  "connectionStringSetting": "<setting_name>", // Defaults to AzureSignalRConnectionString
-  "direction": "in"
+    return connectionInfo;
 }
 ```
 
-### Using the SignalR output binding
+#### Authenticated tokens
 
-The `SignalR` output binding can be used to broadcast messages to all clients connected a hub. Take a look at this sample:
+If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
 
-- [HttpTrigger function to send messages](samples/simple-chat/js/functionapp/messages/)
-- [Simple chat app](samples/simple-chat/content/index.html)
-    - Calls negotiate endpoint to fetch connection information
-    - Connects to SignalR Service
-    - Sends messages to HttpTrigger function, which then broadcasts the messages to all clients
+App Service Authentication sets HTTP headers named `x-ms-client-principal-id` and `x-ms-client-principal-name` that contain the authenticated user's client principal ID and name, respectively. You can set the `UserId` property of the binding to the value from either header using a [binding expression](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-expressions-patterns): `{headers.x-ms-client-principal-id}` or `{headers.x-ms-client-principal-name}`. 
 
-Binding schema:
-
-```javascript
+```cs
+[FunctionName("negotiate")]
+public static SignalRConnectionInfo Negotiate(
+    [HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, 
+    [SignalRConnectionInfo
+        (HubName = "chat", UserId = "{headers.x-ms-client-principal-id}")]
+        SignalRConnectionInfo connectionInfo)
 {
-  "type": "signalR",
-  "name": "signalRMessages", // name of the output binding
-  "hubName": "<hub_name>",
-  "connectionStringSetting": "<setting_name>", // Defaults to AzureSignalRConnectionString
-  "direction": "out"
+    // connectionInfo contains an access key token with a name identifier claim set to the authenticated user
+    return connectionInfo;
 }
 ```
 
-To send one or more messages, set the output binding to an array of objects:
+### 2.x JavaScript input examples
+
+The following example shows a SignalR connection info input binding in a *function.json* file and a [JavaScript function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node) that uses the binding to return the connection information.
+
+Here's binding data in the *function.json* file:
+
+Example function.json:
+
+```json
+{
+    "type": "signalRConnectionInfo",
+    "name": "connectionInfo",
+    "hubName": "chat",
+    "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+    "direction": "in"
+}
+```
+
+Here's the JavaScript code:
 
 ```javascript
-module.exports = function (context, req) {
-  context.bindings.signalRMessages = [{
-    "target": "newMessage", // name of the client method to invoke
-    "arguments": [
-      req.body // arguments to pass to client method
-    ]
-  }];
-  context.done();
+module.exports = async function (context, req, connectionInfo) {
+    context.res.body = connectionInfo;
 };
 ```
+
+#### Authenticated tokens
+
+If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
+
+App Service Authentication sets HTTP headers named `x-ms-client-principal-id` and `x-ms-client-principal-name` that contain the authenticated user's client principal ID and name, respectively. You can set the `userId` property of the binding to the value from either header using a [binding expression](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-expressions-patterns): `{headers.x-ms-client-principal-id}` or `{headers.x-ms-client-principal-name}`. 
+
+Example function.json:
+
+```json
+{
+    "type": "signalRConnectionInfo",
+    "name": "connectionInfo",
+    "hubName": "chat",
+    "userId": "{headers.x-ms-client-principal-id}",
+    "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+    "direction": "in"
+}
+```
+
+Here's the JavaScript code:
+
+```javascript
+module.exports = async function (context, req, connectionInfo) {
+    // connectionInfo contains an access key token with a name identifier
+    // claim set to the authenticated user
+    context.res.body = connectionInfo;
+};
+```
+
+### 2.x Java input examples
+
+The following example shows a [Java function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java) that acquires SignalR connection information using the input binding and returns it over HTTP.
+
+```java
+@FunctionName("negotiate")
+public SignalRConnectionInfo negotiate(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> req,
+        @SignalRConnectionInfoInput(
+            name = "connectionInfo",
+            hubName = "chat") SignalRConnectionInfo connectionInfo) {
+    return connectionInfo;
+}
+```
+
+#### Authenticated tokens
+
+If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
+
+App Service Authentication sets HTTP headers named `x-ms-client-principal-id` and `x-ms-client-principal-name` that contain the authenticated user's client principal ID and name, respectively. You can set the `UserId` property of the binding to the value from either header using a [binding expression](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-expressions-patterns): `{headers.x-ms-client-principal-id}` or `{headers.x-ms-client-principal-name}`.
+
+```java
+@FunctionName("negotiate")
+public SignalRConnectionInfo negotiate(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> req,
+        @SignalRConnectionInfoInput(
+            name = "connectionInfo",
+            hubName = "chat",
+            userId = "{headers.x-ms-client-principal-id}") SignalRConnectionInfo connectionInfo) {
+    return connectionInfo;
+}
+```
+
+## SignalR output binding
+
+Use the *SignalR* output binding to send one or more messages using Azure SignalR Service. You can broadcast a message to all connected clients, or you can broadcast it only to connected clients that have been authenticated to a given user.
+
+You can also use it to manage the groups that a user belongs to.
+
+See the language-specific example:
+
+* [2.x C#](#2x-c-send-message-output-examples)
+* [2.x JavaScript](#2x-javascript-send-message-output-examples)
+* [2.x Java](#2x-java-send-message-output-examples)
+
+### 2.x C# send message output examples
+
+#### Broadcast to all clients
+
+The following example shows a [C# function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+
+```cs
+[FunctionName("SendMessage")]
+public static Task SendMessage(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
+    [SignalR(HubName = "chat")]IAsyncCollector<SignalRMessage> signalRMessages)
+{
+    return signalRMessages.AddAsync(
+        new SignalRMessage 
+        {
+            Target = "newMessage", 
+            Arguments = new [] { message } 
+        });
+}
+```
+
+#### Send to a user
+
+You can send a message only to connections that have been authenticated to a user by setting the `UserId` property of the SignalR message.
+
+```cs
+[FunctionName("SendMessage")]
+public static Task SendMessage(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message, 
+    [SignalR(HubName = "chat")]IAsyncCollector<SignalRMessage> signalRMessages)
+{
+    return signalRMessages.AddAsync(
+        new SignalRMessage 
+        {
+            // the message will only be sent to this user ID
+            UserId = "userId1",
+            Target = "newMessage",
+            Arguments = new [] { message }
+        });
+}
+```
+
+#### Send to a group
+
+You can send a message only to connections that have been added to a group by setting the `GroupName` property of the SignalR message.
+
+```cs
+[FunctionName("SendMessage")]
+public static Task SendMessage(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]object message,
+    [SignalR(HubName = "chat")]IAsyncCollector<SignalRMessage> signalRMessages)
+{
+    return signalRMessages.AddAsync(
+        new SignalRMessage
+        {
+            // the message will be sent to the group with this name
+            GroupName = "myGroup",
+            Target = "newMessage",
+            Arguments = new [] { message }
+        });
+}
+```
+
+### 2.x C# group management output examples
+
+SignalR Service allows users to be added to groups. Messages can then be sent to a group. You can use the `SignalRGroupAction` class with the `SignalR` output binding to manage a user's group membership.
+
+#### Add user to a group
+
+The following example adds a user to a group.
+
+```csharp
+[FunctionName("addToGroup")]
+public static Task AddToGroup(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+    ClaimsPrincipal claimsPrincipal,
+    [SignalR(HubName = "chat")]
+        IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+{
+    var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+    return signalRGroupActions.AddAsync(
+        new SignalRGroupAction
+        {
+            UserId = userIdClaim.Value,
+            GroupName = "myGroup",
+            Action = GroupAction.Add
+        });
+}
+```
+
+#### Remove user from a group
+
+The following example removes a user from a group.
+
+```csharp
+[FunctionName("removeFromGroup")]
+public static Task RemoveFromGroup(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+    ClaimsPrincipal claimsPrincipal,
+    [SignalR(HubName = "chat")]
+        IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+{
+    var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier);
+    return signalRGroupActions.AddAsync(
+        new SignalRGroupAction
+        {
+            UserId = userIdClaim.Value,
+            GroupName = "myGroup",
+            Action = GroupAction.Remove
+        });
+}
+```
+
+The full samples can be found [here](./samples/).
 
 ## Contributing
 
