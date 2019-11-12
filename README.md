@@ -349,6 +349,75 @@ public static Task RemoveFromGroup(
 
 The full samples can be found [here](./samples/).
 
+#### Use SignalR Service Management SDK in functions
+
+[SignalR Service Management SDK](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management) provides communication capabilities with ASP.NET Core SignalR clients through Azure SignalR Service directly. The capabilities include sending messages to all/clients/users/groups and managing group membership. We expose the `IServicemanager` and `IServiceHubContext` in `StaticServiceHubContextStore`. For how to use Management SDK, please refer to this [guide](https://github.com/Azure/azure-signalr/blob/dev/docs/management-sdk-guide.md).
+
+SignalR input and output bindings are designed to improve user experience for Azure SignalR Service in Azure Functions. However SignalR binding is only an extrension to Azure Functions, it has some limitations, for example, you don't have an easy way to add claims into access token in `SignalRConnectionInfo`. If you have such advanced requirements that SignalR input/output binding doesn't meet, consider using `StaticServiceHubContextStore`.
+
+##### `StaticServiceHubContextStore`
+
+A global `IServiceManagerStore` for the extension. It stores `IServiceHubContextStore` per connection string setting.
+
+`public static IServiceHubContextStore Get(string configurationKey = Constants.AzureSignalRConnectionStringName)`
+Get `IServiceHubContextStore` for `configurationKey`. The default `configurationKey` is "AzureSignalRConnectionString".
+
+##### `IServiceHubContextStore`
+
+`IServiceHubContextStore` stores `IServiceHubContext` for each hub name.
+
+`ValueTask<IServiceHubContext> GetAsync(string hubName)`
+
+Gets `IServiceHubContext`. If the `IServiceHubContext` for a specific hub name exists, returns the `IServiceHubContext`, otherwise creates one and then returns it. `hubName` is the hub name of the `IServiceHubContext`. The returned value is an instance of `IServiceHubContext`.
+
+`IServiceManager ServiceManager`
+
+`IServiceManager` is used to create `IServiceHubContext`.
+
+For more introduction about `IServiceHubContext` and `IServiceManager`, please refer to [Azure SignalR Service Management SDK Guide](https://github.com/Azure/azure-signalr/blob/dev/docs/management-sdk-guide.md).
+
+> Note: We recommend you use `StaticServiceHubContextStore` instead of importing [SignalR Service Management package](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management). If you import [SignalR Service Management package](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management) directly, and you use `Persistent` [transport type](https://github.com/Azure/azure-signalr/blob/dev/docs/management-sdk-guide.md#transport-type), please don't create a `IServiceHubContext` and dispose it in a function method. Because for each http request, the function will be invoked. Therefore a new Websockets connection will be established and disconnected for each http request. That will have large impact to you function performance. Instead, you should make the `IServiceHubContext` a singleton to the function class. 
+
+The following are sample for negotiate function without SignalR input binding and broadcast messages without output binding respectively.
+
+##### Negotiate function without SignalR input binding
+
+With `StaticServiceHubContextStore`, you can generate `SignalRConnectionInfo` inside the function, provide user id, hub name and additional claims extracted from http request. 
+
+```C#
+[FunctionName("negotiate")]
+public static SignalRConnectionInfo GetSignalRInfo(
+    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
+{
+    var userId = req.Query["userid"];
+    var hubName = req.Query["hubname"];
+    var connectionInfo = new SignalRConnectionInfo();
+    var serviceManager = StaticServiceHubContextStore.Get().ServiceManager;
+    connectionInfo.AccessToken = serviceManager
+        .GenerateClientAccessToken(
+            hubName,
+            userId,
+            new List<Claim> { new Claim("claimType", "claimValue") });
+    connectionInfo.Url = serviceManager.GetClientEndpoint(hubName);
+    return connectionInfo;
+}
+```
+
+##### Broadcast messages with output binding
+
+`IServiceHubContext` provide [Microsoft.Azure.SignalR](https://www.nuget.org/packages/Microsoft.Azure.SignalR/)-extended interfaces, if you are familiar how to use `IHubContext` to send messages in an app server, it will be easy for you to use `IServiceHubContext`.
+
+``` C#
+[FunctionName("broadcast")]
+public static async Task Broadcast(
+    [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req)
+{
+    var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+    var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
+    await serviceHubContext.Clients.All.SendAsync("newMessage", message);
+}
+```
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
