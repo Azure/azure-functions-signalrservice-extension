@@ -1,5 +1,45 @@
 # Azure Functions Bindings for Azure SignalR Service
 
+## Content
+
+- [Azure Functions Bindings for Azure SignalR Service](#azure-functions-bindings-for-azure-signalr-service)
+  - [Content](#content)
+  - [Build Status](#build-status)
+  - [NuGet Packages](#nuget-packages)
+  - [Intro](#intro)
+    - [Supported scenarios](#supported-scenarios)
+    - [Bindings](#bindings)
+      - [SignalRConnectionInfo Input Binding](#signalrconnectioninfo-input-binding)
+      - [SignalR Output binding](#signalr-output-binding)
+    - [Current limitations](#current-limitations)
+  - [Prerequisites](#prerequisites)
+  - [Usage](#usage)
+    - [Create Azure SignalR Service instance](#create-azure-signalr-service-instance)
+    - [Create Function App with extension](#create-function-app-with-extension)
+    - [Add application setting for SignalR connection string](#add-application-setting-for-signalr-connection-string)
+    - [Using the SignalRConnectionInfo input binding](#using-the-signalrconnectioninfo-input-binding)
+    - [2.x C# input examples](#2x-c-input-examples)
+      - [Authenticated tokens](#authenticated-tokens)
+    - [2.x JavaScript input examples](#2x-javascript-input-examples)
+      - [Authenticated tokens](#authenticated-tokens-1)
+    - [2.x Java input examples](#2x-java-input-examples)
+      - [Authenticated tokens](#authenticated-tokens-2)
+  - [SignalR output binding](#signalr-output-binding)
+    - [2.x C# send message output examples](#2x-c-send-message-output-examples)
+      - [Broadcast to all clients](#broadcast-to-all-clients)
+      - [Send to a user](#send-to-a-user)
+      - [Send to a group](#send-to-a-group)
+    - [2.x C# group management output examples](#2x-c-group-management-output-examples)
+      - [Add user to a group](#add-user-to-a-group)
+      - [Remove user from a group](#remove-user-from-a-group)
+      - [Use SignalR Service Management SDK in functions](#use-signalr-service-management-sdk-in-functions)
+        - [StaticServiceHubContextStore](#staticservicehubcontextstore)
+        - [IServiceHubContextStore](#iservicehubcontextstore)
+        - [Negotiate function without SignalR input binding](#negotiate-function-without-signalr-input-binding)
+        - [Broadcast messages with output binding](#broadcast-messages-with-output-binding)
+  - [Advanced Topics](#advanced-topics)
+  - [Contributing](#contributing)
+
 ## Build Status
 
 Travis: [![travis](https://travis-ci.org/Azure/azure-functions-signalrservice-extension.svg?branch=dev)](https://travis-ci.org/Azure/azure-functions-signalrservice-extension)
@@ -355,14 +395,14 @@ The full samples can be found [here](./samples/).
 
 SignalR input and output bindings are designed to improve user experience for Azure SignalR Service in Azure Functions. However SignalR binding is only an extrension to Azure Functions, it has some limitations, for example, you don't have an easy way to add claims into access token in `SignalRConnectionInfo`. If you have such advanced requirements that SignalR input/output binding doesn't meet, consider using `StaticServiceHubContextStore`.
 
-##### `StaticServiceHubContextStore`
+##### StaticServiceHubContextStore
 
 A global `IServiceManagerStore` for the extension. It stores `IServiceHubContextStore` per connection string setting.
 
 `public static IServiceHubContextStore Get(string configurationKey = Constants.AzureSignalRConnectionStringName)`
 Get `IServiceHubContextStore` for `configurationKey`. The default `configurationKey` is "AzureSignalRConnectionString".
 
-##### `IServiceHubContextStore`
+##### IServiceHubContextStore
 
 `IServiceHubContextStore` stores `IServiceHubContext` for each hub name.
 
@@ -417,6 +457,9 @@ public static async Task Broadcast(
     await serviceHubContext.Clients.All.SendAsync("newMessage", message);
 }
 ```
+
+## Advanced Topics
+* [Group Management](https://github.com/Azure/azure-signalr/blob/dev/docs/group-management.md)
 
 ## Contributing
 
