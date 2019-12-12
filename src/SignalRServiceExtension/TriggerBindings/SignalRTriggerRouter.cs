@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -23,6 +24,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             dic.Add(key.methodName, listener);
         }
 
+        // The request should meet the convention
+        // Header:       X-ASRS-Serverless-ConnectionId
+        //               X-ASRS-Serverless-UserId
+        // Content-Type: application/json / application/x-msgpack
+        // Body:         Payload
         public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
         {
             var path = req.RequestUri.AbsolutePath;
@@ -30,43 +36,61 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 if (_listeners.TryGetValue(hubName, out var hubListener))
                 {
-                    InvocationContext invocationContext;
-                    try
-                    {
-                        var body = await req.Content.ReadAsStringAsync();
-                        invocationContext = JsonConvert.DeserializeObject<InvocationContext>(body);
-                    }
-                    catch (Exception)
-                    {
-                        return new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    }
+                    var contentType = req.Content.Headers.ContentType.MediaType;
 
-                    if (string.IsNullOrEmpty(invocationContext.Data?.Target))
+                    if (contentType == Constants.JsonContentType)
                     {
-                        return new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    }
-
-                    if (hubListener.TryGetValue(invocationContext.Data?.Target, out var listener))
-                    {
-                        invocationContext.HubName = hubName;
-                        var signalRTriggerEvent = new SignalRTriggerEvent
+                        InvocationContext invocationContext = new InvocationContext();
+                        try
                         {
-                            Context = invocationContext,
-                        };
-
-                        // TODO: select out listener that match the pattern
-
-                        var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
+                            var body = await req.Content.ReadAsStringAsync();
+                            invocationContext.Data = JsonConvert.DeserializeObject<InvocationContext.InvocationData>(body);
+                        }
+                        catch (Exception)
                         {
-                            TriggerValue = signalRTriggerEvent
-                        }, CancellationToken.None);
+                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+                        }
 
-                        // TODO: Support invokeAsync later
-                        return new HttpResponseMessage(HttpStatusCode.OK);
+                        if (string.IsNullOrEmpty(invocationContext.Data?.Target))
+                        {
+                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+                        }
+
+                        if (hubListener.TryGetValue(invocationContext.Data?.Target, out var listener))
+                        {
+                            invocationContext.HubName = hubName;
+                            invocationContext.Context = new InvocationContext.ConnectionContext
+                            {
+                                ConnectionId = req.Content.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault(),
+                                UserId = req.Content.Headers.GetValues(Constants.UserIdHeader).FirstOrDefault(),
+                            };
+                            var signalRTriggerEvent = new SignalRTriggerEvent
+                            {
+                                Context = invocationContext,
+                            };
+
+                            // TODO: select out listener that match the pattern
+
+                            var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
+                            {
+                                TriggerValue = signalRTriggerEvent
+                            }, CancellationToken.None);
+
+                            // TODO: Support invokeAsync later
+                            return new HttpResponseMessage(HttpStatusCode.OK);
+                        }
+                        else
+                        {
+                            return new HttpResponseMessage(HttpStatusCode.NotFound);
+                        }
+                    }
+                    else if (contentType == Constants.MessagepackContentType)
+                    {
+                        throw new NotSupportedException();
                     }
                     else
                     {
-                        return new HttpResponseMessage(HttpStatusCode.NotFound);
+                        return new HttpResponseMessage(HttpStatusCode.BadRequest);
                     }
                 }
                 else
