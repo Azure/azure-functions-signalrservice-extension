@@ -59,12 +59,12 @@ namespace FunctionApp
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 
-        // curl -X POST -H "Content-type: application/json" -d '{"HubName": "simplechat", "Data": {"Target": "broadcast2", "Arguments": ["hello"]}}' localhost:7071/runtime/webhooks/signalr/simplechat
+        // curl -X POST -H "Content-type: application/json" -H "X-SignalR-Serverless-ConnectionId: asdf-asf" -H "X-SignalR-Serverless-UserId: abc"   -d '{"type": "1", "invocationId": "23", "Target": "broadcast2", "Arguments": ["hello"]}'$A localhost:7071/runtime/webhooks/signalr/simplechat
         [FunctionName("broadcast2")]
         public static async Task BroadcastWithSignalRTrigger(
             [SignalRTrigger(HubName = "simplechat")]InvocationContext context)
         {
-            var message = (string)context.Data.Arguments[0];
+            var message = context.Data.Type.ToString();
             var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }

@@ -6,7 +6,7 @@
 
         public ConnectionContext Context { get; set; }
 
-        public InvocationData Data { get; set; }
+        public ISignalRServerlessMessage Data { get; set; }
 
         public class ConnectionContext
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,22 +7,23 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class SignalRTriggerRouter
     {
-        private readonly Dictionary<string, Dictionary<string, SignalRListener>> _listeners = new Dictionary<string, Dictionary<string, SignalRListener>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SignalRHubMethodExecutor> _executors = new Dictionary<string, SignalRHubMethodExecutor>(StringComparer.OrdinalIgnoreCase);
 
         internal void AddListener((string hubName, string methodName) key, SignalRListener listener)
         {
-            if (!_listeners.TryGetValue(key.hubName, out var dic))
+            if (!_executors.TryGetValue(key.hubName, out var executor))
             {
-                dic = new Dictionary<string, SignalRListener>(StringComparer.OrdinalIgnoreCase);
-                _listeners.Add(key.hubName, dic);
+                executor = new SignalRHubMethodExecutor(key.hubName);
+                _executors.Add(key.hubName, executor);
             }
-            dic.Add(key.methodName, listener);
+            executor.AddListener(key.methodName, listener);
         }
 
         // The request should meet the convention
@@ -32,76 +34,38 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
         {
             var path = req.RequestUri.AbsolutePath;
-            if (TryGetHubName(path, out var hubName))
-            {
-                if (_listeners.TryGetValue(hubName, out var hubListener))
-                {
-                    var contentType = req.Content.Headers.ContentType.MediaType;
-
-                    if (contentType == Constants.JsonContentType)
-                    {
-                        InvocationContext invocationContext = new InvocationContext();
-                        try
-                        {
-                            var body = await req.Content.ReadAsStringAsync();
-                            invocationContext.Data = JsonConvert.DeserializeObject<InvocationContext.InvocationData>(body);
-                        }
-                        catch (Exception)
-                        {
-                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
-                        }
-
-                        if (string.IsNullOrEmpty(invocationContext.Data?.Target))
-                        {
-                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
-                        }
-
-                        if (hubListener.TryGetValue(invocationContext.Data?.Target, out var listener))
-                        {
-                            invocationContext.HubName = hubName;
-                            invocationContext.Context = new InvocationContext.ConnectionContext
-                            {
-                                ConnectionId = req.Content.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault(),
-                                UserId = req.Content.Headers.GetValues(Constants.UserIdHeader).FirstOrDefault(),
-                            };
-                            var signalRTriggerEvent = new SignalRTriggerEvent
-                            {
-                                Context = invocationContext,
-                            };
-
-                            // TODO: select out listener that match the pattern
-
-                            var result = await listener.Executor.TryExecuteAsync(new Host.Executors.TriggeredFunctionData
-                            {
-                                TriggerValue = signalRTriggerEvent
-                            }, CancellationToken.None);
-
-                            // TODO: Support invokeAsync later
-                            return new HttpResponseMessage(HttpStatusCode.OK);
-                        }
-                        else
-                        {
-                            return new HttpResponseMessage(HttpStatusCode.NotFound);
-                        }
-                    }
-                    else if (contentType == Constants.MessagepackContentType)
-                    {
-                        throw new NotSupportedException();
-                    }
-                    else
-                    {
-                        return new HttpResponseMessage(HttpStatusCode.BadRequest);
-                    }
-                }
-                else
-                {
-                    return new HttpResponseMessage(HttpStatusCode.NotFound);
-                }
-            }
-            else
+            var contentType = req.Content.Headers.ContentType.MediaType;
+            if (!ValidateContentType(contentType))
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
+
+            var connectionId = req.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault();
+
+            if (TryGetHubName(path, out var hubName))
+            {
+                if (_executors.TryGetValue(hubName, out var executor))
+                {
+                    var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
+                    var messageParser = MessageParser.GetParser(contentType);
+                    
+
+                    while (messageParser.TryParseMessage(ref payload, out var message))
+                    {
+                        await executor.ExecuteMethod(new InvocationContext.ConnectionContext
+                        {
+                            ConnectionId = req.Content.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault(),
+                            UserId = req.Content.Headers.GetValues(Constants.UserIdHeader).FirstOrDefault(),
+                        }, message);
+                    }
+
+                    return new HttpResponseMessage(HttpStatusCode.OK);
+                }
+                // No target hub in functions
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }
+            // Request not meet convention
+            return new HttpResponseMessage(HttpStatusCode.BadRequest);
         }
 
         private bool TryGetHubName(string path, out string hubName)
@@ -131,6 +95,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             return true;
+        }
+
+        private bool ValidateContentType(string contentType)
+        {
+            return contentType == Constants.JsonContentType || contentType == Constants.MessagepackContentType;
         }
     }
 }
