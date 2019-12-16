@@ -14,6 +14,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class SignalRTriggerBinding : ITriggerBinding
     {
         private const string HubNameKey = "hubName";
+        private const string ReturnParameterKey = "$return";
 
         private readonly ParameterInfo _parameterInfo;
         private readonly SignalRTriggerAttribute _attribute;
@@ -33,9 +34,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (value is SignalRTriggerEvent triggerEvent)
             {
                 var bindingContext = triggerEvent.Context;
-                bindingData.Add(HubNameKey, bindingContext.HubName);
+                bindingData.Add(HubNameKey, bindingContext.Context.HubName);
                 
-                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData));
+                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData)
+                {
+                    ReturnValueProvider = new TriggerReturnValueProvider(triggerEvent.TaskCompletionSource),
+                });
             }
 
             return Task.FromResult<ITriggerData>(null);
@@ -78,6 +82,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 // Functions can bind to parameter name "hubName" directly
                 { HubNameKey, typeof(string) },
+                { ReturnParameterKey, typeof(object).MakeByRefType() },
             };
 
             return contract;
@@ -107,6 +112,36 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             public Task SetValueAsync(object value, CancellationToken cancellationToken)
             {
                 _value = value;
+                return Task.CompletedTask;
+            }
+        }
+
+        private class TriggerReturnValueProvider : IValueBinder
+        {
+            private TaskCompletionSource<object> _tcs;
+
+            public TriggerReturnValueProvider(TaskCompletionSource<object> tcs)
+            {
+                _tcs = tcs;
+            }
+
+            public Task<object> GetValueAsync()
+            {
+                // Unnecessary for return value provider
+                return null;
+            }
+
+            public string ToInvokeString()
+            {
+                // Unnecessary for return value provider
+                return string.Empty;
+            }
+
+            public Type Type => typeof(object).MakeByRefType();
+
+            public Task SetValueAsync(object value, CancellationToken cancellationToken)
+            {
+                _tcs.TrySetResult(value);
                 return Task.CompletedTask;
             }
         }

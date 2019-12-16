@@ -27,79 +27,62 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
 
         // The request should meet the convention
-        // Header:       X-ASRS-Serverless-ConnectionId
-        //               X-ASRS-Serverless-UserId
+        // Header:       X-ASRS-ConnectionId
+        //               X-ASRS-UserId
+        //               X-ASRS-HubName
         // Content-Type: application/json / application/x-msgpack
         // Body:         Payload
         public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
         {
-            var path = req.RequestUri.AbsolutePath;
             var contentType = req.Content.Headers.ContentType.MediaType;
             if (!ValidateContentType(contentType))
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
 
-            var connectionId = req.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault();
-
-            if (TryGetHubName(path, out var hubName))
+            if (!TryGetConnectionContext(req, out var connectionContext))
             {
-                if (_executors.TryGetValue(hubName, out var executor))
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+            }
+
+            var hubName = connectionContext.HubName;
+            if (_executors.TryGetValue(hubName, out var executor))
+            {
+                var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
+                var messageParser = MessageParser.GetParser(contentType);
+                
+                if (messageParser.TryParseMessage(ref payload, out var message))
                 {
-                    var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
-                    var messageParser = MessageParser.GetParser(contentType);
-                    
-
-                    while (messageParser.TryParseMessage(ref payload, out var message))
-                    {
-                        await executor.ExecuteMethod(new InvocationContext.ConnectionContext
-                        {
-                            ConnectionId = req.Content.Headers.GetValues(Constants.ConnectionIdHeader).FirstOrDefault(),
-                            UserId = req.Content.Headers.GetValues(Constants.UserIdHeader).FirstOrDefault(),
-                        }, message);
-                    }
-
-                    return new HttpResponseMessage(HttpStatusCode.OK);
+                    var result = await executor.ExecuteMethod(connectionContext, message);
                 }
-                // No target hub in functions
-                return new HttpResponseMessage(HttpStatusCode.NotFound);
+
+                return new HttpResponseMessage(HttpStatusCode.OK);
             }
-            // Request not meet convention
-            return new HttpResponseMessage(HttpStatusCode.BadRequest);
-        }
-
-        private bool TryGetHubName(string path, out string hubName)
-        {
-            // The url should be /runtime/webhooks/signalr/{hub}
-            var paths = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (!ValidateUri(paths))
-            {
-                hubName = null;
-                return false;
-            }
-
-            hubName = paths[3];
-            return true;
-        }
-
-        private bool ValidateUri(string[] paths)
-        {
-            if (paths.Length != 4)
-            {
-                return false;
-            }
-
-            if (paths[2] != "signalr")
-            {
-                return false;
-            }
-
-            return true;
+            // No target hub in functions
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
         }
 
         private bool ValidateContentType(string contentType)
         {
-            return contentType == Constants.JsonContentType || contentType == Constants.MessagepackContentType;
+            return contentType == Constants.JsonContentType || contentType == Constants.MessagePackContentType;
+        }
+
+        private bool TryGetConnectionContext(HttpRequestMessage request, out InvocationContext.ConnectionContext context)
+        {
+            if (!request.Headers.Contains(Constants.AsrsHubNameHeader) || !request.Headers.Contains(Constants.AsrsConnectionIdHeader))
+            {
+                context = null;
+                return false;
+            }
+
+            context = new InvocationContext.ConnectionContext();
+            context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).FirstOrDefault();
+            context.HubName = request.Headers.GetValues(Constants.AsrsHubNameHeader).FirstOrDefault();
+            if (request.Headers.Contains(Constants.AsrsUserIdHeader))
+            {
+                context.UserId = request.Headers.GetValues(Constants.AsrsUserIdHeader).FirstOrDefault();
+            }
+            return true;
         }
     }
 }

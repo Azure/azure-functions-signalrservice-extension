@@ -24,7 +24,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _listeners.Add(target, listener);
         }
 
-        public Task ExecuteMethod(InvocationContext.ConnectionContext context, ISignalRServerlessMessage message)
+        public async Task<Task<object>> ExecuteMethod(InvocationContext.ConnectionContext context, ISignalRServerlessMessage message)
         {
             string target;
             if (message is InvocationMessage invocation)
@@ -44,26 +44,28 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new Exception("Target not specified.");
             }
 
+            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+
             if (_listeners.TryGetValue(target, out var listener))
             {
                 var signalRTriggerEvent = new SignalRTriggerEvent
                 {
                     Context = new InvocationContext
                     {
-                        HubName = _hub,
                         Context = context,
                         Data = message,
                     },
+                    TaskCompletionSource = tcs,
                 };
                 // TODO: select out listener that match the pattern
 
-                return listener.Executor.TryExecuteAsync(
+                await listener.Executor.TryExecuteAsync(
                     new Host.Executors.TriggeredFunctionData
                     {
                         TriggerValue = signalRTriggerEvent
                     }, CancellationToken.None);
 
-                // TODO: Support invokeAsync later
+                return tcs.Task;
             }
 
             throw new Exception($"Target: {target} not found.");
