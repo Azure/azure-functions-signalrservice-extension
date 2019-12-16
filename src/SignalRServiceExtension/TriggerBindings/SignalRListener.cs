@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            _router.AddListener((_hubName, _methodName), this);
+            _router.AddRoute((_hubName, _methodName), Executor);
             return Task.CompletedTask;
         }
 

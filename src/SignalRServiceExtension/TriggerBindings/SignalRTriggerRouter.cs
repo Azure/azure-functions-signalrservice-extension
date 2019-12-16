@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
@@ -15,15 +18,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRTriggerRouter
     {
         private readonly Dictionary<string, SignalRHubMethodExecutor> _executors = new Dictionary<string, SignalRHubMethodExecutor>(StringComparer.OrdinalIgnoreCase);
+        private readonly IHubProtocol _jsonHubProtocol = new JsonHubProtocol();
+        private readonly IHubProtocol _messagePackHubProtocol = new MessagePackHubProtocol();
 
-        internal void AddListener((string hubName, string methodName) key, SignalRListener listener)
+        internal void AddRoute((string hubName, string methodName) key, ITriggeredFunctionExecutor executor)
         {
-            if (!_executors.TryGetValue(key.hubName, out var executor))
+            if (!_executors.TryGetValue(key.hubName, out var hubExecutor))
             {
-                executor = new SignalRHubMethodExecutor(key.hubName);
-                _executors.Add(key.hubName, executor);
+                hubExecutor = new SignalRHubMethodExecutor(key.hubName);
+                _executors.Add(key.hubName, hubExecutor);
             }
-            executor.AddListener(key.methodName, listener);
+            hubExecutor.AddTarget(key.methodName, executor);
         }
 
         // The request should meet the convention
@@ -34,6 +39,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         // Body:         Payload
         public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
         {
+            // TODO: More details about response
             var contentType = req.Content.Headers.ContentType.MediaType;
             if (!ValidateContentType(contentType))
             {
@@ -46,17 +52,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             var hubName = connectionContext.HubName;
+            // TODO: select out executor that match the pattern
             if (_executors.TryGetValue(hubName, out var executor))
             {
                 var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
                 var messageParser = MessageParser.GetParser(contentType);
-                
+                var protocol = contentType == Constants.JsonContentType ? _jsonHubProtocol : _messagePackHubProtocol;
+
                 if (messageParser.TryParseMessage(ref payload, out var message))
                 {
-                    var result = await executor.ExecuteMethod(connectionContext, message);
+                    switch (message)
+                    {
+                        case InvocationMessage invocationMessage:
+                            return await executor.ExecuteInvocation(protocol, connectionContext, invocationMessage);
+                        case OpenConnectionMessage openConnectionMessage:
+                            return await executor.ExecuteOpenConnection(connectionContext, openConnectionMessage);
+                        case CloseConnectionMessage closeConnectionMessage:
+                            return await executor.ExecuteCloseConnection(connectionContext, closeConnectionMessage);
+                        default:
+                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+                    }
                 }
 
-                return new HttpResponseMessage(HttpStatusCode.OK);
+                return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
             // No target hub in functions
             return new HttpResponseMessage(HttpStatusCode.NotFound);

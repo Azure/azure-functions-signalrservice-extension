@@ -11,7 +11,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public int Type { get; set; }
 
         [JsonProperty(PropertyName = "invocationId")]
-        public int InvocationId { get; set; }
+        public string InvocationId { get; set; }
 
         [JsonProperty(PropertyName = "target")]
         public string Target { get; set; }

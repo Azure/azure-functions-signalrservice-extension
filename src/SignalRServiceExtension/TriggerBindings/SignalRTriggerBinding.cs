@@ -38,7 +38,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 
                 return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData)
                 {
-                    ReturnValueProvider = new TriggerReturnValueProvider(triggerEvent.TaskCompletionSource),
+                    ReturnValueProvider = triggerEvent.TaskCompletionSource == null ? null : new TriggerReturnValueProvider(triggerEvent.TaskCompletionSource),
                 });
             }
 
