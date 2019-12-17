@@ -12,7 +12,7 @@
 - [Usage](#usage)
   - [Create Azure SignalR Service instance](#create-azure-signalr-service-instance)
   - [Create Function App with extension](#create-function-app-with-extension)
-  - [Add application setting for SignalR connection string](#add-application-setting-for-signalr-connection-string)
+  - [Add application settings](#add-application-settings)
   - [Using the SignalRConnectionInfo input binding](#using-the-signalrconnectioninfo-input-binding)
   - [2.x C# input examples](#2x-c-input-examples)
   - [2.x JavaScript input examples](#2x-javascript-input-examples)
@@ -100,11 +100,34 @@ The following table explains the binding configuration properties that you set i
 1. Install this Functions extension.
     - `func extensions install -p Microsoft.Azure.WebJobs.Extensions.SignalRService -v 1.0.2`
 
-### Add application setting for SignalR connection string
+### Add application settings
 
-1. Create an app setting called `AzureSignalRConnectionString` with the SignalR connection string.
-    - On localhost, use `local.settings.json`
-    - In Azure, use App Settings
+App settings in a function app contain global configuration options that affect all functions for that function app. For more details on how to define the app settings, please refer to [App settings reference for Azure Functions](https://docs.microsoft.com/en-us/azure/azure-functions/functions-app-settings)
+
+An app settings sample for Azure SignalR Service Function binding could be found [here](./samples/simple-chat/csharp/FunctionApp/local.settings.sample.json).
+
+``` json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "AzureWebJobsDashboard": "",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "AzureSignalRConnectionString": "<signalr-connection-string>",
+    "AzureSignalRServiceTransportType": "Transient"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*"
+  }
+}
+```
+Note that `AzureSignalRConnectionString` and `AzureSignalRServiceTransportType` are settings for Azure SignalR Service Function binding.
+
+* `AzureSignalRConnectionString` is the SignalR Service's connection string, it will be used as default connection string when Function doesn't define it.
+* `AzureSignalRServiceTransportType` is used for determining whether the Function establish WebSockets connections to SignalR Service to send messages.
+  * `Transient`: Send messsages by calling SignalR Service's [REST API](https://github.com/Azure/azure-signalr/blob/dev/docs/rest-api.md). This mode is appropriate when you want to send messages infrequently.
+  * `Persisent`: Establish WebSockets connections for each hub, send all messages via these connections. This mode is more effecient than `Transient` mode when you want to send messages frequently or regularly.
 
 ### Using the SignalRConnectionInfo input binding
 
