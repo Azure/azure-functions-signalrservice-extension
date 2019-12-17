@@ -14,16 +14,5 @@
 
             public string UserId { get; set; }
         }
-
-        public class InvocationData
-        {
-            public int Type { get; set; }
-
-            public int InvocationId { get; set; }
-
-            public string Target { get; set; }
-
-            public object[] Arguments { get; set; }
-        }
     }
 }

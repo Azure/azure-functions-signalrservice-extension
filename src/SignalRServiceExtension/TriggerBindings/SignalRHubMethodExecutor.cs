@@ -35,24 +35,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             string target = message.Target;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            HttpResponseMessage response;
+            CompletionMessage completionMessage;
             if (_executors.TryGetValue(target, out var executor))
             {
                 await ExecuteAsync(executor, context, message, tcs);
                 var result = await tcs.Task;
-                var completionMessage = CompletionMessage.WithResult(message.InvocationId, result);
-                return new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new ByteArrayContent(protocol.GetMessageBytes(completionMessage).ToArray()),
-                };
+                completionMessage = CompletionMessage.WithResult(message.InvocationId, result);
+                response = new HttpResponseMessage(HttpStatusCode.OK);
             }
             else
             {
-                var completionMessage = CompletionMessage.WithError(message.InvocationId, $"Target: {target} not found.");
-                return new HttpResponseMessage(HttpStatusCode.NotFound)
-                {
-                    Content = new ByteArrayContent(protocol.GetMessageBytes(completionMessage).ToArray()),
-                };
+                completionMessage = CompletionMessage.WithError(message.InvocationId, $"Target: {target} not found.");
+                response = new HttpResponseMessage(HttpStatusCode.NotFound);
             }
+
+            if (!string.IsNullOrEmpty(message.InvocationId))
+            {
+                response.Content = new ByteArrayContent(protocol.GetMessageBytes(completionMessage).ToArray());
+            }
+            return response;
         }
 
         public async Task<HttpResponseMessage> ExecuteOpenConnection(InvocationContext.ConnectionContext context, OpenConnectionMessage message)
@@ -91,5 +93,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     TriggerValue = signalRTriggerEvent
                 }, CancellationToken.None);
         }
+
+
     }
 }

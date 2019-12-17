@@ -11,5 +11,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         [AutoResolve]
         public string HubName { get; set; }
+
+        [AutoResolve]
+        public string Target { get; set; }
     }
 }

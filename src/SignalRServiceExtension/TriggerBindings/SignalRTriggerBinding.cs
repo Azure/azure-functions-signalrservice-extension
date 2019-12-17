@@ -51,11 +51,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentNullException(nameof(context));
             }
-            
-            var functionNameAttribute = _parameterInfo.Member.GetCustomAttribute<FunctionNameAttribute>(false);
-            var methodName = functionNameAttribute.Name;
 
-            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _router, _attribute.HubName, methodName));
+            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _router, _attribute.HubName, _attribute.Target));
         }
 
         public ParameterDescriptor ToParameterDescriptor()
