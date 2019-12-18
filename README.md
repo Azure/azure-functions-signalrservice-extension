@@ -13,13 +13,8 @@
   - [Create Azure SignalR Service instance](#create-azure-signalr-service-instance)
   - [Create Function App with extension](#create-function-app-with-extension)
   - [Add application settings](#add-application-settings)
-  - [Using the SignalRConnectionInfo input binding](#using-the-signalrconnectioninfo-input-binding)
-  - [2.x C# input examples](#2x-c-input-examples)
-  - [2.x JavaScript input examples](#2x-javascript-input-examples)
-  - [2.x Java input examples](#2x-java-input-examples)
-- [SignalR output binding](#signalr-output-binding)
-  - [2.x C# send message output examples](#2x-c-send-message-output-examples)
-  - [2.x C# group management output examples](#2x-c-group-management-output-examples)
+  - [Use input binding](#use-input-binding)
+  - [Use output binding](#use-output-binding)
 - [Advanced Topics](#advanced-topics)
 - [Contributing](#contributing)
 
@@ -56,27 +51,27 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 
 The following table explains the binding configuration properties that you set in the *function.json* file and the `SignalRConnectionInfo` attribute.
 
-|function.json property | Attribute property |Description|
+|Property | Attribute property |Description|
 |---------|---------|----------------------|
-|**type**|| Must be set to `signalRConnectionInfo`.|
-|**direction**|| Must be set to `in`.|
-|**name**|| Variable name used in function code for connection info object. |
-|**hubName**|**HubName**| This value must be set to the name of the SignalR hub for which the connection information is generated.|
-|**userId**|**UserId**| Optional: The value of the user identifier claim to be set in the access key token. |
-|**connectionStringSetting**|**ConnectionStringSetting**| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString"). |
-|**idToken**|**IdToken**| The ID token which provide claims to be added into Azure SignalR Service token. |
-|**claimTypeList**|**ClaimTypeList**| Defines the claims in `IdToken` that will be selected into Azure SignalR Service token. |
+|type|| Must be set to `signalRConnectionInfo`.|
+|direction|| Must be set to `in`.|
+|name|| Variable name used in function code for connection info object. |
+|hubName|HubName| This value must be set to the name of the SignalR hub for which the connection information is generated.|
+|userId|UserId| Optional: The value of the `UserIdentifier` claim to be set in the access key token. |
+|connectionStringSetting|ConnectionStringSetting| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString"). |
+|idToken|IdToken| The ID token which provides claims to be added into Azure SignalR Service token. |
+|claimTypeList|ClaimTypeList| Defines the claims in `IdToken` that will be selected into Azure SignalR Service token. |
 
 #### SignalR Output binding
 The following table explains the binding configuration properties that you set in the *function.json* file and the `SignalR` attribute.
 
 |function.json property | Attribute property |Description|
 |---------|---------|----------------------|
-|**type**|| Must be set to `signalR`.|
-|**direction**|| Must be set to `out`.|
-|**name**|| Variable name used in function code for connection info object. |
-|**hubName**|**HubName**| This value must be set to the name of the SignalR hub for which the connection information is generated.|
-|**connectionStringSetting**|**ConnectionStringSetting**| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString") |
+|type|| Must be set to `signalR`.|
+|direction|| Must be set to `out`.|
+|name|| Variable name used in function code for connection info object. |
+|hubName|HubName| This value must be set to the name of the SignalR hub for which the connection information is generated.|
+|connectionStringSetting|ConnectionStringSetting| The name of the app setting that contains the SignalR Service connection string (defaults to "AzureSignalRConnectionString") |
 
 ### Current limitations
 
@@ -125,13 +120,17 @@ An app settings sample for Azure SignalR Service Function binding could be found
 Note that `AzureSignalRConnectionString` and `AzureSignalRServiceTransportType` are settings for Azure SignalR Service Function binding.
 
 * `AzureSignalRConnectionString` is the SignalR Service's connection string, it will be used as default connection string when Function doesn't define it.
-* `AzureSignalRServiceTransportType` is used for determining whether the Function establish WebSockets connections to SignalR Service to send messages.
+* `AzureSignalRServiceTransportType` is used for determining whether the Function establishes WebSockets connections to SignalR Service to send messages.
   * `Transient`: Send messsages by calling SignalR Service's [REST API](https://github.com/Azure/azure-signalr/blob/dev/docs/rest-api.md). This mode is appropriate when you want to send messages infrequently.
   * `Persisent`: Establish WebSockets connections for each hub, send all messages via these connections. This mode is more effecient than `Transient` mode when you want to send messages frequently or regularly.
 
-### Using the SignalRConnectionInfo input binding
+<p align="center">
+  <img src="./docs/images/transient-persistent-mode.png"/>
+</p>
 
-Before a client can connect to Azure SignalR Service, it must retrieve the service endpoint URL and a valid access token. The *SignalRConnectionInfo* input binding produces the SignalR Service endpoint URL and a valid token that are used to connect to the service. Because the token is time-limited and can be used to authenticate a specific user to a connection, you should not cache the token or share it between clients. An HTTP trigger using this binding can be used by clients to retrieve the connection information.
+### Use input binding
+
+Before a client can connect to Azure SignalR Service, it must get the service endpoint URL and a valid access token. The *SignalRConnectionInfo* input binding produces the SignalR Service endpoint URL and a valid token that are used to connect to the service. Because the token is time-limited and can be used to authenticate a specific user to a connection, you should not cache the token or share it between clients. An HTTP trigger with this binding can be used by clients to get the connection information.
 
 See the language-specific example:
 
@@ -141,7 +140,7 @@ See the language-specific example:
 
 For more information on how this binding is used to create a "negotiate" function that can be consumed by a SignalR client SDK, see the [Azure Functions development and configuration article](https://docs.microsoft.com/en-us/azure/azure-signalr/signalr-concept-serverless-development-config) in the SignalR Service concepts documentation.
 
-### 2.x C# input examples
+#### 2.x C# input examples2.x C# input examples
 
 The following example shows a [C# function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that acquires SignalR connection information using the input binding and returns it over HTTP.
 
@@ -155,7 +154,7 @@ public static SignalRConnectionInfo Negotiate(
 }
 ```
 
-#### Authenticated tokens
+##### Authenticated tokens
 
 If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
 
@@ -174,13 +173,13 @@ public static SignalRConnectionInfo Negotiate(
 }
 ```
 
-### 2.x JavaScript input examples
+#### 2.x JavaScript input examples
 
 The following example shows a SignalR connection info input binding in a *function.json* file and a [JavaScript function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node) that uses the binding to return the connection information.
 
 Here's binding data in the *function.json* file:
 
-Example function.json:
+Sample of function.json:
 
 ```json
 {
@@ -200,7 +199,7 @@ module.exports = async function (context, req, connectionInfo) {
 };
 ```
 
-#### Authenticated tokens
+##### Authenticated tokens
 
 If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
 
@@ -229,7 +228,7 @@ module.exports = async function (context, req, connectionInfo) {
 };
 ```
 
-### 2.x Java input examples
+#### 2.x Java input examples
 
 The following example shows a [Java function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-java) that acquires SignalR connection information using the input binding and returns it over HTTP.
 
@@ -247,7 +246,7 @@ public SignalRConnectionInfo negotiate(
 }
 ```
 
-#### Authenticated tokens
+##### Authenticated tokens
 
 If the function is triggered by an authenticated client, you can add a user ID claim to the generated token. You can easily add authentication to a function app using [App Service Authentication](https://docs.microsoft.com/en-us/azure/app-service/overview-authentication-authorization).
 
@@ -268,7 +267,7 @@ public SignalRConnectionInfo negotiate(
 }
 ```
 
-## SignalR output binding
+### Use output binding
 
 Use the *SignalR* output binding to send one or more messages using Azure SignalR Service. You can broadcast a message to all connected clients, or you can broadcast it only to connected clients that have been authenticated to a given user.
 
@@ -280,9 +279,9 @@ See the language-specific example:
 * [2.x JavaScript](#2x-javascript-send-message-output-examples)
 * [2.x Java](#2x-java-send-message-output-examples)
 
-### 2.x C# send message output examples
+#### 2.x C# send message output examples
 
-#### Broadcast to all clients
+##### Broadcast to all clients
 
 The following example shows a [C# function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
 
@@ -301,7 +300,7 @@ public static Task SendMessage(
 }
 ```
 
-#### Send to a user
+##### Send to a user
 
 You can send a message only to connections that have been authenticated to a user by setting the `UserId` property of the SignalR message.
 
@@ -322,9 +321,9 @@ public static Task SendMessage(
 }
 ```
 
-#### Send to a group
+##### Send to a group
 
-You can send a message only to connections that have been added to a group by setting the `GroupName` property of the SignalR message.
+You can send a message only to clients that have been added to a group by setting the `GroupName` property of the SignalR message.
 
 ```cs
 [FunctionName("SendMessage")]
@@ -343,11 +342,11 @@ public static Task SendMessage(
 }
 ```
 
-### 2.x C# group management output examples
+#### 2.x C# group management output examples
 
 SignalR Service allows users to be added to groups. Messages can then be sent to a group. You can use the `SignalRGroupAction` class with the `SignalR` output binding to manage a user's group membership.
 
-#### Add user to a group
+##### Add user to a group
 
 The following example adds a user to a group.
 
@@ -370,7 +369,7 @@ public static Task AddToGroup(
 }
 ```
 
-#### Remove user from a group
+##### Remove user from a group
 
 The following example removes a user from a group.
 
@@ -393,22 +392,22 @@ public static Task RemoveFromGroup(
 }
 ```
 
-The full samples can be found [here](./samples/).
+More samples can be found [here](./samples/).
 
-#### Use SignalR Service Management SDK in functions
+##### Use SignalR Service Management SDK in functions
 
 [SignalR Service Management SDK](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management) provides communication capabilities with ASP.NET Core SignalR clients through Azure SignalR Service directly. The capabilities include sending messages to all/clients/users/groups and managing group membership. We expose the `IServicemanager` and `IServiceHubContext` in `StaticServiceHubContextStore`. For how to use Management SDK, please refer to this [guide](https://github.com/Azure/azure-signalr/blob/dev/docs/management-sdk-guide.md).
 
-SignalR input and output bindings are designed to improve user experience for Azure SignalR Service in Azure Functions. However SignalR binding is only an extrension to Azure Functions, it has some limitations, for example, you don't have an easy way to add claims into access token in `SignalRConnectionInfo`. If you have such advanced requirements that SignalR input/output binding doesn't meet, consider using `StaticServiceHubContextStore`.
+SignalR input and output bindings are designed to improve user experience for Azure SignalR Service in Azure Functions. However SignalR binding is only an extrension to Azure Functions, it has some limitations, for example, it's not easy to add claims into access token in `SignalRConnectionInfo`. If you have such advanced requirements that SignalR input/output binding doesn't meet, consider using `StaticServiceHubContextStore`.
 
-##### StaticServiceHubContextStore
+###### StaticServiceHubContextStore
 
 A global `IServiceManagerStore` for the extension. It stores `IServiceHubContextStore` per connection string setting.
 
 `public static IServiceHubContextStore Get(string configurationKey = Constants.AzureSignalRConnectionStringName)`
 Get `IServiceHubContextStore` for `configurationKey`. The default `configurationKey` is "AzureSignalRConnectionString".
 
-##### IServiceHubContextStore
+###### IServiceHubContextStore
 
 `IServiceHubContextStore` stores `IServiceHubContext` for each hub name.
 
@@ -424,9 +423,9 @@ For more introduction about `IServiceHubContext` and `IServiceManager`, please r
 
 > Note: We recommend you use `StaticServiceHubContextStore` instead of importing [SignalR Service Management package](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management). If you import [SignalR Service Management package](https://www.nuget.org/packages/Microsoft.Azure.SignalR.Management) directly, and you use `Persistent` [transport type](https://github.com/Azure/azure-signalr/blob/dev/docs/management-sdk-guide.md#transport-type), please don't create a `IServiceHubContext` and dispose it in a function method. Because for each http request, the function will be invoked. Therefore a new Websockets connection will be established and disconnected for each http request. That will have large impact to you function performance. Instead, you should make the `IServiceHubContext` a singleton to the function class. 
 
-The following are sample for negotiate function without SignalR input binding and broadcast messages without output binding respectively.
+The following are samples for negotiate function without SignalR input binding and broadcast messages without output binding respectively.
 
-##### Negotiate function without SignalR input binding
+###### Negotiate function without SignalR input binding
 
 With `StaticServiceHubContextStore`, you can generate `SignalRConnectionInfo` inside the function, provide user id, hub name and additional claims extracted from http request. 
 
@@ -449,9 +448,9 @@ public static SignalRConnectionInfo GetSignalRInfo(
 }
 ```
 
-##### Broadcast messages with output binding
+###### Broadcast messages with output binding
 
-`IServiceHubContext` provide [Microsoft.Azure.SignalR](https://www.nuget.org/packages/Microsoft.Azure.SignalR/)-extended interfaces, if you are familiar how to use `IHubContext` to send messages in an app server, it will be easy for you to use `IServiceHubContext`.
+`IServiceHubContext` provides [Microsoft.Azure.SignalR](https://www.nuget.org/packages/Microsoft.Azure.SignalR/)-extended interfaces, if you are familiar with how to use `IHubContext` to send messages in an app server, it will be easy for you to use `IServiceHubContext`.
 
 ``` C#
 [FunctionName("broadcast")]
