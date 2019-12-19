@@ -1,3 +1,31 @@
+# Azure SignalR Signalr Service Binding Usage <!-- omit in toc -->
+
+## Contents <!-- omit in toc -->
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+  - [Create Azure SignalR Service instance](#create-azure-signalr-service-instance)
+  - [Create Function App with extension](#create-function-app-with-extension)
+  - [Add application settings](#add-application-settings)
+  - [Use input binding](#use-input-binding)
+    - [2.x C# input examples2.x C# input examples](#2x-c-input-examples2x-c-input-examples)
+      - [Authenticated token](#authenticated-token)
+    - [2.x JavaScript input examples](#2x-javascript-input-examples)
+      - [Authenticated token](#authenticated-token-1)
+    - [2.x Java input examples](#2x-java-input-examples)
+      - [Authenticated token](#authenticated-token-2)
+  - [Use output binding](#use-output-binding)
+    - [2.x C# output samples](#2x-c-output-samples)
+      - [2.x C# send message output examples](#2x-c-send-message-output-examples)
+      - [2.x C# group management output examples](#2x-c-group-management-output-examples)
+      - [Use SignalR Service Management SDK in functions](#use-signalr-service-management-sdk-in-functions)
+    - [2.x JavaScript output examples](#2x-javascript-output-examples)
+      - [2.x JavaScript send message output examples](#2x-javascript-send-message-output-examples)
+      - [2.x JavaScript group management output examples](#2x-javascript-group-management-output-examples)
+    - [2.x Java output examples](#2x-java-output-examples)
+      - [2.x Java send message output examples](#2x-java-send-message-output-examples)
+      - [2.x Java group management output examples](#2x-java-group-management-output-examples)
+- [Samples](#samples)
+
 ## Prerequisites
 
 - [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools) (V2)
@@ -45,7 +73,7 @@ Note that `AzureSignalRConnectionString` and `AzureSignalRServiceTransportType` 
   * `Persisent`: Establish WebSockets connections for each hub, send all messages via these connections. This mode is more effecient than `Transient` mode when you want to send messages frequently or regularly.
 
 <p align="center">
-  <img src="./docs/images/transient-persistent-mode.png"/>
+  <img src="./images/transient-persistent-mode.png"/>
 </p>
 
 ### Use input binding
@@ -55,7 +83,7 @@ Before a client can connect to Azure SignalR Service, it must get the service en
 See the language-specific example:
 
 * [2.x C#](#2x-c-input-examples)
-* [2.x JavaScript](#2x-javascript-input-examples)
+* [2.x JavaScript](#2x-JavaScript-input-examples)
 * [2.x Java](#2x-java-input-examples)
 
 For more information on how this binding is used to create a "negotiate" function that can be consumed by a SignalR client SDK, see the [Azure Functions development and configuration article](https://docs.microsoft.com/en-us/azure/azure-signalr/signalr-concept-serverless-development-config) in the SignalR Service concepts documentation.
@@ -196,7 +224,7 @@ You can also use it to manage the groups that a user belongs to.
 See the language-specific example:
 
 * [2.x C#](#2x-c-output-examples)
-* [2.x JavaScript](#2x-javascript-output-examples)
+* [2.x JavaScript](#2x-JavaScript-output-examples)
 * [2.x Java](#2x-java-output-examples)
 
 #### 2.x C# output samples
@@ -205,7 +233,7 @@ See the language-specific example:
 
 ###### Broadcast to all clients
 
-The following example shows a [C# function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+The following example shows a [C# function](https://docs.microsoft.com/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
 
 ```cs
 [FunctionName("SendMessage")]
@@ -401,27 +429,125 @@ public static async Task Broadcast(
 }
 ```
 
-#### 2.x Javascript output examples
+#### 2.x JavaScript output examples
 
-##### 2.x Javascript send message output examples
+##### 2.x JavaScript send message output examples
 
 ###### Broadcast to all clients
 
-The following example shows a [TODO function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+The following example shows a [JavaScript function](https://docs.microsoft.com/azure/azure-functions/functions-reference-node) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+
+function.json:
+
+```javascript
+{
+  "type": "signalR",
+  "name": "signalRMessages",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+  "direction": "out"
+}
+```
+
+JavaScript code:
+
+```javascript
+module.exports = async function (context, req) {
+    context.bindings.signalRMessages = [{
+        "target": "newMessage",
+        "arguments": [ req.body ]
+    }];
+};
+```
 
 ###### Send to a user
 
-You can send a message only to connections that have been authenticated to a user by setting the `UserId`[todo] property of the SignalR message.
+You can send a message only to connections that have been authenticated to a user by setting the `userId` property of the SignalR message.
+
+function.json:
+
+```json
+{
+  "type": "signalR",
+  "name": "signalRMessages",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+  "direction": "out"
+}
+```
+
+JavaScript code:
+
+```javascript
+module.exports = async function (context, req) {
+    context.bindings.signalRMessages = [{
+        // message will only be sent to this user ID
+        "userId": "userId1",
+        "target": "newMessage",
+        "arguments": [ req.body ]
+    }];
+};
+```
 
 ###### Send to a connection
 
-You can send a message only to connections by setting the `ConnectionId`[todo] property of the SignalR message.
+You can send a message only to connections by setting the `connectionId` property of the SignalR message.
+
+function.json:
+
+```json
+{
+  "type": "signalR",
+  "name": "signalRMessages",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+  "direction": "out"
+}
+```
+
+JavaScript code:
+
+```javascript
+module.exports = async function (context, req) {
+    context.bindings.signalRMessages = [{
+        // message will only be sent to this connection ID
+        "connectionId": "connectionId1",
+        "target": "newMessage",
+        "arguments": [ req.body ]
+    }];
+};
+```
 
 ###### Send to a group
 
-You can send a message only to clients that have been added to a group by setting the `GroupName`[todo] property of the SignalR message.
+You can send a message only to clients that have been added to a group by setting the `groupName` property of the SignalR message.
 
-##### 2.x [todo] group management output examples
+function.json:
+
+```json
+{
+  "type": "signalR",
+  "name": "signalRMessages",
+  "hubName": "<hub_name>",
+  "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+  "direction": "out"
+}
+```
+
+JavaScript code:
+
+```javascript
+module.exports = async function (context, req) {
+    context.bindings.signalRMessages = [{
+        // message will only be sent to this group
+        "groupName": "myGroup",
+        "target": "newMessage",
+        "arguments": [ req.body ]
+    }];
+};
+```
+
+##### 2.x JavaScript group management output examples
 
 SignalR Service allows users to be added to groups. Messages can then be sent to a group. You can use the `SignalRGroupAction` class with the `SignalR` output binding to manage a user's group membership.
 
@@ -429,11 +555,57 @@ SignalR Service allows users to be added to groups. Messages can then be sent to
 
 The following example adds a user to a group.
 
+function.json
+
+```json
+{
+    "type": "signalR",
+    "name": "signalRGroupActions",
+    "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+    "hubName": "chat",
+    "direction": "out"
+}
+```
+
+JavaScript code:
+
+```javascript
+module.exports = async function (context, req) {
+  context.bindings.signalRGroupActions = [{
+    "userId": req.query.userId,
+    "groupName": "myGroup",
+    "action": "add"
+  }];
+};
+```
+
 ###### Remove user from a group
 
 The following example removes a user from a group.
 
-More samples can be found [here](./samples/).
+function.json
+
+```json
+{
+    "type": "signalR",
+    "name": "signalRGroupActions",
+    "connectionStringSetting": "<name of setting containing SignalR Service connection string>",
+    "hubName": "chat",
+    "direction": "out"
+}
+```
+
+JavaScript code
+
+```javascript
+module.exports = async function (context, req) {
+  context.bindings.signalRGroupActions = [{
+    "userId": req.query.userId,
+    "groupName": "myGroup",
+    "action": "remove"
+  }];
+};
+```
 
 #### 2.x Java output examples
 
@@ -441,21 +613,88 @@ More samples can be found [here](./samples/).
 
 ###### Broadcast to all clients
 
-The following example shows a [TODO function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-dotnet-class-library) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+The following example shows a [Java function](https://docs.microsoft.com/azure/azure-functions/functions-reference-java) that sends a message using the output binding to all connected clients. The `Target` is the name of the method to be invoked on each client. The `Arguments` property is an array of zero or more objects to be passed to the client method.
+
+```java
+@FunctionName("sendMessage")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRMessage sendMessage(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req) {
+
+    SignalRMessage message = new SignalRMessage();
+    message.target = "newMessage";
+    message.arguments.add(req.getBody());
+    return message;
+}
+```
 
 ###### Send to a user
 
-You can send a message only to connections that have been authenticated to a user by setting the `UserId`[todo] property of the SignalR message.
+You can send a message only to connections that have been authenticated to a user by setting the `userId` property of the SignalR message.
+
+```java
+@FunctionName("sendMessage")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRMessage sendMessage(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req) {
+
+    SignalRMessage message = new SignalRMessage();
+    message.userId = "userId1";
+    message.target = "newMessage";
+    message.arguments.add(req.getBody());
+    return message;
+}
+```
 
 ###### Send to a connection
 
-You can send a message only to connections by setting the `ConnectionId`[todo] property of the SignalR message.
+You can send a message only to connections by setting the `connectionId` property of the SignalR message.
+
+```java
+@FunctionName("sendMessage")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRMessage sendMessage(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req) {
+
+    SignalRMessage message = new SignalRMessage();
+    message.connectionId = "connectiond1";
+    message.target = "newMessage";
+    message.arguments.add(req.getBody());
+    return message;
+}
+```
 
 ###### Send to a group
 
-You can send a message only to clients that have been added to a group by setting the `GroupName`[todo] property of the SignalR message.
+You can send a message only to clients that have been added to a group by setting the `groupName` property of the SignalR message.
 
-##### 2.x [todo] group management output examples
+```java
+@FunctionName("sendMessage")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRMessage sendMessage(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req) {
+
+    SignalRMessage message = new SignalRMessage();
+    message.groupName = "myGroup";
+    message.target = "newMessage";
+    message.arguments.add(req.getBody());
+    return message;
+}
+```
+
+##### 2.x Java group management output examples
 
 SignalR Service allows users to be added to groups. Messages can then be sent to a group. You can use the `SignalRGroupAction` class with the `SignalR` output binding to manage a user's group membership.
 
@@ -463,8 +702,46 @@ SignalR Service allows users to be added to groups. Messages can then be sent to
 
 The following example adds a user to a group.
 
+```java
+@FunctionName("addToGroup")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRGroupAction addToGroup(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req,
+        @BindingName("userId") String userId) {
+
+    SignalRGroupAction groupAction = new SignalRGroupAction();
+    groupAction.action = "add";
+    groupAction.userId = userId;
+    groupAction.groupName = "myGroup";
+    return action;
+}
+```
+
 ###### Remove user from a group
 
 The following example removes a user from a group.
+
+```java
+@FunctionName("removeFromGroup")
+@SignalROutput(name = "$return", hubName = "chat")
+public SignalRGroupAction removeFromGroup(
+        @HttpTrigger(
+            name = "req",
+            methods = { HttpMethod.POST },
+            authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Object> req,
+        @BindingName("userId") String userId) {
+
+    SignalRGroupAction groupAction = new SignalRGroupAction();
+    groupAction.action = "remove";
+    groupAction.userId = userId;
+    groupAction.groupName = "myGroup";
+    return action;
+}
+```
+
+## Samples
 
 More samples can be found [here](./samples/).
