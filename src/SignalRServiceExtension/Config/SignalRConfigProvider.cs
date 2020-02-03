@@ -20,22 +20,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public IConfiguration Configuration { get; }
 
+        internal readonly ILogger logger; //todo
+
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;
-        private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
+        private readonly IAccessTokenProvider accessTokenProvider;
+        private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
             INameResolver nameResolver,
             ILoggerFactory loggerFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IAccessTokenProvider accessTokenProvider,
+            ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
         {
             this.options = options.Value;
             this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
             Configuration = configuration;
+            this.accessTokenProvider = accessTokenProvider;
+            this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -71,6 +78,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
 
+            var signalRConnectionInfoV2AttributeRule = context.AddBindingRule<SignalRConnectionInfoV2Attribute>();
+            signalRConnectionInfoV2AttributeRule.AddValidator(ValidateSignalRConnectionInfoV2AttributeBinding);
+            signalRConnectionInfoV2AttributeRule.Bind(new SignalRConnectionInputBindingProvider(this, accessTokenProvider, signalRConnectionInfoConfigurer));
+
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
@@ -98,6 +109,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             ValidateConnectionString(
                 attribute.ConnectionStringSetting,
                 $"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}");
+        }
+
+        private void ValidateSignalRConnectionInfoV2AttributeBinding(SignalRConnectionInfoV2Attribute attribute, Type type)
+        {
+            ValidateConnectionString(
+                attribute.ConnectionStringSetting,
+                $"{nameof(SignalRConnectionInfoV2Attribute)}.{nameof(SignalRConnectionInfoV2Attribute.ConnectionStringSetting)}");
         }
 
         private void ValidateConnectionString(string attributeConnectionString, string attributeConnectionStringName)

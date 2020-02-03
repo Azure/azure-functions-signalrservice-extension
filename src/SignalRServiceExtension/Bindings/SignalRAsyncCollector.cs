@@ -4,6 +4,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -11,10 +12,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly IAzureSignalRSender client;
         private readonly SignalROutputConverter converter;
+        private readonly ILogger logger;
 
-        internal SignalRAsyncCollector(IAzureSignalRSender client)
+        internal SignalRAsyncCollector(IAzureSignalRSender client, ILogger logger)
         {
             this.client = client;
+            this.logger = logger;
             converter = new SignalROutputConverter();
         }
 
@@ -59,7 +62,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
                 if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    switch(groupAction.Action)
+                    switch (groupAction.Action)
                     {
                         case GroupAction.Add:
                             await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
