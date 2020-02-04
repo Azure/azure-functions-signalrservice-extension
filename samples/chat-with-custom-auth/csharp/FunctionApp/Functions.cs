@@ -4,6 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Security.Authentication;
 using System.Security.Claims;
 using System.Text;
@@ -84,20 +86,30 @@ namespace FunctionApp
         }
 
         [FunctionName("messages")]
-        public static Task SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
+        public static async Task<HttpResponseMessage> SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequestMessage req,
+            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
 
-            return signalRMessages.AddAsync(
-                new SignalRMessage
-                {
-                    UserId = message.Recipient,
-                    GroupName = message.Groupname,
-                    Target = "newMessage",
-                    Arguments = new[] { message }
-                });
+            try
+            {
+                await signalRMessages.AddAsync(
+                    new SignalRMessage
+                    {
+                        UserId = message.Recipient,
+                        GroupName = message.Groupname,
+                        Target = "newMessage",
+                        Arguments = new[] { message }
+                    });
+            }
+            catch (Exception ex)
+            {
+                // todo: switch
+                return req.CreateErrorResponse(HttpStatusCode.Forbidden, ex);
+            }
+
+            return req.CreateResponse(HttpStatusCode.OK);
         }
 
         [FunctionName("addToGroup")]

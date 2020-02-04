@@ -46,7 +46,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (tokenResult.Status != AccessTokenStatus.Valid)
             {
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(new SignalRConnectionInfoV2(null, tokenResult.Exception)));
+                throw new Exception("to do exception");
             }
 
             if (signalRConnectionInfoConfigurer == null)
