@@ -1,13 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
+using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -46,12 +44,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (tokenResult.Status != AccessTokenStatus.Valid)
             {
-                throw new Exception("to do exception");
+                return Task.FromResult((IValueProvider)new SignalRValueProvider(new SignalRConnectionInfoV2(null, tokenResult)));
             }
 
             if (signalRConnectionInfoConfigurer == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfoV2(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
+                var info = azureSignalRClient.GetClientConnectionInfoV2(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList, tokenResult);
                 return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
             }
 
@@ -61,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 Claims = azureSignalRClient.GetCustomerClaims(attribute.IdToken, attribute.ClaimTypeList),
             };
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
-            var customizedInfo = azureSignalRClient.GetClientConnectionInfoV2(signalRConnectionDetail.UserId, signalRConnectionDetail.Claims);
+            var customizedInfo = azureSignalRClient.GetClientConnectionInfoV2(signalRConnectionDetail.UserId, signalRConnectionDetail.Claims, tokenResult);
             return Task.FromResult((IValueProvider)new SignalRValueProvider(customizedInfo));
         }
 

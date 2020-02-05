@@ -7,12 +7,11 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // change name
     internal class SignalRConnectionInputBindingProvider : IBindingProvider
     {
-        private IAccessTokenProvider accessTokenAccessTokenProvider;
-        private SignalRConfigProvider signalRConfigProvider;
-        private ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
+        private readonly IAccessTokenProvider accessTokenAccessTokenProvider;
+        private readonly SignalRConfigProvider signalRConfigProvider;
+        private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
 
         public SignalRConnectionInputBindingProvider(SignalRConfigProvider signalRConfigProvider, IAccessTokenProvider accessTokenProvider, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
         {

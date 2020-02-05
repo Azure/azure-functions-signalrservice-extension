@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public IConfiguration Configuration { get; }
 
-        internal readonly ILogger logger; //todo
+        internal readonly ILogger logger;
 
         private readonly SignalROptions options;
         private readonly INameResolver nameResolver;

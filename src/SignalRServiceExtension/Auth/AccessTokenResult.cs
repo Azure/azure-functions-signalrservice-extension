@@ -3,6 +3,7 @@
 
 using System;
 using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -11,8 +12,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// </summary>
     public sealed class AccessTokenResult
     {
-        private AccessTokenResult() { }
-
         /// <summary>
         /// Gets the security principal associated with a valid token.
         /// </summary>
@@ -22,14 +21,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// Gets any exception encountered when validating a token.
         /// </summary>
+        [JsonProperty("exception")]
         public Exception Exception
         { get; private set; }
 
         /// <summary>
         /// Gets the status of the token, i.e. whether it is valid.
         /// </summary>
+        [JsonProperty("status")]
         public AccessTokenStatus Status
         { get; private set; }
+
+        private AccessTokenResult() { }
 
         /// <summary>
         /// Returns a valid token.
@@ -75,7 +78,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             return new AccessTokenResult
             {
-                Status = AccessTokenStatus.NoToken,
+                Status = AccessTokenStatus.Empty,
                 Exception = new Exception("No token found")
             };
         }

@@ -7,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -61,14 +60,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public SignalRConnectionInfoV2 GetClientConnectionInfoV2(string userId, string idToken, string[] claimTypeList)
+        public SignalRConnectionInfoV2 GetClientConnectionInfoV2(string userId, string idToken, string[] claimTypeList, AccessTokenResult accessTokenResult)
         {
-            return new SignalRConnectionInfoV2(GetClientConnectionInfo(userId, idToken, claimTypeList));
+            return new SignalRConnectionInfoV2(GetClientConnectionInfo(userId, idToken, claimTypeList), accessTokenResult);
         }
 
-        public SignalRConnectionInfoV2 GetClientConnectionInfoV2(string userId, IList<Claim> claims)
+        public SignalRConnectionInfoV2 GetClientConnectionInfoV2(string userId, IList<Claim> claims, AccessTokenResult accessTokenResult)
         {
-            return new SignalRConnectionInfoV2(GetClientConnectionInfo(userId, claims));
+            return new SignalRConnectionInfoV2(GetClientConnectionInfo(userId, claims), accessTokenResult);
         }
 
         public IList<Claim> GetCustomerClaims(string idToken, string[] claimTypeList)

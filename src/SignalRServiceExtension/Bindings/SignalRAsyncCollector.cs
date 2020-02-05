@@ -12,12 +12,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly IAzureSignalRSender client;
         private readonly SignalROutputConverter converter;
-        private readonly ILogger logger;
 
-        internal SignalRAsyncCollector(IAzureSignalRSender client, ILogger logger)
+        internal SignalRAsyncCollector(IAzureSignalRSender client)
         {
             this.client = client;
-            this.logger = logger;
             converter = new SignalROutputConverter();
         }
 

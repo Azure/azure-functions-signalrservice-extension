@@ -8,6 +8,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         Valid,
         Expired,
         Error,
-        NoToken
+        Empty
     }
 }

@@ -40,15 +40,18 @@ namespace FunctionApp
                 // resolve the identity
                 var identity = accessTokenResult.Principal.Identity.Name;
 
-                // generate custom claim
-                var myHeader = httpRequest.Headers["myheader"];
-                var customClaim = new Claim("myheader", myHeader);
-
                 // update connection info detail
                 signalRConnectionDetail.UserId = identity;
-                signalRConnectionDetail.Claims?.Add(customClaim);
 
-                // binding will generate ASRS negotiate response inside with this new signalRsignalRConnectionDetail,
+                // add custom claim
+                var customClaimValues = httpRequest.Headers["x-ms-signalr-custom-claim"];
+                if (customClaimValues.Count == 1)
+                {
+                    var customClaim = new Claim("x-ms-signalr-custom-claim", customClaimValues);
+                    signalRConnectionDetail.Claims?.Add(customClaim);
+                }
+
+                // binding will generate ASRS negotiate response inside with this new signalRConnectionDetail,
                 // now you can keep your negotiate function clean
                 return signalRConnectionDetail;
             });

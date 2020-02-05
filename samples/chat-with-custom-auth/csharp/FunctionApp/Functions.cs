@@ -1,153 +1,100 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Net.Http;
-using System.Security.Authentication;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Azure.EventGrid.Models;
-using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
-using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FunctionApp
 {
     public static class Functions
     {
-        /* sample:
-           
-           Request: send a request with user id "myuserid" in bearer token
-           url (GET):  http://localhost:7071/api/negotiate
-           headers: [
-             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6Im15dXNlcmlkIiwiaWF0IjoxNTE2MjM5MDIyfQ.5GK9ykQfNGEz07VU_Lwd2QneT9gxEP44o7Zs1y63mcI",
-             "myheader": "testclaim"
-           ]
-           Expected Response:
-           {
-                "url": "<YOUR ASRS ENDPOINT>/client/?hub=simplechat",
-                "accessToken": "<payload contains "nameid": "myuserid" and "myheader": "testclaim">"
-            }
-        */
         [FunctionName("negotiate")]
         public static Task<IActionResult> GetSignalRInfo(
             [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-            [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2) // todo: make HubName optional
-        {
-
-            return connectionInfoV2.Exception == null ? Task.FromResult((IActionResult)new OkObjectResult(connectionInfoV2.NegotiateResponse)) : Task.FromResult((IActionResult)new ObjectResult(new { statusCode = StatusCodes.Status403Forbidden, message = connectionInfoV2.Exception.Message }));
-            //return connectionInfoV2;
-        }
-
-        public static class Constants
-        {
-            public const string HubName = "simplechat";
-        }
-
-        [FunctionName("broadcast")]
-        public static async Task<IActionResult> Broadcast(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages,
             [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
-            var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
 
-            try
-            {
-                await signalRMessages.AddAsync(
-                    new SignalRMessage
-                    {
-                        UserId = message.Recipient,
-                        GroupName = message.Groupname,
-                        Target = "newMessage",
-                        Arguments = new[] { message }
-                    });
-            }
-            catch (Exception e)
-            {
-                // todo: logging 
-                return new ObjectResult(new { statusCode = StatusCodes.Status403Forbidden, message = e });
-            }
-
-            return new AcceptedResult();
+            return connectionInfoV2.AccessTokenResult.Status == AccessTokenStatus.Valid ?
+                Task.FromResult((IActionResult)new OkObjectResult(connectionInfoV2.NegotiateResponse)) :
+                Task.FromResult((IActionResult)new ObjectResult(new { statusCode = StatusCodes.Status403Forbidden, message = connectionInfoV2.AccessTokenResult.Exception.Message }));
         }
 
         [FunctionName("messages")]
-        public static async Task<HttpResponseMessage> SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequestMessage req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+        public static async Task<IActionResult> SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
+            [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
-
-            try
+            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
             {
-                await signalRMessages.AddAsync(
-                    new SignalRMessage
-                    {
-                        UserId = message.Recipient,
-                        GroupName = message.Groupname,
-                        Target = "newMessage",
-                        Arguments = new[] { message }
-                    });
-            }
-            catch (Exception ex)
-            {
-                // todo: switch
-                return req.CreateErrorResponse(HttpStatusCode.Forbidden, ex);
+                return forbiddenActionResult;
             }
 
-            return req.CreateResponse(HttpStatusCode.OK);
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+
+            return await BuildResponseAsync(signalRMessages.AddAsync(
+                new SignalRMessage
+                {
+                    UserId = message.Recipient,
+                    GroupName = message.Groupname,
+                    Target = "newMessage",
+                    Arguments = new[] { message }
+                }));
         }
 
         [FunctionName("addToGroup")]
-        public static Task AddToGroup(
+        public static async Task<IActionResult> AddToGroup(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
             [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
+            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
+            {
+                return forbiddenActionResult;
+            }
 
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
             var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
 
-            return signalRGroupActions.AddAsync(
+            return await BuildResponseAsync(signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
                     ConnectionId = decodedfConnectionId,
                     UserId = message.Recipient,
                     GroupName = message.Groupname,
                     Action = GroupAction.Add
-                });
+                }));
         }
 
         [FunctionName("removeFromGroup")]
-        public static Task RemoveFromGroup(
+        public static async Task<IActionResult> RemoveFromGroup(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+            [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
             [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-
+            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
+            {
+                return forbiddenActionResult;
+            }
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
-            return signalRGroupActions.AddAsync(
+            return await BuildResponseAsync(signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
                     ConnectionId = message.ConnectionId,
                     UserId = message.Recipient,
                     GroupName = message.Groupname,
                     Action = GroupAction.Remove
-                });
+                }));
         }
 
         private static string GetBase64DecodedString(string source)
@@ -158,6 +105,47 @@ namespace FunctionApp
             }
 
             return Encoding.UTF8.GetString(Convert.FromBase64String(source));
+        }
+
+        private static bool PassTokenValidation(AccessTokenResult accessTokenResult, out IActionResult forbiddenActionResult)
+        {
+            if (accessTokenResult.Status != AccessTokenStatus.Valid)
+            {
+                // failed to pass auth check
+                forbiddenActionResult = new ObjectResult(new
+                {
+                    statusCode = StatusCodes.Status403Forbidden,
+                    message = accessTokenResult.Exception.Message
+                });
+                return false;
+            }
+
+            forbiddenActionResult = null;
+            return true;
+        }
+
+        private static async Task<IActionResult> BuildResponseAsync(Task task)
+        {
+            try
+            {
+                await task;
+            }
+            catch (Exception ex)
+            {
+                // define your own response here
+                return new ObjectResult(new
+                {
+                    statusCode = StatusCodes.Status500InternalServerError,
+                    message = ex.Message
+                });
+            }
+
+            return new AcceptedResult();
+        }
+
+        public static class Constants
+        {
+            public const string HubName = "simplechat";
         }
 
         public class ChatMessage

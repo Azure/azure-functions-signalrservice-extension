@@ -168,7 +168,10 @@
       }).catch(alert);
       function getAxiosConfig() {
         const config = {
-          headers: { 'x-ms-signalr-userid': data.username }
+          headers: { 
+            'x-ms-signalr-custom-claim': 'Hello ' + data.username,
+            'Authorization': 'Bearer ' // todo
+          }
         };
         return config;
       }
