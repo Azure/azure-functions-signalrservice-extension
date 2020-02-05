@@ -9,38 +9,41 @@ using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Http;
+using Microsoft.WindowsAzure.Storage.Blob.Protocol;
 
 namespace FunctionApp
 {
     public static class Functions
     {
         [FunctionName("negotiate")]
-        public static Task<IActionResult> GetSignalRInfo(
-            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+        public static Task<HttpResponseMessage> GetSignalRInfo(
+            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequestMessage req,
             [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2)
         {
-
-            return connectionInfoV2.AccessTokenResult.Status == AccessTokenStatus.Valid ?
-                Task.FromResult((IActionResult)new OkObjectResult(connectionInfoV2.NegotiateResponse)) :
-                Task.FromResult((IActionResult)new ObjectResult(new { statusCode = StatusCodes.Status403Forbidden, message = connectionInfoV2.AccessTokenResult.Exception.Message }));
+            return connectionInfoV2.AccessTokenResult.Status == AccessTokenStatus.Valid
+                ? Task.FromResult(req.CreateResponse(HttpStatusCode.OK, connectionInfoV2.NegotiateResponse))
+                : Task.FromResult(req.CreateErrorResponse(HttpStatusCode.Forbidden, connectionInfoV2.AccessTokenResult.Exception.Message));
         }
 
         [FunctionName("messages")]
-        public static async Task<IActionResult> SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+        public static async Task<HttpResponseMessage> SendMessage(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequestMessage req,
             [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
             [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
+            if (!PassTokenValidation(req, connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
             {
                 return forbiddenActionResult;
             }
 
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
 
-            return await BuildResponseAsync(signalRMessages.AddAsync(
+            return await BuildResponseAsync(req, signalRMessages.AddAsync(
                 new SignalRMessage
                 {
                     UserId = message.Recipient,
@@ -51,21 +54,21 @@ namespace FunctionApp
         }
 
         [FunctionName("addToGroup")]
-        public static async Task<IActionResult> AddToGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+        public static async Task<HttpResponseMessage> AddToGroup(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequestMessage req,
             [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
             [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
+            if (!PassTokenValidation(req, connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
             {
                 return forbiddenActionResult;
             }
 
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
 
             var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
 
-            return await BuildResponseAsync(signalRGroupActions.AddAsync(
+            return await BuildResponseAsync(req, signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
                     ConnectionId = decodedfConnectionId,
@@ -76,18 +79,18 @@ namespace FunctionApp
         }
 
         [FunctionName("removeFromGroup")]
-        public static async Task<IActionResult> RemoveFromGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
+        public static async Task<HttpResponseMessage> RemoveFromGroup(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequestMessage req,
             [SignalRConnectionInfoV2(HubName = Constants.HubName)] SignalRConnectionInfoV2 connectionInfoV2,
             [SignalR(HubName = Constants.HubName)]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-            if (!PassTokenValidation(connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
+            if (!PassTokenValidation(req, connectionInfoV2.AccessTokenResult, out var forbiddenActionResult))
             {
                 return forbiddenActionResult;
             }
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(await req.Content.ReadAsStreamAsync())));
 
-            return await BuildResponseAsync(signalRGroupActions.AddAsync(
+            return await BuildResponseAsync(req, signalRGroupActions.AddAsync(
                 new SignalRGroupAction
                 {
                     ConnectionId = message.ConnectionId,
@@ -107,24 +110,21 @@ namespace FunctionApp
             return Encoding.UTF8.GetString(Convert.FromBase64String(source));
         }
 
-        private static bool PassTokenValidation(AccessTokenResult accessTokenResult, out IActionResult forbiddenActionResult)
+        private static bool PassTokenValidation(HttpRequestMessage req, AccessTokenResult accessTokenResult, out HttpResponseMessage forbiddenResponseMessage)
         {
             if (accessTokenResult.Status != AccessTokenStatus.Valid)
             {
                 // failed to pass auth check
-                forbiddenActionResult = new ObjectResult(new
-                {
-                    statusCode = StatusCodes.Status403Forbidden,
-                    message = accessTokenResult.Exception.Message
-                });
+                forbiddenResponseMessage =
+                    req.CreateErrorResponse(HttpStatusCode.Forbidden, accessTokenResult.Exception.Message);
                 return false;
             }
 
-            forbiddenActionResult = null;
+            forbiddenResponseMessage = null;
             return true;
         }
 
-        private static async Task<IActionResult> BuildResponseAsync(Task task)
+        private static async Task<HttpResponseMessage> BuildResponseAsync(HttpRequestMessage req, Task task)
         {
             try
             {
@@ -132,15 +132,10 @@ namespace FunctionApp
             }
             catch (Exception ex)
             {
-                // define your own response here
-                return new ObjectResult(new
-                {
-                    statusCode = StatusCodes.Status500InternalServerError,
-                    message = ex.Message
-                });
+                return req.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message);
             }
 
-            return new AcceptedResult();
+            return req.CreateResponse(HttpStatusCode.Accepted);
         }
 
         public static class Constants
