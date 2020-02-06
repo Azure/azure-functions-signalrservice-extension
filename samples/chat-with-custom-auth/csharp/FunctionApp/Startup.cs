@@ -30,10 +30,10 @@ namespace FunctionApp
             {
                 parameters.IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(issuerToken));
                 // for sample only
-                parameters.RequireSignedTokens = false;
+                parameters.RequireSignedTokens = true;
                 parameters.ValidateAudience = false;
                 parameters.ValidateIssuer = false;
-                parameters.ValidateIssuerSigningKey = false;
+                parameters.ValidateIssuerSigningKey = true;
                 parameters.ValidateLifetime = false;
             }, (accessTokenResult, httpRequest, signalRConnectionDetail) =>
             {
