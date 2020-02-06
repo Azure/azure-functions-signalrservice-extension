@@ -25,7 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentNullException(nameof(configureTokenValidationParameters));
             }
-            configureTokenValidationParameters.Invoke(tokenValidationParameters);
+            configureTokenValidationParameters(tokenValidationParameters);
         }
 
         public AccessTokenResult ValidateToken(HttpRequest request)
@@ -43,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     return AccessTokenResult.Success(result);
                 }
 
-                return AccessTokenResult.NoToken();
+                return AccessTokenResult.Empty();
             }
             catch (SecurityTokenExpiredException ex)
             {

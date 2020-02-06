@@ -74,7 +74,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// Returns a result in response to no token being in the request.
         /// </summary>
         /// <returns></returns>
-        public static AccessTokenResult NoToken()
+        public static AccessTokenResult Empty()
         {
             return new AccessTokenResult
             {

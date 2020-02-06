@@ -253,6 +253,7 @@
         // customize your JWT token payload here 
         var data = {
           "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": userName,
+          "exp": 1699819025
         };
 
         var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(data));
