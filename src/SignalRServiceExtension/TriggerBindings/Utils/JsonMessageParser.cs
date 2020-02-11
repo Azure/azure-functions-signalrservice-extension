@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.SignalR.Protocol;
-using Microsoft.Extensions.Logging.Abstractions;
-using Newtonsoft.Json.Linq;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
+
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -39,6 +42,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             message = null;
             return false;
         }
+
+        public override IHubProtocol Protocol { get; } = new JsonHubProtocol();
 
         private ISignalRServerlessMessage SafeParseMessage<T>(JObject jObject) where T : ISignalRServerlessMessage
         {

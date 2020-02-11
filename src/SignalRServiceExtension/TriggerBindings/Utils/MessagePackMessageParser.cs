@@ -1,10 +1,14 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using MessagePack;
+
 using Microsoft.AspNetCore.SignalR.Protocol;
+using MessagePack;
 using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -31,6 +35,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             return message != null;
         }
+
+        public override IHubProtocol Protocol { get; } = new MessagePackHubProtocol();
 
         private static InvocationMessage ConvertInvocationMessage(byte[] input, ref int offset)
         {

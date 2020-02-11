@@ -1,9 +1,13 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -13,7 +17,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRTriggerBinding : ITriggerBinding
     {
-        private const string HubNameKey = "hubName";
         private const string ReturnParameterKey = "$return";
 
         private readonly ParameterInfo _parameterInfo;
@@ -34,9 +37,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (value is SignalRTriggerEvent triggerEvent)
             {
                 var bindingContext = triggerEvent.Context;
-                bindingData.Add(HubNameKey, bindingContext.Context.HubName);
-                
-                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(bindingContext), bindingData)
+                // TODO: Add dynamic binding data in bindingData
+
+                return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(_parameterInfo, bindingContext), bindingData)
                 {
                     ReturnValueProvider = triggerEvent.TaskCompletionSource == null ? null : new TriggerReturnValueProvider(triggerEvent.TaskCompletionSource),
                 });
@@ -77,8 +80,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
-                // Functions can bind to parameter name "hubName" directly
-                { HubNameKey, typeof(string) },
+                //TODO: Add names in parameterNames to contract for binding
                 { ReturnParameterKey, typeof(object).MakeByRefType() },
             };
 
@@ -87,16 +89,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private class SignalRTriggerValueProvider : IValueBinder
         {
-            private object _value;
+            private readonly Context _value;
+            private readonly ParameterInfo _parameter;
 
-            public SignalRTriggerValueProvider(object value)
+            public SignalRTriggerValueProvider(ParameterInfo parameter, Context value)
             {
-                _value = value;
+                _parameter = parameter ?? throw new ArgumentNullException(nameof(parameter));
+                _value = value ?? throw new ArgumentNullException(nameof(value));
             }
 
             public Task<object> GetValueAsync()
             {
-                return Task.FromResult(_value);
+                if (_parameter.ParameterType == typeof(Context))
+                {
+                    return Task.FromResult<object>(_value);
+                }
+
+                return Task.FromResult<object>(null);
             }
 
             public string ToInvokeString()
@@ -104,18 +113,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return _value.ToString();
             }
 
-            public Type Type => typeof(InvocationContext);
+            public Type Type => _parameter.GetType();
 
+            // No use here
             public Task SetValueAsync(object value, CancellationToken cancellationToken)
             {
-                _value = value;
                 return Task.CompletedTask;
             }
         }
 
         private class TriggerReturnValueProvider : IValueBinder
         {
-            private TaskCompletionSource<object> _tcs;
+            private readonly TaskCompletionSource<object> _tcs;
 
             public TriggerReturnValueProvider(TaskCompletionSource<object> tcs)
             {
@@ -124,13 +133,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             public Task<object> GetValueAsync()
             {
-                // Unnecessary for return value provider
+                // Useless for return value provider
                 return null;
             }
 
             public string ToInvokeString()
             {
-                // Unnecessary for return value provider
+                // Useless for return value provider
                 return string.Empty;
             }
 

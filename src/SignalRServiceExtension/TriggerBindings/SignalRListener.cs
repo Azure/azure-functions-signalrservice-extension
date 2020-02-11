@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -6,10 +9,9 @@ using Microsoft.Azure.WebJobs.Host.Listeners;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // Take EventGridListener as reference.
     internal class SignalRListener: IListener
     {
-        public ITriggeredFunctionExecutor Executor { private set; get; }
+        public ITriggeredFunctionExecutor Executor { get; }
 
         private readonly SignalRTriggerRouter _router;
         private readonly string _hubName;

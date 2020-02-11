@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -7,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// SignalR Context that gets from HTTP request and pass the Function parameters
         /// </summary>
-        public InvocationContext Context { get; set; }
+        public Context Context { get; set; }
 
         /// <summary>
         /// A TaskCompletionSource will set result when the function invocation has finished.
