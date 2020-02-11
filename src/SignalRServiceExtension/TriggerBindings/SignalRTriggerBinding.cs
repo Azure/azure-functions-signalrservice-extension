@@ -55,7 +55,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException(nameof(context));
             }
 
-            return Task.FromResult<IListener>(new SignalRListener(context.Executor, _router, _attribute.HubName, _attribute.Target));
+            _router.AddRoute((_attribute.HubName, _attribute.Target), context.Executor);
+            return Task.FromResult<IListener>(new NullListener());
         }
 
         public ParameterDescriptor ToParameterDescriptor()
