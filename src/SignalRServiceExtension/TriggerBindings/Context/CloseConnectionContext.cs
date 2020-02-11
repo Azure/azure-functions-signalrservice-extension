@@ -5,6 +5,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     public class CloseConnectionContext : Context
     {
-        public string ErrorMessage { get; set; }
+        public string Error { get; set; }
     }
 }

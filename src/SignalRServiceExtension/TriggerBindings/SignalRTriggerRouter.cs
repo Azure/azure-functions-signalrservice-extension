@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -29,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             hubExecutor.AddTarget(key.methodName, executor);
         }
 
-        public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req)
+        public async Task<HttpResponseMessage> ProcessAsync(HttpRequestMessage req, CancellationToken token = default)
         {
             // TODO: More details about response
             var contentType = req.Content.Headers.ContentType.MediaType;
@@ -73,7 +74,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         case CloseConnectionMessage closeConnectionMessage:
                         {
                             var closeConnectionContext = (CloseConnectionContext) connectionContext;
-                            closeConnectionContext.ErrorMessage = closeConnectionMessage.Error;
+                            closeConnectionContext.Error = closeConnectionMessage.Error;
                             return await executor.ExecuteCloseConnection(closeConnectionContext);
                         }
                         default:

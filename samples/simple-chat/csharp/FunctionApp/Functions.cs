@@ -15,8 +15,6 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.Azure.WebJobs.Host;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -59,40 +57,6 @@ namespace FunctionApp
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
             var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
             await serviceHubContext.Clients.All.SendAsync("newMessage", message);
-        }
-
-        // curl -X POST -H "Content-type: application/json" -H "X-ASRS-HubName: simplechat" -H "X-ASRS-ConnectionId: asdf-asf" -H "X-ASRS-UserId: abc"   -d '{"type": "1", "invocationId": "23", "Target": "broadcast2", "Arguments": ["hello"]}'$(printf "\x$(printf %x 30)") localhost:7071/runtime/webhooks/signalr
-        [FunctionName("broadcast2")]
-        public static Task<string> BroadcastWithSignalRTrigger(
-            [SignalRTrigger(HubName = "simplechat", Target = "broadcast2")]InvocationContext context, ILogger logger)
-        {
-            var message = context.Data.Type.ToString();
-            logger.LogInformation(message);
-            return Task.FromResult("aaa");
-            //var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
-            //await serviceHubContext.Clients.All.SendAsync("newMessage", message);
-        }
-
-        [FunctionName("OnConnectedAsync")]
-        public static Task<string> OnConnectedAsync(
-            [SignalRTrigger(HubName = "simplechat", Target = "onConnected")]InvocationContext context, ILogger logger)
-        {
-            var message = context.Data.Type.ToString();
-            logger.LogInformation(message);
-            return Task.FromResult("aaa");
-            //var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
-            //await serviceHubContext.Clients.All.SendAsync("newMessage", message);
-        }
-
-        [FunctionName("OnDisconnectedAsync")]
-        public static Task<string> OnDisconnectedAsync(
-            [SignalRTrigger(HubName = "simplechat", Target = "onDisconnected")]InvocationContext context, ILogger logger)
-        {
-            var message = context.Data.ToString();
-            logger.LogInformation(message);
-            return Task.FromResult("aaa");
-            //var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
-            //await serviceHubContext.Clients.All.SendAsync("newMessage", message);
         }
 
         [FunctionName("messages")]

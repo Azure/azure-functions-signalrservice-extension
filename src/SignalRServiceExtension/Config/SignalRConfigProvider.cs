@@ -43,7 +43,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this._router = new SignalRTriggerRouter();
         }
 
-        [Obsolete]
+        // GetWebhookHandler() need this Obsolete
+        [Obsolete("preview")]
         public void Initialize(ExtensionConfigContext context)
         {
             if (context == null)
@@ -69,7 +70,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
 
             var url = context.GetWebhookHandler();
-            logger.LogInformation($"Registered SignalR negotiate Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
+            logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
 
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
@@ -77,7 +78,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
             // Trigger binding rule
-            // TODO: Add more convert type
             context.AddBindingRule<SignalRTriggerAttribute>()
                 .BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_router));
 
@@ -95,7 +95,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
         {
-            return _router.ProcessAsync(input);
+            return _router.ProcessAsync(input, cancellationToken);
         }
 
         public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)

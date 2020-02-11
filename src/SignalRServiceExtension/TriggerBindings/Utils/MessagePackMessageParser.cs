@@ -45,27 +45,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 Type = ServerlessProtocolConstants.InvocationMessageType,
             };
 
-            _ = ReadHeaders(input, ref offset);
+            SkipHeaders(input, ref offset);
             invocationMessage.InvocationId = ReadInvocationId(input, ref offset);
             invocationMessage.Target = ReadTarget(input, ref offset);
             invocationMessage.Arguments = ReadArguments(input, ref offset);
             return invocationMessage;
         }
 
-        private static Dictionary<string, string> ReadHeaders(byte[] input, ref int offset)
+        private static void SkipHeaders(byte[] input, ref int offset)
         {
             var headerCount = ReadMapLength(input, ref offset, "headers");
-            var map = new Dictionary<string, string>();
             if (headerCount > 0)
             {
                 for (var i = 0; i < headerCount; i++)
                 {
-                    var key = ReadString(input, ref offset, $"headers[{i}].Key");
-                    var value = ReadString(input, ref offset, $"headers[{i}].Value");
-                    map[key] = value;
+                    ReadString(input, ref offset, $"headers[{i}].Key");
+                    ReadString(input, ref offset, $"headers[{i}].Value");
                 }
             }
-            return map;
         }
 
         private static string ReadInvocationId(byte[] input, ref int offset)
