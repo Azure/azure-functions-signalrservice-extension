@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// SignalR Context that gets from HTTP request and pass the Function parameters
         /// </summary>
-        public Context Context { get; set; }
+        public InvocationContext Context { get; set; }
 
         /// <summary>
         /// A TaskCompletionSource will set result when the function invocation has finished.

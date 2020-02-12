@@ -90,10 +90,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private class SignalRTriggerValueProvider : IValueBinder
         {
-            private readonly Context _value;
+            private readonly InvocationContext _value;
             private readonly ParameterInfo _parameter;
 
-            public SignalRTriggerValueProvider(ParameterInfo parameter, Context value)
+            public SignalRTriggerValueProvider(ParameterInfo parameter, InvocationContext value)
             {
                 _parameter = parameter ?? throw new ArgumentNullException(nameof(parameter));
                 _value = value ?? throw new ArgumentNullException(nameof(value));
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             public Task<object> GetValueAsync()
             {
-                if (_parameter.ParameterType == typeof(Context))
+                if (_parameter.ParameterType == typeof(InvocationContext))
                 {
                     return Task.FromResult<object>(_value);
                 }

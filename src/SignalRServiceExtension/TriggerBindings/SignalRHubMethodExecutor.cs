@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return response;
         }
 
-        public async Task<HttpResponseMessage> ExecuteOpenConnection(OpenConnectionContext context)
+        public async Task<HttpResponseMessage> ExecuteOpenConnection(InvocationContext context)
         {
             if (_executors.TryGetValue(OnConnectedTarget, out var executor))
             {
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
 
-        public async Task<HttpResponseMessage> ExecuteCloseConnection(CloseConnectionContext context)
+        public async Task<HttpResponseMessage> ExecuteCloseConnection(InvocationContext context)
         {
             if (_executors.TryGetValue(OnDisconnectedTarget, out var executor))
             {
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
 
-        private async Task ExecuteAsync(ITriggeredFunctionExecutor executor, Context context, TaskCompletionSource<object> tcs)
+        private async Task ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
         {
             var signalRTriggerEvent = new SignalRTriggerEvent
             {

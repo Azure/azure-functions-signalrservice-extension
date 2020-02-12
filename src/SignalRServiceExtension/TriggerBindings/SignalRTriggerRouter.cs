@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 using Microsoft.Azure.WebJobs.Host.Executors;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -44,7 +45,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return new HttpResponseMessage(HttpStatusCode.Forbidden);
             }
 
-            if (!TryGetConnectionContext(req, out var connectionContext))
+            if (!TryGetInvocationContext(req, out var connectionContext))
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
@@ -53,36 +54,50 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // TODO: select out executor that match the pattern
             if (_executors.TryGetValue(hubName, out var executor))
             {
-                var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
-                var messageParser = MessageParser.GetParser(contentType);
-
-                if (messageParser.TryParseMessage(ref payload, out var message))
+                try
                 {
-                    switch (message)
+                    var payload = new ReadOnlySequence<byte>(await req.Content.ReadAsByteArrayAsync());
+                    var messageParser = MessageParser.GetParser(contentType);
+                    if (!messageParser.TryParseMessage(ref payload, out var message))
                     {
-                        case InvocationMessage invocationMessage:
-                        {
-                            var invocationContext = (InvocationContext) connectionContext;
-                            invocationContext.Arguments = invocationMessage.Arguments;
-                            return await executor.ExecuteInvocation(messageParser.Protocol, invocationContext,
-                                invocationMessage.Target, invocationMessage.InvocationId);
-                        }
-                        case OpenConnectionMessage openConnectionMessage:
-                        {
-                            return await executor.ExecuteOpenConnection((OpenConnectionContext) connectionContext);
-                        }
-                        case CloseConnectionMessage closeConnectionMessage:
-                        {
-                            var closeConnectionContext = (CloseConnectionContext) connectionContext;
-                            closeConnectionContext.Error = closeConnectionMessage.Error;
-                            return await executor.ExecuteCloseConnection(closeConnectionContext);
-                        }
-                        default:
-                            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+                        throw new FailedRouteEventException("Parsing message failed");
                     }
-                }
 
-                return new HttpResponseMessage(HttpStatusCode.BadRequest);
+                    if (connectionContext.Category == Constants.Category.Connections)
+                    {
+                        if (connectionContext.Event == Constants.Events.Connect)
+                        {
+                            AssertTypeMatch(message.Type, ServerlessProtocolConstants.OpenConnectionMessageType);
+                            return await executor.ExecuteOpenConnection(connectionContext);
+                        }
+
+                        if (connectionContext.Event == Constants.Events.Disconnect)
+                        {
+                            AssertTypeMatch(message.Type, ServerlessProtocolConstants.CloseConnectionMessageType);
+                            connectionContext.Error = ((CloseConnectionMessage)message).Error;
+                            return await executor.ExecuteCloseConnection(connectionContext);
+                        }
+
+                        throw new FailedRouteEventException($"{connectionContext.Event} is not a supported event");
+                    }
+
+                    if (connectionContext.Category == Constants.Category.Messages)
+                    {
+                        AssertTypeMatch(message.Type, ServerlessProtocolConstants.InvocationMessageType);
+                        var invocationMessage = (InvocationMessage)message;
+                        connectionContext.Arguments = invocationMessage.Arguments;
+                        return await executor.ExecuteInvocation(messageParser.Protocol, connectionContext, invocationMessage.Target, invocationMessage.InvocationId);
+                    }
+
+                    throw new FailedRouteEventException($"{connectionContext.Category} is not a supported category");
+                }
+                catch (SignalRBindingException ex)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    {
+                        ReasonPhrase = ex.Message
+                    };
+                }
             }
 
             // No target hub in functions
@@ -105,7 +120,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return true;
         }
 
-        private bool TryGetConnectionContext(HttpRequestMessage request, out Context context)
+        private bool TryGetInvocationContext(HttpRequestMessage request, out InvocationContext context)
         {
             if (!request.Headers.Contains(Constants.AsrsHubNameHeader) ||
                 !request.Headers.Contains(Constants.AsrsCategory) ||
@@ -117,8 +132,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             context = new InvocationContext();
-            context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).FirstOrDefault();
-            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).FirstOrDefault();
+            context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).First();
+            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).First();
+            context.Category = request.Headers.GetValues(Constants.AsrsCategory).First();
+            context.Event = request.Headers.GetValues(Constants.AsrsEvent).First();
             context.UserId = request.Headers.GetValues(Constants.AsrsUserId).FirstOrDefault();
             context.Query = GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());
             context.Claims = GetClaimDictionary(request.Headers.GetValues(Constants.AsrsUserClaims));
@@ -135,12 +152,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             // The query string looks like "?key1=value1&key2=value2"
-            if (queryString.StartsWith("?"))
-            {
-                queryString = queryString.Substring(1);
-            }
-
-            var queryArray = queryString.Split('&');
+            var queryArray = queryString.TrimStart('?').Split('&');
             return queryArray.Select(p => p.Split('=')).ToDictionary(p => p[0], p => p[1]);
         }
 
@@ -152,6 +164,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private IDictionary<string, string> GetHeaderDictionary(HttpRequestMessage request)
         {
             return request.Headers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToString(), StringComparer.OrdinalIgnoreCase);
+        }
+
+        private void AssertTypeMatch(int messageType, int expectedMessageType)
+        {
+            if (messageType != expectedMessageType)
+            {
+                throw new FailedRouteEventException($"Type in message doesn't match the expected type: {expectedMessageType}");
+            }
         }
     }
 }
