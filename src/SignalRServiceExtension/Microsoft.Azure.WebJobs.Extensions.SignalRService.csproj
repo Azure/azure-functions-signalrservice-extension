@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="TriggerBindings\Utils\MessagepackParser.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Azure.SignalR.Management" Version="$(MicrosoftAzureSignalRManagement)" />
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="$(MicrosoftAzureWebJobsPackageVersion)" />
   </ItemGroup>
