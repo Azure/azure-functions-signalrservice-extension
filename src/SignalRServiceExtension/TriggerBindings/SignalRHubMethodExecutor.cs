@@ -63,7 +63,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (_executors.TryGetValue(OnConnectedTarget, out var executor))
             {
-                await ExecuteAsync(executor, context, null);
+                var result = await ExecuteAsync(executor, context, null);
+                if (result.Exception != null)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.Forbidden);
+                }
             }
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
@@ -77,7 +81,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
 
-        private async Task ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
+        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
         {
             var signalRTriggerEvent = new SignalRTriggerEvent
             {
@@ -85,11 +89,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 TaskCompletionSource = tcs,
             };
 
-            await executor.TryExecuteAsync(
+            var result = await executor.TryExecuteAsync(
                 new TriggeredFunctionData
                 {
                     TriggerValue = signalRTriggerEvent
                 }, CancellationToken.None);
+
+            // If there's exception in invocation, tcs may not be set.
+            if (result.Succeeded == false)
+            {
+                tcs.TrySetResult(null);
+            }
+
+            return result;
         }
     }
 }
