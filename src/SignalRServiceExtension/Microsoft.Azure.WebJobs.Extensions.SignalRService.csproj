@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TriggerBindings\Utils\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Microsoft.Azure.SignalR.Serverless.Protocols\Microsoft.Azure.SignalR.Serverless.Protocols.csproj" />
   </ItemGroup>
 
