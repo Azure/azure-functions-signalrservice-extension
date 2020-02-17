@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
+namespace Microsoft.Azure.SignalR.Serverless.Protocols
 {
     internal class ReadOnlySequenceStream : Stream
     {

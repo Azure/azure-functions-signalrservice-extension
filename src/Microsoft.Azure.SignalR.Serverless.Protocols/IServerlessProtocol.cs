@@ -1,0 +1,23 @@
+﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Microsoft.Azure.SignalR.Serverless.Protocols
+{
+    public interface IServerlessProtocol
+    {
+        /// <summary>
+        /// Gets the version of the protocol.
+        /// </summary>
+        int Version { get; }
+
+        /// <summary>
+        /// Creates a new <see cref="ServerlessMessage"/> from the specified serialized representation.
+        /// </summary>
+        /// <param name="input">The serialized representation of the message.</param>
+        /// <param name="message">When this method returns <c>true</c>, contains the parsed message.</param>
+        /// <returns>A value that is <c>true</c> if the <see cref="ServerlessMessage"/> was successfully parsed; otherwise, <c>false</c>.</returns>
+        bool TryParseMessage(ref ReadOnlySequence<byte> input, out ServerlessMessage message);
+    }
+}

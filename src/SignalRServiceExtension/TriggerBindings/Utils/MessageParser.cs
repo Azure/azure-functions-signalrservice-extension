@@ -3,6 +3,7 @@
 
 using System.Buffers;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.SignalR.Serverless.Protocols;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -24,7 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
 
-        public abstract bool TryParseMessage(ref ReadOnlySequence<byte> buffer, out ISignalRServerlessMessage message);
+        public abstract bool TryParseMessage(ref ReadOnlySequence<byte> buffer, out ServerlessMessage message);
 
         public abstract IHubProtocol Protocol { get; }
     }

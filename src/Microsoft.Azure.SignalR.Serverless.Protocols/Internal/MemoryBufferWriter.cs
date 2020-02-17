@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
+namespace Microsoft.Azure.SignalR.Serverless.Protocols
 {
     internal sealed class MemoryBufferWriter : Stream, IBufferWriter<byte>
     {
