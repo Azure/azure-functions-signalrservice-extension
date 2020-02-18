@@ -53,7 +53,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         public IDictionary<string, string> Query { get; set; }
 
-
         /// <summary>
         /// The claims of the client.
         /// </summary>
