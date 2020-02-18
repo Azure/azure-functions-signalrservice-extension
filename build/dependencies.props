@@ -11,7 +11,7 @@
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
-    <MessagePackPackageVersion>2.1.90</MessagePackPackageVersion>
+    <MessagePackPackageVersion>1.9.11</MessagePackPackageVersion>
     <NewtonsoftJsonPackageVersion>11.0.2</NewtonsoftJsonPackageVersion>
     <SystemMemoryPackageVersion>4.5.3</SystemMemoryPackageVersion>
 
