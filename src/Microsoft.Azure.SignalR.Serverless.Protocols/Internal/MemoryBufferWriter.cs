@@ -6,12 +6,14 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Azure.SignalR.Serverless.Protocols
+namespace Microsoft.AspNetCore.Internal
 {
+    /// <summary>
+    /// Copied from https://github.com/dotnet/aspnetcore/blob/master/src/SignalR/common/Shared/MemoryBufferWriter.cs
+    /// </summary>
     internal sealed class MemoryBufferWriter : Stream, IBufferWriter<byte>
     {
         [ThreadStatic]
