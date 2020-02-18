@@ -10,4 +10,8 @@
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="$(MicrosoftAzureWebJobsPackageVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Azure.SignalR.Serverless.Protocols\Microsoft.Azure.SignalR.Serverless.Protocols.csproj" />
+  </ItemGroup>
+
 </Project>
