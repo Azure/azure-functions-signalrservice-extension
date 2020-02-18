@@ -11,20 +11,6 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
 {
     internal class MessagePackHelper
     {
-        private static InvocationMessage ConvertInvocationMessage(byte[] input, ref int offset)
-        {
-            var invocationMessage = new InvocationMessage()
-            {
-                Type = ServerlessProtocolConstants.InvocationMessageType,
-            };
-
-            SkipHeaders(input, ref offset);
-            invocationMessage.InvocationId = ReadInvocationId(input, ref offset);
-            invocationMessage.Target = ReadTarget(input, ref offset);
-            invocationMessage.Arguments = ReadArguments(input, ref offset);
-            return invocationMessage;
-        }
-
         public static void SkipHeaders(byte[] input, ref int offset)
         {
             var headerCount = ReadMapLength(input, ref offset, "headers");
