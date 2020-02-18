@@ -10,6 +10,7 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
 {
     public interface IServerlessProtocol
     {
+        // TODO: Have a discussion about how to handle version change.
         /// <summary>
         /// Gets the version of the protocol.
         /// </summary>
