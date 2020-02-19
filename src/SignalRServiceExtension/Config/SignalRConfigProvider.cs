@@ -79,7 +79,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // Trigger binding rule
             context.AddBindingRule<SignalRTriggerAttribute>()
-                .BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher));
+                .BindToTrigger(new SignalRTriggerBindingProvider(_dispatcher));
 
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();

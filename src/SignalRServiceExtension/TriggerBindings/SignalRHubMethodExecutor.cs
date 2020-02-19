@@ -41,10 +41,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             CompletionMessage completionMessage;
             if (_executors.TryGetValue(target, out var executor))
             {
-                await ExecuteAsync(executor, context, tcs);
-                var result = await tcs.Task;
-                completionMessage = CompletionMessage.WithResult(invocationId, result);
-                response = new HttpResponseMessage(HttpStatusCode.OK);
+                var functionResult = await ExecuteAsync(executor, context, tcs);
+                if (!functionResult.Succeeded)
+                {
+                    // TODO: Consider more error details
+                    completionMessage = CompletionMessage.WithError(invocationId, "Function run with error");
+                    response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                }
+                else
+                {
+                    var result = await tcs.Task;
+                    completionMessage = CompletionMessage.WithResult(invocationId, result);
+                    response = new HttpResponseMessage(HttpStatusCode.OK);
+                }
             }
             else
             {
@@ -63,8 +72,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (_executors.TryGetValue(OnConnectedTarget, out var executor))
             {
-                var result = await ExecuteAsync(executor, context, null);
-                if (result.Exception != null)
+                var result = await ExecuteAsync(executor, context);
+                if (!result.Succeeded)
                 {
                     return new HttpResponseMessage(HttpStatusCode.Forbidden);
                 }
@@ -76,12 +85,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (_executors.TryGetValue(OnDisconnectedTarget, out var executor))
             {
-                await ExecuteAsync(executor, context, null);
+                await ExecuteAsync(executor, context);
             }
             return new HttpResponseMessage(HttpStatusCode.OK);
         }
 
-        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
+        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs = null)
         {
             var signalRTriggerEvent = new SignalRTriggerEvent
             {
@@ -98,7 +107,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // If there's exception in invocation, tcs may not be set.
             if (result.Succeeded == false)
             {
-                tcs.TrySetResult(null);
+                tcs?.TrySetResult(null);
             }
 
             return result;
