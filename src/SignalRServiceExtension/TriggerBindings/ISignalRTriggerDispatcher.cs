@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal interface ISignalRTriggerDispatcher
     {
-        void Map((string hubName, string category, string @event) key, ITriggeredFunctionExecutor executor);
+        void Map((string hubName, string category, string @event) key, ExecutionContext executor);
 
         Task<HttpResponseMessage> ExecuteAsync(HttpRequestMessage req, CancellationToken token = default);
     }

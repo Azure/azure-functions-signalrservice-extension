@@ -11,6 +11,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Binding]
     public class SignalRTriggerAttribute : Attribute
     {
+        [AppSetting(Default = Constants.AzureSignalRConnectionStringName)]
+        public string ConnectionStringSetting { get; set; }
+
         /// <summary>
         /// The hub of request belongs to.
         /// </summary>
