@@ -12,7 +12,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRTriggerAttribute : Attribute
     {
         /// <summary>
-        /// THe hub of request belongs to.
+        /// The hub of request belongs to.
         /// </summary>
         [AutoResolve]
         public string HubName { get; set; }
@@ -20,16 +20,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// The event of the request.
         /// </summary>
+        [AutoResolve]
         public string Event { get; set; }
 
         /// <summary>
         /// Two optional value: connections and messages
         /// </summary>
+        [AutoResolve]
         public string Category { get; set; }
 
         /// <summary>
         /// Used for messages category. All the name defined in <see cref="ParameterNames"/> will map to
-        /// Arguments in InvocationMessage by order. And the these name can be used in parameters of method
+        /// Arguments in InvocationMessage by order. And the name can be used in parameters of method
         /// directly.
         /// </summary>
         public string[] ParameterNames { get; set; }

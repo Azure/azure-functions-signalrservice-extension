@@ -13,7 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public InvocationContext Context { get; set; }
 
         /// <summary>
-        /// A TaskCompletionSource will set the return value when the function invocation has finished.
+        /// A TaskCompletionSource will set the return value when the function invocation is finished.
         /// </summary>
         public TaskCompletionSource<object> TaskCompletionSource { get; set; }
     }
