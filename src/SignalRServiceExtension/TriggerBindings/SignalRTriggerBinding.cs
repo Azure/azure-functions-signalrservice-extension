@@ -24,11 +24,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalRTriggerAttribute _attribute;
         private readonly ISignalRTriggerDispatcher _dispatcher;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher router)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
-            _dispatcher = router ?? throw new ArgumentNullException(nameof(router));
+            _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)

@@ -13,11 +13,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRTriggerBindingProvider : ITriggerBindingProvider
     {
-        private readonly ISignalRTriggerDispatcher _router;
+        private readonly ISignalRTriggerDispatcher dispatcher;
 
-        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher router)
+        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher dispatcher)
         {
-            _router = router ?? throw new ArgumentNullException(nameof(router));
+            this.dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, attribute, _router));
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, attribute, dispatcher));
         }
     }
 }
