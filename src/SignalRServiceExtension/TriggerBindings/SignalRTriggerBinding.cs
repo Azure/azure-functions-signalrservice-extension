@@ -58,7 +58,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // It's not a real listener, and it doesn't need a start or close.
             _dispatcher.Map((_attribute.HubName, _attribute.Category, _attribute.Event),
-                new ExecutionContext{Executor = context.Executor, AccessKey = _attribute.ConnectionStringSetting});
+                new ExecutionContext{Executor = context.Executor, AccessKey = SignalRTriggerUtils.GetAccessKey(_attribute.ConnectionStringSetting)});
 
             return Task.FromResult<IListener>(new NullListener());
         }

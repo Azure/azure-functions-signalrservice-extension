@@ -41,33 +41,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context.Category = request.Headers.GetValues(Constants.AsrsCategory).First();
             context.Event = request.Headers.GetValues(Constants.AsrsEvent).First();
             context.UserId = request.Headers.GetValues(Constants.AsrsUserId).FirstOrDefault();
-            context.Query = GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());
-            context.Claims = GetClaimDictionary(request.Headers.GetValues(Constants.AsrsUserClaims).FirstOrDefault());
-            context.Headers = GetHeaderDictionary(request);
+            context.Query = SignalRTriggerUtils.GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());
+            context.Claims = SignalRTriggerUtils.GetClaimDictionary(request.Headers.GetValues(Constants.AsrsUserClaims).FirstOrDefault());
+            context.Headers = SignalRTriggerUtils.GetHeaderDictionary(request);
 
             return true;
-        }
-
-        private static IDictionary<string, string> GetQueryDictionary(string queryString)
-        {
-            if (string.IsNullOrEmpty(queryString))
-            {
-                return default;
-            }
-
-            // The query string looks like "?key1=value1&key2=value2"
-            var queryArray = queryString.TrimStart('?').Split('&');
-            return queryArray.Select(p => p.Split('=')).ToDictionary(p => p[0], p => p[1]);
-        }
-
-        private static IDictionary<string, string> GetClaimDictionary(string claims)
-        {
-            return claims?.Split(',').Select(p => p.Split(new[] { ": " }, StringSplitOptions.None)).ToDictionary(p => p[0].Trim(), p => p[1].Trim());
-        }
-
-        private static IDictionary<string, string> GetHeaderDictionary(HttpRequestMessage request)
-        {
-            return request.Headers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FirstOrDefault(), StringComparer.OrdinalIgnoreCase);
         }
     }
 }

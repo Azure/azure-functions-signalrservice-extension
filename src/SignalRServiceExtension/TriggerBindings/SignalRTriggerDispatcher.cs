@@ -10,7 +10,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Azure.SignalR.Serverless.Protocols;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -98,16 +97,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return !string.IsNullOrEmpty(key.hub) &&
                    !string.IsNullOrEmpty(key.category) &&
                    !string.IsNullOrEmpty(key.@event);
-        }
-
-        private T AssertTypeMatch<T>(object obj)
-        {
-            if (obj.GetType() != typeof(T))
-            {
-                throw new FailedRouteEventException($"Message type: {obj.GetType()} doesn't match the expected type: {typeof(T)}");
-            }
-
-            return (T)obj;
         }
     }
 }

@@ -52,39 +52,51 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_resolver.TryGetInvocationContext(request, out var context))
             {
-                //TODO: Edit
+                //TODO: More detailed exception
                 throw new SignalRTriggerException();
             }
             var (message, protocol) = await GetMessageAsync<InvocationMessage>(request);
             AssertConsistency(context, message);
             context.Arguments = message.Arguments;
 
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            // Only when it's an invoke, we need the result from function execution.
+            TaskCompletionSource<object> tcs = null;
+            if (!string.IsNullOrEmpty(message.InvocationId))
+            {
+                tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
+            }
+
             HttpResponseMessage response;
-            CompletionMessage completionMessage;
+            CompletionMessage completionMessage = null;
             if (_messageExecutors.TryGetValue(context.Event, out var executor))
             {
                 var functionResult = await ExecuteWithAuthAsync(request, executor, context, tcs);
-                if (!functionResult.Succeeded)
+                if (tcs != null)
                 {
-                    // TODO: Consider more error details
-                    completionMessage = CompletionMessage.WithError(message.InvocationId, "Function run with error");
-                    response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+                    if (!functionResult.Succeeded)
+                    {
+                        // TODO: Consider more error details
+                        completionMessage = CompletionMessage.WithError(message.InvocationId, "Execution failed");
+                        response = new HttpResponseMessage(HttpStatusCode.OK);
+                    }
+                    else
+                    {
+                        var result = await tcs.Task;
+                        completionMessage = CompletionMessage.WithResult(message.InvocationId, result);
+                        response = new HttpResponseMessage(HttpStatusCode.OK);
+                    }
                 }
                 else
                 {
-                    var result = await tcs.Task;
-                    completionMessage = CompletionMessage.WithResult(message.InvocationId, result);
                     response = new HttpResponseMessage(HttpStatusCode.OK);
                 }
             }
             else
             {
-                completionMessage = CompletionMessage.WithError(message.InvocationId, $"Event: {context.Event} is not registered in Function App.");
                 response = new HttpResponseMessage(HttpStatusCode.NotFound);
             }
 
-            if (!string.IsNullOrEmpty(message.InvocationId))
+            if (completionMessage != null)
             {
                 response.Content = new ByteArrayContent(protocol.GetMessageBytes(completionMessage).ToArray());
             }
@@ -95,7 +107,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_resolver.TryGetInvocationContext(request, out var context))
             {
-                //TODO: Edit
+                //TODO: More detailed exception
                 throw new SignalRTriggerException();
             }
 
@@ -114,7 +126,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_resolver.TryGetInvocationContext(request, out var context))
             {
-                //TODO: Edit
+                //TODO: More detailed exception
                 throw new SignalRTriggerException();
             }
             var (message, _) = await GetMessageAsync<CloseConnectionMessage>(request);
@@ -130,9 +142,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private Task<FunctionResult> ExecuteWithAuthAsync(HttpRequestMessage request, ExecutionContext executor,
             InvocationContext context, TaskCompletionSource<object> tcs = null)
         {
-            if (_resolver.ValidateSignature(request, executor.AccessKey))
+            if (!_resolver.ValidateSignature(request, executor.AccessKey))
             {
-                //TODO: Edit
+                //TODO: More detailed exception
                 throw new SignalRTriggerException();
             }
 
@@ -154,6 +166,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }, CancellationToken.None);
 
             // If there's exception in invocation, tcs may not be set.
+            // And SetException seems not necessary. Exception can be get from FunctionResult.
             if (result.Succeeded == false)
             {
                 tcs?.TrySetResult(null);
@@ -168,7 +181,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var messageParser = MessageParser.GetParser(request.Content.Headers.ContentType.MediaType);
             if (!messageParser.TryParseMessage(ref payload, out var message))
             {
-                throw new FailedRouteEventException("Parsing message failed");
+                throw new SignalRTriggerException("Parsing message failed");
             }
 
             return ((T)message, messageParser.Protocol);
@@ -178,7 +191,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!string.Equals(context.Event, message.Target, StringComparison.OrdinalIgnoreCase))
             {
-                // TODO: Edit
+                // TODO: More detailed exception
                 throw new SignalRTriggerException();
             }
         }

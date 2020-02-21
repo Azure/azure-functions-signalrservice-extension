@@ -9,16 +9,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.Azure.WebJobs.Host.Executors;
+using ExecutionContext = Microsoft.Azure.WebJobs.Extensions.SignalRService.ExecutionContext;
 
 namespace SignalRServiceExtension.Tests.Utils
 {
     class TestTriggerDispatcher : ISignalRTriggerDispatcher
     {
-        public Dictionary<(string, string, string), ITriggeredFunctionExecutor> Executors { get; } =
-            new Dictionary<(string, string, string), ITriggeredFunctionExecutor>();
+        public Dictionary<(string, string, string), ExecutionContext> Executors { get; } =
+            new Dictionary<(string, string, string), ExecutionContext>();
 
-        public void Map((string hubName, string category, string @event) key, ITriggeredFunctionExecutor executor)
+        public void Map((string hubName, string category, string @event) key, ExecutionContext executor)
         {
             Executors.Add(key, executor);
         }

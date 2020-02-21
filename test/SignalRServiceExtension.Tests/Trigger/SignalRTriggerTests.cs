@@ -42,11 +42,11 @@ namespace SignalRServiceExtension.Tests
             var parameterInfo = this.GetType().GetMethod(nameof(TestFunction)).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
             var hub = Guid.NewGuid().ToString();
-            var category = Guid.NewGuid().ToString();
+            var category = "connections";
             var method = Guid.NewGuid().ToString();
             var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute{HubName = hub, Category = category, Event = method}, dispatcher);
             await binding.CreateListenerAsync(listenerFactoryContext);
-            Assert.Equal(executor, dispatcher.Executors[(hub, category, method)]);
+            Assert.Equal(executor, dispatcher.Executors[(hub, category, method)].Executor);
         }
 
         public void TestFunction(InvocationContext context)
