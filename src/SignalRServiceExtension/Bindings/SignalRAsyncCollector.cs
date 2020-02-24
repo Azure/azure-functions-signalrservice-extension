@@ -4,6 +4,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -59,7 +60,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
                 if (!string.IsNullOrEmpty(groupAction.ConnectionId))
                 {
-                    switch(groupAction.Action)
+                    switch (groupAction.Action)
                     {
                         case GroupAction.Add:
                             await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);

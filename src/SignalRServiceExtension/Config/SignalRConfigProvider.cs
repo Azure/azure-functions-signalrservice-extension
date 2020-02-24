@@ -20,22 +20,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public IConfiguration Configuration { get; }
 
-        private readonly SignalROptions options;
-        private readonly INameResolver nameResolver;
+        internal readonly INameResolver nameResolver;
+
         private readonly ILogger logger;
+        private readonly SignalROptions options;
         private readonly ILoggerFactory loggerFactory;
+        private readonly ISecurityTokenValidator securityTokenValidator;
+        private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
             INameResolver nameResolver,
             ILoggerFactory loggerFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ISecurityTokenValidator securityTokenValidator = null,
+            ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer = null)
         {
             this.options = options.Value;
             this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger("SignalR");
             this.nameResolver = nameResolver;
             Configuration = configuration;
+            this.securityTokenValidator = securityTokenValidator;
+            this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
         }
 
         public void Initialize(ExtensionConfigContext context)
@@ -67,9 +74,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
+            var signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(this, securityTokenValidator, signalRConnectionInfoConfigurer);
+
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
-            signalRConnectionInfoAttributeRule.BindToInput<SignalRConnectionInfo>(GetClientConnectionInfo);
+            signalRConnectionInfoAttributeRule.Bind(signalRConnectionInputBindingProvider);
+
+            var securityTokenValidationAttributeRule = context.AddBindingRule<SecurityTokenValidationAttribute>();
+            securityTokenValidationAttributeRule.Bind(signalRConnectionInputBindingProvider);
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
