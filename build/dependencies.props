@@ -6,7 +6,7 @@
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
     <MicrosoftAzureSignalRManagement>1.2.0</MicrosoftAzureSignalRManagement>
-    <MicrosoftAzureWebJobsPackageVersion>3.0.4</MicrosoftAzureWebJobsPackageVersion>
+    <MicrosoftAzureFunctionsExtensionsVersion>1.0.0</MicrosoftAzureFunctionsExtensionsVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
     <XunitPackageVersion>2.4.0</XunitPackageVersion>
