@@ -3,6 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.WebApiCompatShim;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -52,6 +55,20 @@ namespace SignalRServiceExtension.Tests.Utils
         public static JobHost GetJobHost(this IHost host)
         {
             return host.Services.GetService<IJobHost>() as JobHost;
+        }
+
+        public static HttpRequestMessage CreateHttpRequestMessage(string hub, string category, string @event, string connectionId, 
+            string contentType = Constants.JsonContentType)
+        {
+            var context = new DefaultHttpContext();
+            context.Request.ContentType = contentType;
+            context.Request.Method = "Post";
+            context.Request.Headers.Add(Constants.AsrsHubNameHeader, hub);
+            context.Request.Headers.Add(Constants.AsrsCategory, category);
+            context.Request.Headers.Add(Constants.AsrsEvent, @event);
+            context.Request.Headers.Add(Constants.AsrsConnectionIdHeader, connectionId);
+
+            return new HttpRequestMessageFeature(context).HttpRequestMessage;
         }
     }
 }

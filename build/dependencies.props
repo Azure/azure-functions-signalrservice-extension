@@ -14,6 +14,7 @@
     <MessagePackPackageVersion>1.9.11</MessagePackPackageVersion>
     <NewtonsoftJsonPackageVersion>11.0.2</NewtonsoftJsonPackageVersion>
     <SystemMemoryPackageVersion>4.5.3</SystemMemoryPackageVersion>
+    <MicrosoftAspNetCoreMvcWebApiCompatShimPackageVersion>2.2.0</MicrosoftAspNetCoreMvcWebApiCompatShimPackageVersion>
 
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />

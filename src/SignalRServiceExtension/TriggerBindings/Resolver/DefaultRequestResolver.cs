@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
+
+using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.SignalR.Serverless.Protocols;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -46,6 +52,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context.Headers = SignalRTriggerUtils.GetHeaderDictionary(request);
 
             return true;
+        }
+
+        public async Task<(T, IHubProtocol)> GetMessageAsync<T>(HttpRequestMessage request) where T : ServerlessMessage, new()
+        {
+            var payload = new ReadOnlySequence<byte>(await request.Content.ReadAsByteArrayAsync());
+            var messageParser = MessageParser.GetParser(request.Content.Headers.ContentType.MediaType);
+            if (!messageParser.TryParseMessage(ref payload, out var message))
+            {
+                throw new SignalRTriggerException("Parsing message failed");
+            }
+
+            return ((T)message, messageParser.Protocol);
         }
     }
 }

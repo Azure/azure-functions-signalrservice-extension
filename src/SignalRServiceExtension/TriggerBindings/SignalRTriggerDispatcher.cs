@@ -16,8 +16,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRTriggerDispatcher : ISignalRTriggerDispatcher
     {
-        private readonly Dictionary<string, SignalRHubMethodExecutor> _executors =
-            new Dictionary<string, SignalRHubMethodExecutor>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<(string hub, string category, string @event), SignalRMethodExecutor> _executors =
+            new Dictionary<(string, string, string), SignalRMethodExecutor>(TupleIgnoreCasesComparer.Instance);
         private readonly IRequestResolver _resolver;
 
         public SignalRTriggerDispatcher(IRequestResolver resolver = null)
@@ -27,13 +27,32 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void Map((string hubName, string category, string @event) key, ExecutionContext executor)
         {
-            if (!_executors.TryGetValue(key.hubName, out var hubExecutor))
+            if (!_executors.ContainsKey(key))
             {
-                hubExecutor = new SignalRHubMethodExecutor(key.hubName, _resolver);
-                _executors.Add(key.hubName, hubExecutor);
+                if (key.category == Constants.Category.Connections)
+                {
+                    if (key.@event == Constants.Events.Connect)
+                    {
+                        _executors.Add(key, new SignalRConnectMethodExecutor(_resolver, executor));
+                        return;
+                    }
+                    if (key.@event == Constants.Events.Disconnect)
+                    {
+                        _executors.Add(key, new SignalRDisconnectMethodExecutor(_resolver, executor));
+                        return;
+                    }
+                    throw new SignalRTriggerException($"Event {key.@event} is not supported in connections");
+                }
+                if (key.category == Constants.Category.Messages)
+                {
+                    _executors.Add(key, new SignalRInvocationMethodExecutor(_resolver, executor));
+                    return;
+                }
+                throw new SignalRTriggerException($"Category {key.category} is not supported");
             }
 
-            hubExecutor.Map((key.category, key.@event), executor);
+            throw new SignalRTriggerException(
+                $"Duplicated key parameter hub: {key.hubName}, category: {key.category}, event: {key.@event}");
         }
 
         public async Task<HttpResponseMessage> ExecuteAsync(HttpRequestMessage req, CancellationToken token = default)
@@ -49,36 +68,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
             
-            // TODO: select out executor that match the pattern
-            if (_executors.TryGetValue(key.hub, out var executor))
+            if (_executors.TryGetValue(key, out var executor))
             {
                 try
                 {
-                    if (key.category == Constants.Category.Connections)
-                    {
-                        if (key.@event == Constants.Events.Connect)
-                        {
-                            return await executor.ExecuteOpenConnection(req);
-                        }
-
-                        if (key.@event == Constants.Events.Disconnect)
-                        {
-                            return await executor.ExecuteCloseConnection(req);
-                        }
-
-                        throw new FailedRouteEventException($"{key.@event} is not a supported event for connections");
-                    }
-
-                    if (key.category == Constants.Category.Messages)
-                    {
-                        return await executor.ExecuteInvocation(req);
-                    }
-
-                    throw new FailedRouteEventException($"{key.category} is not a supported category");
+                    return await executor.ExecuteAsync(req);
                 }
                 catch (SignalRTriggerException ex)
                 {
-                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError)
                     {
                         ReasonPhrase = ex.Message
                     };
