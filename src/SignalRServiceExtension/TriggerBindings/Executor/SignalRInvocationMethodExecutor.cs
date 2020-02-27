@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Protocol;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 using InvocationMessage = Microsoft.Azure.SignalR.Serverless.Protocols.InvocationMessage;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService

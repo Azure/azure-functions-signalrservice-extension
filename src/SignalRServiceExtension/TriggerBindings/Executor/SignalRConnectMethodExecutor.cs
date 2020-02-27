@@ -10,8 +10,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
-
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRConnectMethodExecutor : SignalRMethodExecutor

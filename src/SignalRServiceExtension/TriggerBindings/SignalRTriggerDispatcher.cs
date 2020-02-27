@@ -10,14 +10,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
-
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRTriggerDispatcher : ISignalRTriggerDispatcher
     {
         private readonly Dictionary<(string hub, string category, string @event), SignalRMethodExecutor> _executors =
-            new Dictionary<(string, string, string), SignalRMethodExecutor>(TupleIgnoreCasesComparer.Instance);
+            new Dictionary<(string, string, string), SignalRMethodExecutor>(TupleStringIgnoreCasesComparer.Instance);
         private readonly IRequestResolver _resolver;
 
         public SignalRTriggerDispatcher(IRequestResolver resolver = null)

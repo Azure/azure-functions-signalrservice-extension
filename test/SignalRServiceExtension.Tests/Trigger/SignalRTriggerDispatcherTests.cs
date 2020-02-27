@@ -48,6 +48,11 @@ namespace SignalRServiceExtension.Tests
             var request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
             await dispatcher.ExecuteAsync(request);
             executorMoc.Verify(e => e.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()), Times.Once);
+
+            // We can handle different word cases
+            request = TestHelpers.CreateHttpRequestMessage(key.hub.ToUpper(), key.category.ToUpper(), key.@event.ToUpper(), Guid.NewGuid().ToString());
+            await dispatcher.ExecuteAsync(request);
+            executorMoc.Verify(e => e.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
         private class TestRequestResolver : IRequestResolver

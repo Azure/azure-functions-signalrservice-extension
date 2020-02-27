@@ -1,14 +1,14 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Azure.SignalR.Serverless.Protocols;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -32,20 +32,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public bool TryGetInvocationContext(HttpRequestMessage request, out InvocationContext context)
         {
-            if (!request.Headers.Contains(Constants.AsrsHubNameHeader) ||
-                !request.Headers.Contains(Constants.AsrsCategory) ||
-                !request.Headers.Contains(Constants.AsrsEvent) ||
-                !request.Headers.Contains(Constants.AsrsConnectionIdHeader))
+            context = new InvocationContext();
+            // Required properties
+            context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).FirstOrDefault();
+            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).FirstOrDefault();
+            context.Category = request.Headers.GetValues(Constants.AsrsCategory).FirstOrDefault();
+            context.Event = request.Headers.GetValues(Constants.AsrsEvent).FirstOrDefault();
+            if (string.IsNullOrEmpty(context.ConnectionId) ||
+                string.IsNullOrEmpty(context.Hub) ||
+                string.IsNullOrEmpty(context.Category) ||
+                string.IsNullOrEmpty(context.Event))
             {
-                context = null;
                 return false;
             }
-
-            context = new InvocationContext();
-            context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).First();
-            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).First();
-            context.Category = request.Headers.GetValues(Constants.AsrsCategory).First();
-            context.Event = request.Headers.GetValues(Constants.AsrsEvent).First();
+            // Optional properties
             context.UserId = request.Headers.GetValues(Constants.AsrsUserId).FirstOrDefault();
             context.Query = SignalRTriggerUtils.GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());
             context.Claims = SignalRTriggerUtils.GetClaimDictionary(request.Headers.GetValues(Constants.AsrsUserClaims).FirstOrDefault());

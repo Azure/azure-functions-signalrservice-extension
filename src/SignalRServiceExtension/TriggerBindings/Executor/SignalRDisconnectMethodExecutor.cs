@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.SignalR.Serverless.Protocols;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.Exceptions;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
