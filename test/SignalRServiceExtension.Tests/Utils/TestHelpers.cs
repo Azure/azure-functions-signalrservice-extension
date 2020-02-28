@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
@@ -57,7 +58,7 @@ namespace SignalRServiceExtension.Tests.Utils
         }
 
         public static HttpRequestMessage CreateHttpRequestMessage(string hub, string category, string @event, string connectionId, 
-            string contentType = Constants.JsonContentType)
+            string contentType = Constants.JsonContentType, byte[] content = null)
         {
             var context = new DefaultHttpContext();
             context.Request.ContentType = contentType;
@@ -66,6 +67,7 @@ namespace SignalRServiceExtension.Tests.Utils
             context.Request.Headers.Add(Constants.AsrsCategory, category);
             context.Request.Headers.Add(Constants.AsrsEvent, @event);
             context.Request.Headers.Add(Constants.AsrsConnectionIdHeader, connectionId);
+            context.Request.Body = content == null ? Stream.Null : new MemoryStream(content);
 
             return CreateHttpRequestMessageFromContext(context);
         }

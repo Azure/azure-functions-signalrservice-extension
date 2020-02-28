@@ -3,9 +3,9 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common
 {
-    internal static class BinaryMessageParser
+    public static class BinaryMessageParser
     {
         internal const int MaxLengthPrefixSize = 5;
 

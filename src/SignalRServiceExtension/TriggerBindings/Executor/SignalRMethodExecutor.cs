@@ -36,10 +36,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new SignalRTriggerException();
             }
 
-            return ExecuteAsync(executor.Executor, context);
+            return ExecuteAsync(executor.Executor, context, tcs);
         }
 
-        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs = null)
+        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
         {
             var signalRTriggerEvent = new SignalRTriggerEvent
             {

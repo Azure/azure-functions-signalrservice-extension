@@ -43,9 +43,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context.Category = request.Headers.GetValues(Constants.AsrsCategory).FirstOrDefault();
             context.Event = request.Headers.GetValues(Constants.AsrsEvent).FirstOrDefault();
             // Optional properties
-            context.UserId = request.Headers.GetValues(Constants.AsrsUserId).FirstOrDefault();
-            context.Query = SignalRTriggerUtils.GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());
-            context.Claims = SignalRTriggerUtils.GetClaimDictionary(request.Headers.GetValues(Constants.AsrsUserClaims).FirstOrDefault());
+            if (request.Headers.TryGetValues(Constants.AsrsUserId, out var values))
+            {
+                context.UserId = values.FirstOrDefault();
+            }
+            if (request.Headers.TryGetValues(Constants.AsrsClientQueryString, out values))
+            {
+                context.Query = SignalRTriggerUtils.GetQueryDictionary(values.FirstOrDefault());
+            }
+            if (request.Headers.TryGetValues(Constants.AsrsUserClaims, out values))
+            {
+                context.Claims = SignalRTriggerUtils.GetClaimDictionary(values.FirstOrDefault());
+            }
             context.Headers = SignalRTriggerUtils.GetHeaderDictionary(request);
 
             return true;

@@ -3,12 +3,12 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common
 {
     /// <summary>
     /// The same as https://github.com/aspnet/SignalR/blob/release/2.2/src/Common/TextMessageParser.cs
     /// </summary>
-    internal static class TextMessageParser
+    public static class TextMessageParser
     {
         public static readonly byte RecordSeparator = 0x1e;
 
