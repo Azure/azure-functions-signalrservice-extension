@@ -35,16 +35,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             context = new InvocationContext();
             // Required properties
             context.ConnectionId = request.Headers.GetValues(Constants.AsrsConnectionIdHeader).FirstOrDefault();
-            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).FirstOrDefault();
-            context.Category = request.Headers.GetValues(Constants.AsrsCategory).FirstOrDefault();
-            context.Event = request.Headers.GetValues(Constants.AsrsEvent).FirstOrDefault();
-            if (string.IsNullOrEmpty(context.ConnectionId) ||
-                string.IsNullOrEmpty(context.Hub) ||
-                string.IsNullOrEmpty(context.Category) ||
-                string.IsNullOrEmpty(context.Event))
+            if (string.IsNullOrEmpty(context.ConnectionId))
             {
                 return false;
             }
+            context.Hub = request.Headers.GetValues(Constants.AsrsHubNameHeader).FirstOrDefault();
+            context.Category = request.Headers.GetValues(Constants.AsrsCategory).FirstOrDefault();
+            context.Event = request.Headers.GetValues(Constants.AsrsEvent).FirstOrDefault();
             // Optional properties
             context.UserId = request.Headers.GetValues(Constants.AsrsUserId).FirstOrDefault();
             context.Query = SignalRTriggerUtils.GetQueryDictionary(request.Headers.GetValues(Constants.AsrsClientQueryString).FirstOrDefault());

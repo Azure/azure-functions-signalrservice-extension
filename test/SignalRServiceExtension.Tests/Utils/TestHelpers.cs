@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.WebApiCompatShim;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -68,7 +67,38 @@ namespace SignalRServiceExtension.Tests.Utils
             context.Request.Headers.Add(Constants.AsrsEvent, @event);
             context.Request.Headers.Add(Constants.AsrsConnectionIdHeader, connectionId);
 
-            return new HttpRequestMessageFeature(context).HttpRequestMessage;
+            return CreateHttpRequestMessageFromContext(context);
+        }
+
+        private static HttpRequestMessage CreateHttpRequestMessageFromContext(HttpContext httpContext)
+        {
+            var httpRequest = httpContext.Request;
+            var uriString =
+                httpRequest.Scheme + "://" +
+                httpRequest.Host +
+                httpRequest.PathBase +
+                httpRequest.Path +
+                httpRequest.QueryString;
+
+            var message = new HttpRequestMessage(new HttpMethod(httpRequest.Method), uriString);
+
+            // This allows us to pass the message through APIs defined in legacy code and then
+            // operate on the HttpContext inside.
+            message.Properties[nameof(HttpContext)] = httpContext;
+
+            message.Content = new StreamContent(httpRequest.Body);
+
+            foreach (var header in httpRequest.Headers)
+            {
+                // Every header should be able to fit into one of the two header collections.
+                // Try message.Headers first since that accepts more of them.
+                if (!message.Headers.TryAddWithoutValidation(header.Key, (IEnumerable<string>)header.Value))
+                {
+                    message.Content.Headers.TryAddWithoutValidation(header.Key, (IEnumerable<string>)header.Value);
+                }
+            }
+
+            return message;
         }
     }
 }

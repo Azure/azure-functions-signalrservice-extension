@@ -16,8 +16,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal abstract class SignalRMethodExecutor
     {
-        protected readonly IRequestResolver Resolver;
-        protected readonly ExecutionContext ExecutionContext;
+        protected IRequestResolver Resolver { get; }
+        protected ExecutionContext ExecutionContext { get; }
 
         protected SignalRMethodExecutor(IRequestResolver resolver, ExecutionContext executionContext)
         {
