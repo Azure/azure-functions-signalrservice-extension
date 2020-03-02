@@ -40,7 +40,7 @@ namespace SignalRServiceExtension.Tests.Trigger
         [Fact]
         public async Task SignalRConnectMethodExecutorTest()
         {
-            var resolver = new DefaultRequestResolver();
+            var resolver = new SignalRRequestResolver();
             var methodExecutor = new SignalRConnectMethodExecutor(resolver, new ExecutionContext {Executor = _triggeredFunctionExecutor });
             var hub = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();
@@ -63,7 +63,7 @@ namespace SignalRServiceExtension.Tests.Trigger
         [Fact]
         public async Task SignalRDisconnectMethodExecutorTest()
         {
-            var resolver = new DefaultRequestResolver();
+            var resolver = new SignalRRequestResolver();
             var methodExecutor = new SignalRDisconnectMethodExecutor(resolver, new ExecutionContext { Executor = _triggeredFunctionExecutor });
             var hub = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();
@@ -90,7 +90,7 @@ namespace SignalRServiceExtension.Tests.Trigger
         [InlineData("messagepack")]
         public async Task SignalRInvocationMethodExecutorTest(string protocolName)
         {
-            var resolver = new DefaultRequestResolver();
+            var resolver = new SignalRRequestResolver();
             var methodExecutor = new SignalRInvocationMethodExecutor(resolver, new ExecutionContext { Executor = _triggeredFunctionExecutor });
             var hub = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();

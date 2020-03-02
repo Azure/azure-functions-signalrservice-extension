@@ -32,14 +32,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!Resolver.ValidateSignature(request, executor.AccessKey))
             {
-                //TODO: More detailed exception
-                throw new SignalRTriggerException();
+                throw new SignalRTriggerAuthorizeFailedException();
             }
 
-            return ExecuteAsync(executor.Executor, context, tcs);
+            return ExecuteAsyncCore(executor.Executor, context, tcs);
         }
 
-        private async Task<FunctionResult> ExecuteAsync(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
+        private async Task<FunctionResult> ExecuteAsyncCore(ITriggeredFunctionExecutor executor, InvocationContext context, TaskCompletionSource<object> tcs)
         {
             var signalRTriggerEvent = new SignalRTriggerEvent
             {

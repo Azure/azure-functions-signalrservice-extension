@@ -20,7 +20,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public SignalRTriggerDispatcher(IRequestResolver resolver = null)
         {
-            _resolver = resolver ?? new DefaultRequestResolver();
+            _resolver = resolver ?? new SignalRRequestResolver();
         }
 
         public void Map((string hubName, string category, string @event) key, ExecutionContext executor)
@@ -72,7 +72,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 {
                     return await executor.ExecuteAsync(req);
                 }
-                catch (SignalRTriggerException ex)
+                //TODO: Different response for more details exceptions
+                catch (SignalRTriggerAuthorizeFailedException ex)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                    {
+                        ReasonPhrase = ex.Message
+                    };
+                }
+                catch (Exception ex)
                 {
                     return new HttpResponseMessage(HttpStatusCode.InternalServerError)
                     {

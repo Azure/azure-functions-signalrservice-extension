@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -55,16 +56,62 @@ namespace SignalRServiceExtension.Tests
             executorMoc.Verify(e => e.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         }
 
+        [Theory]
+        [MemberData(nameof(AttributeData))]
+        public async Task ResolverInfluenceTests(string category, string @event, bool throwException)
+        {
+            if (throwException)
+            {
+                return;
+            }
+            var resolver = new TestRequestResolver();
+            var dispatcher = new SignalRTriggerDispatcher(resolver);
+            var key = (hub: Guid.NewGuid().ToString(), category, @event);
+            var tcs = new TaskCompletionSource<ITriggeredFunctionExecutor>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var executorMoc = new Mock<ITriggeredFunctionExecutor>();
+            executorMoc.Setup(f => f.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult(new FunctionResult(true)));
+            var executor = executorMoc.Object;
+            dispatcher.Map(key, new ExecutionContext { Executor = executor, AccessKey = string.Empty });
+            
+            // Test content type
+            resolver.ValidateContentTypeResult = false;
+            var request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
+            var res = await dispatcher.ExecuteAsync(request);
+            Assert.Equal(HttpStatusCode.UnsupportedMediaType, res.StatusCode);
+            resolver.ValidateContentTypeResult = true;
+
+            // Test signature
+            resolver.ValidateSignatureResult = false;
+            request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
+            res = await dispatcher.ExecuteAsync(request);
+            Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
+            resolver.ValidateSignatureResult = true;
+
+            // Test GetInvocationContext
+            resolver.GetInvocationContextResult = false;
+            request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
+            res = await dispatcher.ExecuteAsync(request);
+            Assert.Equal(HttpStatusCode.InternalServerError, res.StatusCode);
+            resolver.GetInvocationContextResult = true;
+        }
+
         private class TestRequestResolver : IRequestResolver
         {
-            public bool ValidateContentType(HttpRequestMessage request) => true;
+            public bool ValidateContentTypeResult { get; set; } = true;
 
-            public bool ValidateSignature(HttpRequestMessage request, string accessKey) => true;
+            public bool ValidateSignatureResult { get; set; } = true;
+
+            public bool GetInvocationContextResult { get; set; } = true;
+
+            public bool ValidateContentType(HttpRequestMessage request) => ValidateContentTypeResult;
+
+            public bool ValidateSignature(HttpRequestMessage request, string accessKey) => ValidateSignatureResult;
 
             public bool TryGetInvocationContext(HttpRequestMessage request, out InvocationContext context)
             {
                 context = new InvocationContext();
-                return true;
+                return GetInvocationContextResult;
             }
 
             public Task<(T, IHubProtocol)> GetMessageAsync<T>(HttpRequestMessage request) where T : ServerlessMessage, new()

@@ -12,7 +12,7 @@ using Microsoft.Azure.SignalR.Serverless.Protocols;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class DefaultRequestResolver : IRequestResolver
+    internal class SignalRRequestResolver : IRequestResolver
     {
         public bool ValidateContentType(HttpRequestMessage request)
         {
