@@ -9,10 +9,12 @@
     <PackageReference Include="Moq" Version="$(MoqPackageVersion)" />
     <PackageReference Include="xunit" Version="$(XunitPackageVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitRunnerVisualstudioPackageVersion)" />
+    <PackageReference Include="Microsoft.Azure.SignalR.Management" Version="$(MicrosoftAzureSignalRManagement)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Azure.SignalR.Serverless.Protocols\Microsoft.Azure.SignalR.Serverless.Protocols.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common\Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common.csproj" />
   </ItemGroup>
 
 </Project>

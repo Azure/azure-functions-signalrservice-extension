@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common;
 using Newtonsoft.Json;
 using Xunit;
 

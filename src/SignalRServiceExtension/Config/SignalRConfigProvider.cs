@@ -4,10 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,8 +19,8 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    [Extension("SignalR")]
-    internal class SignalRConfigProvider : IExtensionConfigProvider
+    [Extension("SignalR", "signalr")]
+    internal class SignalRConfigProvider : IExtensionConfigProvider, IAsyncConverter<HttpRequestMessage, HttpResponseMessage>
     {
         public IConfiguration Configuration { get; }
 
@@ -27,6 +31,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ILoggerFactory loggerFactory;
         private readonly ISecurityTokenValidator securityTokenValidator;
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
+        private readonly ISignalRTriggerDispatcher _dispatcher;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -38,13 +43,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             this.options = options.Value;
             this.loggerFactory = loggerFactory;
-            this.logger = loggerFactory.CreateLogger("SignalR");
+            this.logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("SignalR"));
             this.nameResolver = nameResolver;
             Configuration = configuration;
             this.securityTokenValidator = securityTokenValidator;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
+            this._dispatcher = new SignalRTriggerDispatcher();
         }
 
+        // GetWebhookHandler() need the Obsolete
+        [Obsolete("preview")]
         public void Initialize(ExtensionConfigContext context)
         {
             if (context == null)
@@ -69,11 +77,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
 
+            var url = context.GetWebhookHandler();
+            logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
+
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
+            // Trigger binding rule
+            context.AddBindingRule<SignalRTriggerAttribute>()
+                .BindToTrigger(new SignalRTriggerBindingProvider(_dispatcher));
+
+            // Non-trigger binding rule
             var signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(this, securityTokenValidator, signalRConnectionInfoConfigurer);
 
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
@@ -88,6 +104,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
 
             logger.LogInformation("SignalRService binding initialized");
+        }
+
+        public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
+        {
+            return _dispatcher.ExecuteAsync(input, cancellationToken);
         }
 
         public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)

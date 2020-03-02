@@ -33,6 +33,7 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal(context, await result.ValueProvider.GetValueAsync());
         }
 
+        // Test CreateListenerAsync() in binding will call IDispatcher.Map()
         [Fact]
         public async Task CreateListenerTest()
         {
@@ -42,11 +43,11 @@ namespace SignalRServiceExtension.Tests
             var parameterInfo = this.GetType().GetMethod(nameof(TestFunction)).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
             var hub = Guid.NewGuid().ToString();
-            var category = Guid.NewGuid().ToString();
             var method = Guid.NewGuid().ToString();
+            var category = Guid.NewGuid().ToString();
             var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute{HubName = hub, Category = category, Event = method}, dispatcher);
             await binding.CreateListenerAsync(listenerFactoryContext);
-            Assert.Equal(executor, dispatcher.Executors[(hub, category, method)]);
+            Assert.Equal(executor, dispatcher.Executors[(hub, category, method)].Executor);
         }
 
         public void TestFunction(InvocationContext context)
