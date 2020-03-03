@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 { 
-    class SignalRTriggerParametersNotMatchException : SignalRTriggerException
+    internal class SignalRTriggerParametersNotMatchException : SignalRTriggerException
     {
         public SignalRTriggerParametersNotMatchException(int excepted, int actual) : base(
             $"The function expected {excepted} parameters but got {actual}")

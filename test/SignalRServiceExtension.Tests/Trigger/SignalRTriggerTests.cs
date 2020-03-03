@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace SignalRServiceExtension.Tests
             var executor = new Mock<ITriggeredFunctionExecutor>().Object;
             var listenerFactoryContext =
                 new ListenerFactoryContext(new FunctionDescriptor(), executor, CancellationToken.None);
-            var parameterInfo = this.GetType().GetMethod(nameof(TestFunction)).GetParameters()[0];
+            var parameterInfo = this.GetType().GetMethod(nameof(TestFunction), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
             var hub = Guid.NewGuid().ToString();
             var method = Guid.NewGuid().ToString();
@@ -51,7 +52,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task BindingDataTestWithLessParameterNames()
         {
-            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), new string[] {"arg0"});
+            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), "arg0");
             var context = new InvocationContext{Arguments = new object[] {Guid.NewGuid().ToString()}};
             var triggerContext = new SignalRTriggerEvent { Context = context };
             var result = await binding.BindAsync(triggerContext, null);
@@ -64,7 +65,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task BindingDataTestWithExactParameterNames()
         {
-            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), new string[] { "arg0", "arg1" });
+            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), "arg0", "arg1");
             var context = new InvocationContext { Arguments = new object[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() } };
             var triggerContext = new SignalRTriggerEvent { Context = context };
             var result = await binding.BindAsync(triggerContext, null);
@@ -78,7 +79,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task BindingDataTestWithMoreParameterNames()
         {
-            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), new string[] { "arg0", "arg1", "arg2" });
+            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), "arg0", "arg1", "arg2");
             var context = new InvocationContext { Arguments = new object[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString() } };
             var triggerContext = new SignalRTriggerEvent { Context = context };
             var result = await binding.BindAsync(triggerContext, null);
@@ -94,25 +95,25 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task BindingDataTestWithUnmatchedParameterNamesAndInvocation()
         {
-            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), new string[] { "arg0", "arg1", "arg2" });
+            var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), "arg0", "arg1", "arg2");
             // Less invocation arguments than ParameterNames
             var context = new InvocationContext { Arguments = new object[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() } };
             var triggerContext = new SignalRTriggerEvent { Context = context };
             await Assert.ThrowsAsync<SignalRTriggerParametersNotMatchException>(() => binding.BindAsync(triggerContext, null));
         }
 
-        private SignalRTriggerBinding CreateBinding(string functionName, string[] parameterNames)
+        private SignalRTriggerBinding CreateBinding(string functionName, params string[] parameterNames)
         {
-            var parameterInfo = this.GetType().GetMethod(functionName).GetParameters()[0];
+            var parameterInfo = this.GetType().GetMethod(functionName, BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
             return new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute{ParameterNames = parameterNames}, dispatcher);
         }
 
-        public void TestFunction(InvocationContext context)
+        internal void TestFunction(InvocationContext context)
         {
         }
 
-        public void TestFunctionWithTwoStringArgument(InvocationContext context, string arg0, string arg1)
+        internal void TestFunctionWithTwoStringArgument(InvocationContext context, string arg0, string arg1)
         {
         }
     }

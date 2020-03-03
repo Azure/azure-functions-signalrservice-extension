@@ -86,8 +86,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .AddConverter<JObject, SignalRGroupAction>(input => input.ToObject<SignalRGroupAction>());
 
             // Trigger binding rule
-            context.AddBindingRule<SignalRTriggerAttribute>()
-                .BindToTrigger(new SignalRTriggerBindingProvider(_dispatcher));
+            var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
+            triggerBindingRule.AddValidator(ValidateSignalRTriggerAttributeBinding);
+            triggerBindingRule.BindToTrigger(new SignalRTriggerBindingProvider(_dispatcher));
 
             // Non-trigger binding rule
             var signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(this, securityTokenValidator, signalRConnectionInfoConfigurer);
@@ -140,6 +141,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (string.IsNullOrEmpty(connectionString))
             {
                 throw new InvalidOperationException(string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributeConnectionStringName));
+            }
+        }
+
+        private void ValidateSignalRTriggerAttributeBinding(SignalRTriggerAttribute attribute, Type type)
+        {
+            ValidateConnectionString(attribute.ConnectionStringSetting,
+                $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}");
+            ValidateParameterNames(attribute.ParameterNames);
+        }
+
+        private void ValidateParameterNames(string[] parameterNames)
+        {
+            if (parameterNames == null || parameterNames.Length == 0)
+            {
+                return;
+            }
+
+            if (parameterNames.Length != parameterNames.Distinct(StringComparer.OrdinalIgnoreCase).Count())
+            {
+                throw new ArgumentException("Elements in ParameterNames should be distinct under ignore case.");
             }
         }
 
