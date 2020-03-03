@@ -160,7 +160,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (parameterNames.Length != parameterNames.Distinct(StringComparer.OrdinalIgnoreCase).Count())
             {
-                throw new ArgumentException("Elements in ParameterNames should be distinct under ignore case.");
+                throw new ArgumentException("Elements in ParameterNames should be ignore case unique.");
             }
         }
 
