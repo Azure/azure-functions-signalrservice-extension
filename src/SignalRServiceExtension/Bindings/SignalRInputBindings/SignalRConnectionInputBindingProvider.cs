@@ -10,13 +10,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class SignalRConnectionInputBindingProvider : IBindingProvider
     {
         private readonly ISecurityTokenValidator securityTokenValidator;
-        private readonly SignalRConfigProvider signalRConfigProvider;
+        private readonly SignalROptions options;
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
+        private readonly INameResolver nameResolver;
 
-        public SignalRConnectionInputBindingProvider(SignalRConfigProvider signalRConfigProvider, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
+        public SignalRConnectionInputBindingProvider(INameResolver nameResolver, SignalROptions options, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
         {
+            this.nameResolver = nameResolver;
             this.securityTokenValidator = securityTokenValidator;
-            this.signalRConfigProvider = signalRConfigProvider;
+            this.options = options;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
         }
 
@@ -28,8 +30,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 switch (attr)
                 {
                     case SignalRConnectionInfoAttribute connectionInfoAttribute:
-                        var resolvedConnectionString = signalRConfigProvider.nameResolver.Resolve(connectionInfoAttribute.ConnectionStringSetting);
-                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(connectionInfoAttribute, signalRConfigProvider.GetAzureSignalRClient(resolvedConnectionString, connectionInfoAttribute.HubName), securityTokenValidator, signalRConnectionInfoConfigurer));
+                        var resolvedConnectionString = nameResolver.Resolve(connectionInfoAttribute.ConnectionStringSetting);
+                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(connectionInfoAttribute, Utils.GetAzureSignalRClient(resolvedConnectionString, connectionInfoAttribute.HubName, options), securityTokenValidator, signalRConnectionInfoConfigurer));
                     case SecurityTokenValidationAttribute validationAttribute:
                         return Task.FromResult((IBinding) new SecurityTokenValidationInputBinding(securityTokenValidator));
                 }

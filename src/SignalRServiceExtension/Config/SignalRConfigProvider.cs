@@ -22,16 +22,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Extension("SignalR", "signalr")]
     internal class SignalRConfigProvider : IExtensionConfigProvider, IAsyncConverter<HttpRequestMessage, HttpResponseMessage>
     {
-        public IConfiguration Configuration { get; }
-
-        internal readonly INameResolver nameResolver;
-
+        private readonly IConfiguration configuration;
+        private readonly INameResolver nameResolver;
         private readonly ILogger logger;
         private readonly SignalROptions options;
         private readonly ILoggerFactory loggerFactory;
-        private readonly ISecurityTokenValidator securityTokenValidator;
-        private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
         private readonly ISignalRTriggerDispatcher _dispatcher;
+        private readonly SignalRConnectionInputBindingProvider signalRConnectionInputBindingProvider;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -45,10 +42,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("SignalR"));
             this.nameResolver = nameResolver;
-            Configuration = configuration;
-            this.securityTokenValidator = securityTokenValidator;
-            this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
+            this.configuration = configuration;
             this._dispatcher = new SignalRTriggerDispatcher();
+            signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(nameResolver, options.Value, securityTokenValidator, signalRConnectionInfoConfigurer);
         }
 
         // GetWebhookHandler() need the Obsolete
@@ -75,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
             }
 
-            StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, Configuration, loggerFactory);
+            StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, configuration, loggerFactory);
 
             var url = context.GetWebhookHandler();
             logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
@@ -91,8 +87,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             triggerBindingRule.BindToTrigger(new SignalRTriggerBindingProvider(_dispatcher));
 
             // Non-trigger binding rule
-            var signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(this, securityTokenValidator, signalRConnectionInfoConfigurer);
-
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.Bind(signalRConnectionInputBindingProvider);
@@ -102,7 +96,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
-            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), this);
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), options);
 
             logger.LogInformation("SignalRService binding initialized");
         }
@@ -110,14 +104,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
         {
             return _dispatcher.ExecuteAsync(input, cancellationToken);
-        }
-
-        public AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName)
-        {
-            var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
-            var hubName = FirstOrDefault(attributeHubName, options.HubName);
-
-            return new AzureSignalRClient(StaticServiceHubContextStore.ServiceManagerStore, connectionString, hubName);
         }
 
         private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
@@ -136,7 +122,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private void ValidateConnectionString(string attributeConnectionString, string attributeConnectionStringName)
         {
-            var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
+            var connectionString = Utils.FirstOrDefault(attributeConnectionString, options.ConnectionString);
 
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -162,17 +148,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException("Elements in ParameterNames should be ignore case unique.");
             }
-        }
-
-        private SignalRConnectionInfo GetClientConnectionInfo(SignalRConnectionInfoAttribute attribute)
-        {
-            var client = GetAzureSignalRClient(attribute.ConnectionStringSetting, attribute.HubName);
-            return client.GetClientConnectionInfo(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
-        }
-
-        private string FirstOrDefault(params string[] values)
-        {
-            return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
         }
 
         private class SignalROpenType : OpenType.Poco

@@ -5,16 +5,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRCollectorBuilder<T> : IConverter<SignalRAttribute, IAsyncCollector<T>>
     {
-        private readonly SignalRConfigProvider configProvider;
+        private readonly SignalROptions options;
 
-        public SignalRCollectorBuilder(SignalRConfigProvider configProvider)
+        public SignalRCollectorBuilder(SignalROptions options)
         {
-            this.configProvider = configProvider;
+            this.options = options;
         }
 
         public IAsyncCollector<T> Convert(SignalRAttribute attribute)
         {
-            var client = configProvider.GetAzureSignalRClient(attribute.ConnectionStringSetting, attribute.HubName);
+            var client = Utils.GetAzureSignalRClient(attribute.ConnectionStringSetting, attribute.HubName, options);
             return new SignalRAsyncCollector<T>(client);
         }
     }
