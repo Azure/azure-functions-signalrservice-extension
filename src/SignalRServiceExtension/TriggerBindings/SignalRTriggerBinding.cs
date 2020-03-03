@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -29,6 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+            BindingDataContract = CreateBindingContract(_attribute, _parameterInfo);
         }
 
         public Task<ITriggerData> BindAsync(object value, ValueBindingContext context)
@@ -38,7 +40,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (value is SignalRTriggerEvent triggerEvent)
             {
                 var bindingContext = triggerEvent.Context;
-                // TODO: Add dynamic binding data in bindingData
+
+                // If ParameterNames are set, bind them in order.
+                // To reduce undefined situation, number of arguments should keep consist with that of ParameterNames
+                if (_attribute.ParameterNames != null && _attribute.ParameterNames.Length != 0)
+                {
+                    if (bindingContext.Arguments == null ||
+                        bindingContext.Arguments.Length != _attribute.ParameterNames.Length)
+                    {
+                        throw new SignalRTriggerParametersNotMatchException(_attribute.ParameterNames.Length, bindingContext.Arguments?.Length ?? 0);
+                    }
+
+                    var length = _attribute.ParameterNames.Length;
+                    for (var i = 0; i < length; i++)
+                    {
+                        bindingData.Add(_attribute.ParameterNames[i], bindingContext.Arguments[i]);
+                    }
+                }
 
                 return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(_parameterInfo, bindingContext), bindingData)
                 {
@@ -77,19 +95,35 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public Type TriggerValueType => typeof(SignalRTriggerEvent);
 
         // TODO: Use dynamic contract to deal with parameterName
-        public IReadOnlyDictionary<string, Type> BindingDataContract => CreateBindingContract();
+        public IReadOnlyDictionary<string, Type> BindingDataContract { get; }
 
         /// <summary>
         /// Defined what other bindings can use and return value.
         /// </summary>
-        private IReadOnlyDictionary<string, Type> CreateBindingContract()
+        private IReadOnlyDictionary<string, Type> CreateBindingContract(SignalRTriggerAttribute attribute, ParameterInfo parameter)
         {
             var contract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
             {
-                //TODO: Add names in parameterNames to contract for binding
                 { ReturnParameterKey, typeof(object).MakeByRefType() },
             };
 
+            // Add names in ParameterNames to binding contract, that user can bind to Functions' parameter directly
+            if (attribute.ParameterNames != null)
+            {
+                var parameters = ((MethodInfo)parameter.Member).GetParameters().ToDictionary(p => p.Name, p => p.ParameterType, StringComparer.OrdinalIgnoreCase);
+                foreach (var parameterName in attribute.ParameterNames)
+                {
+                    if (parameters.ContainsKey(parameterName))
+                    {
+                        contract.Add(parameterName, parameters[parameterName]);
+                    }
+                    else
+                    {
+                        contract.Add(parameterName, typeof(object));
+                    }
+                }
+            }
+            
             return contract;
         }
 
