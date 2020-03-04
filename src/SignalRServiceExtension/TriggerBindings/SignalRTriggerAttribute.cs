@@ -11,6 +11,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Binding]
     public class SignalRTriggerAttribute : Attribute
     {
+        public SignalRTriggerAttribute(string hubName, string category, string @event, params string[] parameterNames)
+        {
+            HubName = hubName;
+            Category = category;
+            Event = @event;
+            ParameterNames = parameterNames;
+        }
 
         /// <summary>
         /// Connection string that connect to Azure SignalR Service

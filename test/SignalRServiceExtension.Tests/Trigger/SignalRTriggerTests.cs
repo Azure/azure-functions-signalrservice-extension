@@ -44,7 +44,7 @@ namespace SignalRServiceExtension.Tests
             var hub = Guid.NewGuid().ToString();
             var method = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();
-            var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute{HubName = hub, Category = category, Event = method}, dispatcher);
+            var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(hub, category, method), dispatcher);
             await binding.CreateListenerAsync(listenerFactoryContext);
             Assert.Equal(executor, dispatcher.Executors[(hub, category, method)].Executor);
         }
@@ -106,7 +106,7 @@ namespace SignalRServiceExtension.Tests
         {
             var parameterInfo = this.GetType().GetMethod(functionName, BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute{ParameterNames = parameterNames}, dispatcher);
+            return new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(string.Empty, string.Empty, string.Empty, parameterNames), dispatcher);
         }
 
         internal void TestFunction(InvocationContext context)

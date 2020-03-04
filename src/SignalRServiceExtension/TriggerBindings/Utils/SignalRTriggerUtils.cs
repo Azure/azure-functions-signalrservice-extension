@@ -16,7 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private static readonly char[] KeyValueSeparator = { '=' };
         private static readonly char[] QuerySeparator = { '&' };
         private static readonly char[] HeaderSeparator = { ',' };
-        private static readonly string[] ClaimsSeparator = { "= " };
+        private static readonly string[] ClaimsSeparator = { ": " };
 
         public static string GetAccessKey(string connectionString)
         {

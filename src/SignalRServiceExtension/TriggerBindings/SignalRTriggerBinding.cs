@@ -51,11 +51,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         throw new SignalRTriggerParametersNotMatchException(_attribute.ParameterNames.Length, bindingContext.Arguments?.Length ?? 0);
                     }
 
-                    var length = _attribute.ParameterNames.Length;
-                    for (var i = 0; i < length; i++)
-                    {
-                        bindingData.Add(_attribute.ParameterNames[i], bindingContext.Arguments[i]);
-                    }
+                    AddParameterNamesBindingData(bindingData, _attribute.ParameterNames, bindingContext.Arguments);
                 }
 
                 return Task.FromResult<ITriggerData>(new TriggerData(new SignalRTriggerValueProvider(_parameterInfo, bindingContext), bindingData)
@@ -125,6 +121,50 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
             
             return contract;
+        }
+
+        private void AddParameterNamesBindingData(Dictionary<string, object> bindingData, string[] parameterNames, object[] arguments)
+        {
+            var length = parameterNames.Length;
+            for (var i = 0; i < length; i++)
+            {
+                if (BindingDataContract.TryGetValue(parameterNames[i], out var type))
+                {
+                    bindingData.Add(parameterNames[i], ConvertValueIfNecessary(arguments[i], type));
+                }
+                else
+                {
+                    bindingData.Add(parameterNames[i], arguments[i]);
+                }
+            }
+        }
+
+        private object ConvertValueIfNecessary(object value, Type targetType)
+        {
+            if (value != null && !targetType.IsAssignableFrom(value.GetType()))
+            {
+                var underlyingTargetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+                var jObject = value as JObject;
+                if (jObject != null)
+                {
+                    value = jObject.ToObject(targetType);
+                }
+                else if (underlyingTargetType == typeof(Guid) && value.GetType() == typeof(string))
+                {
+                    // Guids need to be converted by their own logic
+                    // Intentionally throw here on error to standardize behavior
+                    value = Guid.Parse((string)value);
+                }
+                else
+                {
+                    // if the type is nullable, we only need to convert to the
+                    // correct underlying type
+                    value = Convert.ChangeType(value, underlyingTargetType);
+                }
+            }
+
+            return value;
         }
 
         // TODO: Add more supported type
