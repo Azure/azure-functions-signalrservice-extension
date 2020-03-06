@@ -72,12 +72,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 resolvedConnectionString = _nameResolver.Resolve(attribute.Default);
             }
 
-            if (string.IsNullOrEmpty(resolvedConnectionString))
-            {
-                resolvedConnectionString = _options.ConnectionString;
-            }
-
-            return resolvedConnectionString;
+            return string.IsNullOrEmpty(resolvedConnectionString)
+                ? _options.ConnectionString
+                : resolvedConnectionString;
         }
 
         private void ValidateSignalRTriggerAttributeBinding(SignalRTriggerAttribute attribute)
