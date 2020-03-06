@@ -37,7 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 if (kvp.Length != 2) continue;
 
                 var key = kvp[0].Trim();
-                if (key == AccessKeyProperty)
+                if (string.Equals(key, AccessKeyProperty, StringComparison.OrdinalIgnoreCase))
                 {
                     return kvp[1].Trim();
                 }
@@ -69,6 +69,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return claims.Split(HeaderSeparator)
                 .Select(p => p.Split(ClaimsSeparator, StringSplitOptions.RemoveEmptyEntries))
                 .ToDictionary(p => p[0].Trim(), p => p[1].Trim());
+        }
+
+        public static IReadOnlyList<string> GetSignatureList(string signatures)
+        {
+            if (string.IsNullOrEmpty(signatures))
+            {
+                return default;
+            }
+
+            return signatures.Split(HeaderSeparator, StringSplitOptions.RemoveEmptyEntries);
         }
 
         public static IDictionary<string, string> GetHeaderDictionary(HttpRequestMessage request)
