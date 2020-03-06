@@ -16,6 +16,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRRequestResolver : IRequestResolver
     {
+        private readonly bool _validateSignature;
+
+        // Now it's only used in test, but when the trigger started to support AAD,
+        // It can be configurable in public.
+        internal SignalRRequestResolver(bool validateSignature = true)
+        {
+            _validateSignature = validateSignature;
+        }
+
         public bool ValidateContentType(HttpRequestMessage request)
         {
             var contentType = request.Content.Headers.ContentType.MediaType;
@@ -28,6 +37,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public bool ValidateSignature(HttpRequestMessage request, string accessToken)
         {
+            if (!_validateSignature)
+            {
+                return true;
+            }
+
             if (!string.IsNullOrEmpty(accessToken) &&
                 request.Headers.TryGetValues(Constants.AsrsSignature, out var values))
             {
