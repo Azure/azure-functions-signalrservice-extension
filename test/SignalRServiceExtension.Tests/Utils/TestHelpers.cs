@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Runtime.InteropServices.ComTypes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
@@ -58,7 +59,7 @@ namespace SignalRServiceExtension.Tests.Utils
         }
 
         public static HttpRequestMessage CreateHttpRequestMessage(string hub, string category, string @event, string connectionId, 
-            string contentType = Constants.JsonContentType, byte[] content = null)
+            string contentType = Constants.JsonContentType, byte[] content = null, string[] signatures = null)
         {
             var context = new DefaultHttpContext();
             context.Request.ContentType = contentType;
@@ -67,6 +68,10 @@ namespace SignalRServiceExtension.Tests.Utils
             context.Request.Headers.Add(Constants.AsrsCategory, category);
             context.Request.Headers.Add(Constants.AsrsEvent, @event);
             context.Request.Headers.Add(Constants.AsrsConnectionIdHeader, connectionId);
+            if (signatures != null)
+            {
+                context.Request.Headers.Add(Constants.AsrsSignature, signatures);
+            }
             context.Request.Body = content == null ? Stream.Null : new MemoryStream(content);
 
             return CreateHttpRequestMessageFromContext(context);

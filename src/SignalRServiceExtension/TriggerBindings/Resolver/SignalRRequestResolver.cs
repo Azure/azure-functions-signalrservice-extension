@@ -5,6 +5,8 @@ using System;
 using System.Buffers;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Protocol;
@@ -26,8 +28,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public bool ValidateSignature(HttpRequestMessage request, string accessToken)
         {
-            //TODO: Add real signature validation
-            return true;
+            if (!string.IsNullOrEmpty(accessToken) &&
+                request.Headers.TryGetValues(Constants.AsrsSignature, out var values))
+            {
+                var signatures = SignalRTriggerUtils.GetSignatureList(values.FirstOrDefault());
+                if (signatures == null)
+                {
+                    return false;
+                }
+                using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(accessToken)))
+                {
+                    var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Headers.GetValues(Constants.AsrsConnectionIdHeader).First()));
+                    var hash = "sha256=" + BitConverter.ToString(hashBytes).Replace("-", "");
+                    return signatures.Contains(hash, StringComparer.OrdinalIgnoreCase);
+                }
+            }
+
+            return false;
         }
 
         public bool TryGetInvocationContext(HttpRequestMessage request, out InvocationContext context)
