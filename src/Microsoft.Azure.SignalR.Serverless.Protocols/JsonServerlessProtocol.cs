@@ -21,7 +21,7 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
         {
             var textReader = new JsonTextReader(new StreamReader(new ReadOnlySequenceStream(input)));
             var jObject = JObject.Load(textReader);
-            if (jObject.TryGetValue(TypePropertyName, out var token))
+            if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token))
             {
                 var type = token.Value<int>();
                 switch (type)
