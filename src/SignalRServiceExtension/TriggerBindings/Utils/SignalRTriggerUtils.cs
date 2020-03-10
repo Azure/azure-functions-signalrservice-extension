@@ -55,7 +55,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // The query string looks like "?key1=value1&key2=value2"
             var queryArray = queryString.TrimStart('?').Split(QuerySeparator, StringSplitOptions.RemoveEmptyEntries);
-            return queryArray.Select(p => p.Split(KeyValueSeparator)).ToDictionary(p => p[0].Trim(), p => p[1].Trim());
+            return queryArray.Select(p => p.Split(KeyValueSeparator, StringSplitOptions.RemoveEmptyEntries))
+                .Where(l => l.Length == 2).ToDictionary(p => p[0].Trim(), p => p[1].Trim());
         }
 
         public static IDictionary<string, string> GetClaimDictionary(string claims)
@@ -65,9 +66,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return default;
             }
 
-            // The claim string looks like "a= v, b= v"
-            return claims.Split(HeaderSeparator)
-                .Select(p => p.Split(ClaimsSeparator, StringSplitOptions.RemoveEmptyEntries))
+            // The claim string looks like "a: v, b: v"
+            return claims.Split(HeaderSeparator, StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Split(ClaimsSeparator, StringSplitOptions.RemoveEmptyEntries)).Where(l => l.Length == 2)
                 .ToDictionary(p => p[0].Trim(), p => p[1].Trim());
         }
 
