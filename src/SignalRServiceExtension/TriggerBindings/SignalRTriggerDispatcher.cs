@@ -27,21 +27,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_executors.ContainsKey(key))
             {
-                if (key.category == Constants.Category.Connections)
+                if (key.category == Category.Connections)
                 {
-                    if (key.@event == Constants.Events.Connect)
+                    if (key.@event == Event.Connect)
                     {
                         _executors.Add(key, new SignalRConnectMethodExecutor(_resolver, executor));
                         return;
                     }
-                    if (key.@event == Constants.Events.Disconnect)
+                    if (key.@event == Event.Disconnect)
                     {
                         _executors.Add(key, new SignalRDisconnectMethodExecutor(_resolver, executor));
                         return;
                     }
                     throw new SignalRTriggerException($"Event {key.@event} is not supported in connections");
                 }
-                if (key.category == Constants.Category.Messages)
+                if (key.category == Category.Messages)
                 {
                     _executors.Add(key, new SignalRInvocationMethodExecutor(_resolver, executor));
                     return;
