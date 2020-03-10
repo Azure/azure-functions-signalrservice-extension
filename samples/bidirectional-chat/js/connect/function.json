@@ -1,0 +1,18 @@
+{
+  "bindings": [
+    {
+      "type": "signalRTrigger",
+      "direction": "in",
+      "name": "invocation",
+      "hubName": "simplechat",
+      "category": "connections",
+      "event": "connect"
+    },
+    {
+      "type": "signalR",
+      "direction": "out",
+      "name": "signalRMessage",
+      "hubName": "simplechat"
+    }
+  ]
+}
