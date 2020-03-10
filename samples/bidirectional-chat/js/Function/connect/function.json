@@ -1,4 +1,5 @@
 {
+  "disabled": false,
   "bindings": [
     {
       "type": "signalRTrigger",

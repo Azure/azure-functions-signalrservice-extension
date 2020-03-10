@@ -11,6 +11,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Binding]
     public class SignalRTriggerAttribute : Attribute
     {
+        private static readonly string[] EmptyArray = new string[0];
+
+        public SignalRTriggerAttribute(string hubName, string category, string @event): this(hubName, category, @event, EmptyArray)
+        {
+        }
+
         public SignalRTriggerAttribute(string hubName, string category, string @event, params string[] parameterNames)
         {
             HubName = hubName;
