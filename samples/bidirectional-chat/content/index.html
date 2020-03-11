@@ -132,7 +132,7 @@
             connection.invoke("joinGroup", connectionId, this.defaultgroup);
           },
           addUserToGroup: function (user) {
-            r = confirm('Add user ' + recipient + ' to group: ' + this.defaultgroup);
+            r = confirm('Add user ' + user + ' to group: ' + this.defaultgroup);
             connection.invoke("joinUserToGroup", user, this.defaultgroup);
           },
           removeConnectionIdFromGroup: function(connectionId) {
@@ -140,7 +140,7 @@
             connection.invoke("leaveGroup", connectionId, this.defaultgroup);
           },
           removeUserFromGroup: function(user) {
-            confirm('Remove user ' + recipient + ' from group: ' + this.defaultgroup);
+            confirm('Remove user ' + user + ' from group: ' + this.defaultgroup);
             connection.invoke("leaveUserFromGroup", user, this.defaultgroup);
           }
         }

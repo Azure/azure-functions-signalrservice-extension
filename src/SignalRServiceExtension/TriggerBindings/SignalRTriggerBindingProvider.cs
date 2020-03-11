@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Triggers;
-using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -39,20 +38,54 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return Task.FromResult<ITriggerBinding>(null);
             }
-            var resolvedAttribute = GetParameterResolvedAttribute(attribute);
+            var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
             ValidateSignalRTriggerAttributeBinding(resolvedAttribute);
             
             return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher));
         }
 
-        private SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute)
+        private SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
         {
             //TODO: AutoResolve more properties in attribute
             var resolvedConnectionString = GetResolvedConnectionString(
                 typeof(SignalRTriggerAttribute).GetProperty(nameof(attribute.ConnectionStringSetting)),
                 attribute.ConnectionStringSetting);
 
-            return new SignalRTriggerAttribute(attribute.HubName, attribute.Category, attribute.Event, attribute.ParameterNames){ConnectionStringSetting = resolvedConnectionString};
+            var hubName = attribute.HubName;
+            var category = attribute.Category;
+            var @event = attribute.Event;
+            var parameterNames = attribute.ParameterNames ?? new string[0]; 
+
+            // We have to model for C#, one is function based model which also work in multiple language
+            // Another one is class based model, which is highly close to SignalR itself but must keep some conventions.
+            var method = (MethodInfo) parameterInfo.Member;
+            var declaredType = method.DeclaringType;
+            // Class based model
+            if (declaredType != null && declaredType.IsSubclassOf(typeof(ServerlessHub)))
+            {
+                hubName = string.IsNullOrEmpty(hubName) ? declaredType.Name : hubName;
+                category = string.IsNullOrEmpty(category) ? GetCategoryFromMethodName(method.Name) : category;
+                @event = string.IsNullOrEmpty(@event) ? method.Name : @event;
+            }
+
+            var parameters = method.GetParameters().Where(p => p.GetCustomAttribute<SignalRParameterAttribute>(false) != null);
+            var parameterNamesFromAttribute = new List<string>();
+            foreach (var parameter in parameters)
+            {
+                parameterNamesFromAttribute.Add(parameter.Name);
+            }
+
+            if (parameterNamesFromAttribute.Count != 0 && parameterNames.Length != 0)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRTriggerAttribute.ParameterNames)} and {nameof(SignalRParameterAttribute)} can not be set in the same Function.");
+            }
+
+            parameterNames = parameterNamesFromAttribute.Count != 0
+                ? parameterNamesFromAttribute.ToArray()
+                : parameterNames;
+
+            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) {ConnectionStringSetting = resolvedConnectionString};
         }
 
         private string GetResolvedConnectionString(PropertyInfo property, string configurationName)
@@ -85,6 +118,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"));
             }
             ValidateParameterNames(attribute.ParameterNames);
+        }
+
+        private string GetCategoryFromMethodName(string name)
+        {
+            if (string.Equals(name, Event.Connect, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, Event.Disconnect, StringComparison.OrdinalIgnoreCase))
+            {
+                return Category.Connections;
+            }
+
+            return Category.Messages;
         }
 
         private void ValidateParameterNames(string[] parameterNames)
