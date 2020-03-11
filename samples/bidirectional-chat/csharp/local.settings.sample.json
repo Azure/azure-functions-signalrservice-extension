@@ -4,7 +4,7 @@
     "AzureWebJobsStorage": "",
     "AzureWebJobsDashboard": "",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "AzureSignalRConnectionString": "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGH;Version=1.0;Port=8080",
+    "AzureSignalRConnectionString": "",
     "AzureSignalRServiceTransportType": "Transient"
   },
   "Host": {
