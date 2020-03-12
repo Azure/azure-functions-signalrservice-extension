@@ -15,7 +15,7 @@
     {
       "type": "signalR",
       "direction": "out",
-      "name": "$return",
+      "name": "signalRMessages",
       "hubName": "simplechat"
     }
   ]

@@ -2,21 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 module.exports = function (context, invocation) {
-  return {
-    "target": "newMessage",
-    "arguments": [{ 
-      "connectionId": invocation.ConnectionId,
-      "sender": invocation.UserId,
-      "text": context.bindingData.message 
-    }]
-  }
-    // context.bindings.signalRMessages = [{
-    //   "target": "newMessage",
-    //   "arguments": [{ 
-    //     "connectionId": invocation.ConnectionId,
-    //     "sender": invocation.UserId,
-    //     "text": context.bindingData.message 
-    //   }]
-    // }];
-    // context.done();
+    context.bindings.signalRMessages = [{
+      "target": "newMessage",
+      "arguments": [{ 
+        "connectionId": invocation.ConnectionId,
+        "sender": invocation.UserId,
+        "text": context.bindingData.message 
+      }]
+    }];
+    context.done();
   };
