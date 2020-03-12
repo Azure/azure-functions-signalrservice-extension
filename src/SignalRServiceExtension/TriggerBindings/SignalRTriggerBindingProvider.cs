@@ -44,30 +44,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher));
         }
 
-        private SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
+        internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
         {
             //TODO: AutoResolve more properties in attribute
-            var resolvedConnectionString = GetResolvedConnectionString(
-                typeof(SignalRTriggerAttribute).GetProperty(nameof(attribute.ConnectionStringSetting)),
-                attribute.ConnectionStringSetting);
-
             var hubName = attribute.HubName;
             var category = attribute.Category;
             var @event = attribute.Event;
-            var parameterNames = attribute.ParameterNames ?? new string[0]; 
+            var parameterNames = attribute.ParameterNames ?? new string[0];
 
-            // We have to model for C#, one is function based model which also work in multiple language
-            // Another one is class based model, which is highly close to SignalR itself but must keep some conventions.
-            var method = (MethodInfo) parameterInfo.Member;
-            var declaredType = method.DeclaringType;
-            // Class based model
-            if (declaredType != null && declaredType.IsSubclassOf(typeof(ServerlessHub)))
-            {
-                hubName = string.IsNullOrEmpty(hubName) ? declaredType.Name : hubName;
-                category = string.IsNullOrEmpty(category) ? GetCategoryFromMethodName(method.Name) : category;
-                @event = string.IsNullOrEmpty(@event) ? method.Name : @event;
-            }
-
+            var method = (MethodInfo)parameterInfo.Member;
             var parameters = method.GetParameters().Where(p => p.GetCustomAttribute<SignalRParameterAttribute>(false) != null);
             var parameterNamesFromAttribute = new List<string>();
             foreach (var parameter in parameters)
@@ -84,6 +69,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             parameterNames = parameterNamesFromAttribute.Count != 0
                 ? parameterNamesFromAttribute.ToArray()
                 : parameterNames;
+
+            // We have to model for C#, one is function based model which also work in multiple language
+            // Another one is class based model, which is highly close to SignalR itself but must keep some conventions.
+            var declaredType = method.DeclaringType;
+            // Class based model
+            if (declaredType != null && declaredType.IsSubclassOf(typeof(ServerlessHub)))
+            {
+                hubName = string.IsNullOrEmpty(hubName) ? declaredType.Name : hubName;
+                category = string.IsNullOrEmpty(category) ? GetCategoryFromMethodName(method.Name) : category;
+                @event = string.IsNullOrEmpty(@event) ? method.Name : @event;
+            }
+
+            var resolvedConnectionString = GetResolvedConnectionString(
+                typeof(SignalRTriggerAttribute).GetProperty(nameof(attribute.ConnectionStringSetting)),
+                attribute.ConnectionStringSetting);
 
             return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) {ConnectionStringSetting = resolvedConnectionString};
         }
@@ -122,8 +122,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private string GetCategoryFromMethodName(string name)
         {
-            if (string.Equals(name, Event.Connect, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(name, Event.Disconnect, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, Event.Connected, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, Event.Disconnected, StringComparison.OrdinalIgnoreCase))
             {
                 return Category.Connections;
             }

@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.AspNetCore.SignalR;
 
-namespace bidirectional_chat
+namespace FunctionApp
 {
     public class SimpleChat : ServerlessHub
     {
-        private const string Hub = "simplechat";
+        private const string Hub = nameof(SimpleChat);
         private const string NewMessageTarget = "newMessage";
         private const string NewConnectionTarget = "newConnection";
 
@@ -23,8 +23,8 @@ namespace bidirectional_chat
             return connectionInfo;
         }
 
-        [FunctionName(nameof(Connect))]
-        public async Task Connect([SignalRTrigger]InvocationContext invocationContext)
+        [FunctionName(nameof(Connected))]
+        public async Task Connected([SignalRTrigger]InvocationContext invocationContext)
         {
             await Clients.All.SendAsync(NewConnectionTarget, new NewConnection(invocationContext.ConnectionId));
         }

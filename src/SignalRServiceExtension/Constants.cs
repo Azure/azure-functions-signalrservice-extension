@@ -28,7 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
     public static class Event
     {
-        public const string Connect = "connect";
-        public const string Disconnect = "disconnect";
+        public const string Connected = "connected";
+        public const string Disconnected = "disconnected";
     }
 }

@@ -29,12 +29,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 if (string.Equals(key.category,Category.Connections, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (string.Equals(key.@event, Event.Connect, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(key.@event, Event.Connected, StringComparison.OrdinalIgnoreCase))
                     {
                         _executors.Add(key, new SignalRConnectMethodExecutor(_resolver, executor));
                         return;
                     }
-                    if (string.Equals(key.@event, Event.Disconnect, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(key.@event, Event.Disconnected, StringComparison.OrdinalIgnoreCase))
                     {
                         _executors.Add(key, new SignalRDisconnectMethodExecutor(_resolver, executor));
                         return;
