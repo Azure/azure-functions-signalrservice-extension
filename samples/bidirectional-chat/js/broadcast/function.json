@@ -1,0 +1,22 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "type": "signalRTrigger",
+      "direction": "in",
+      "name": "invocation",
+      "hubName": "simplechat",
+      "category": "messages",
+      "event": "broadcast",
+      "parameterNames": [
+        "message"
+      ]
+    },
+    {
+      "type": "signalR",
+      "direction": "out",
+      "name": "$return",
+      "hubName": "simplechat"
+    }
+  ]
+}
