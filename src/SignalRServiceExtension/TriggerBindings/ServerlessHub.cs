@@ -24,11 +24,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             UserGroups = hubContext.UserGroups;
         }
 
-        public IHubClients Clients { get; set; }
+        public IHubClients Clients { get; }
 
-        public IGroupManager Groups { get; set; }
+        public IGroupManager Groups { get; }
 
-        public IUserGroupManager UserGroups { get; set; }
+        public IUserGroupManager UserGroups { get; }
 
         /// <summary>
         /// Releases all resources currently used by this <see cref="ServerlessHub" /> instance.
