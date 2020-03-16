@@ -7,7 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
     /// In class based model, mark the parameter explicitly not to be a SignalR parameter.
-    /// That means it won't be bind to a InvocationMessage argument.
+    /// That means it won't be bound to a InvocationMessage argument.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter)]
     public class SignalRIgnoreAttribute : Attribute

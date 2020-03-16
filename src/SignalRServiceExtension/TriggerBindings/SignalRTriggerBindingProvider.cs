@@ -149,7 +149,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private bool IsLegalClassBasedParameter(ParameterInfo parameter)
         {
-            // In class based model, we treat all the parameters as a legal parameter exception the cases below
+            // In class based model, we treat all the parameters as a legal parameter except the cases below
             // 1. Parameter decorated by [SignalRIgnore]
             // 2. Parameter decorated Attribute that has BindingAttribute
             // 3. Two special type ILogger and CancellationToken
