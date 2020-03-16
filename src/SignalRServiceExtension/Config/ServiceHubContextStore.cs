@@ -11,7 +11,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceHubContextStore : IServiceHubContextStore
     {
-        private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>();
+        private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
         private readonly ILoggerFactory loggerFactory;
 
         public IServiceManager ServiceManager { get; set; }

@@ -20,8 +20,8 @@ namespace SignalRServiceExtension.Tests
     {
         public static IEnumerable<object[]> AttributeData()
         {
-            yield return new object[] { "connections", "connect", false };
-            yield return new object[] { "connections", "disconnect", false };
+            yield return new object[] { "connections", "connected", false };
+            yield return new object[] { "connections", "disconnected", false };
             yield return new object[] { "connections", Guid.NewGuid().ToString(), true };
             yield return new object[] { "messages", Guid.NewGuid().ToString(), false };
             yield return new object[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), true };

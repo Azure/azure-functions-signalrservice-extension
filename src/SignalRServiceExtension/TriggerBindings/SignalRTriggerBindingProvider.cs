@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Triggers;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -39,20 +39,56 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return Task.FromResult<ITriggerBinding>(null);
             }
-            var resolvedAttribute = GetParameterResolvedAttribute(attribute);
+            var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
             ValidateSignalRTriggerAttributeBinding(resolvedAttribute);
             
             return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher));
         }
 
-        private SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute)
+        internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
         {
             //TODO: AutoResolve more properties in attribute
+            var hubName = attribute.HubName;
+            var category = attribute.Category;
+            var @event = attribute.Event;
+            var parameterNames = attribute.ParameterNames ?? Array.Empty<string>();
+
+            // We have two models for C#, one is function based model which also work in multiple language
+            // Another one is class based model, which is highly close to SignalR itself but must keep some conventions.
+            var method = (MethodInfo)parameterInfo.Member;
+            var declaredType = method.DeclaringType;
+            string[] parameterNamesFromAttribute;
+
+            if (declaredType != null && declaredType.IsSubclassOf(typeof(ServerlessHub)))
+            {
+                // Class based model
+                parameterNamesFromAttribute = method.GetParameters().Where(IsLegalClassBasedParameter).Select(p => p.Name).ToArray();
+                hubName = string.IsNullOrEmpty(hubName) ? declaredType.Name : hubName;
+                category = string.IsNullOrEmpty(category) ? GetCategoryFromMethodName(method.Name) : category;
+                @event = string.IsNullOrEmpty(@event) ? method.Name : @event;
+            }
+            else
+            {
+                parameterNamesFromAttribute = method.GetParameters().
+                    Where(p => p.GetCustomAttribute<SignalRParameterAttribute>(false) != null).
+                    Select(p => p.Name).ToArray();
+            }
+
+            if (parameterNamesFromAttribute.Length != 0 && parameterNames.Length != 0)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRTriggerAttribute.ParameterNames)} and {nameof(SignalRParameterAttribute)} can not be set in the same Function.");
+            }
+
+            parameterNames = parameterNamesFromAttribute.Length != 0
+                ? parameterNamesFromAttribute
+                : parameterNames;
+
             var resolvedConnectionString = GetResolvedConnectionString(
                 typeof(SignalRTriggerAttribute).GetProperty(nameof(attribute.ConnectionStringSetting)),
                 attribute.ConnectionStringSetting);
 
-            return new SignalRTriggerAttribute(attribute.HubName, attribute.Category, attribute.Event, attribute.ParameterNames){ConnectionStringSetting = resolvedConnectionString};
+            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) {ConnectionStringSetting = resolvedConnectionString};
         }
 
         private string GetResolvedConnectionString(PropertyInfo property, string configurationName)
@@ -87,6 +123,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             ValidateParameterNames(attribute.ParameterNames);
         }
 
+        private string GetCategoryFromMethodName(string name)
+        {
+            if (string.Equals(name, Event.Connected, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, Event.Disconnected, StringComparison.OrdinalIgnoreCase))
+            {
+                return Category.Connections;
+            }
+
+            return Category.Messages;
+        }
+
         private void ValidateParameterNames(string[] parameterNames)
         {
             if (parameterNames == null || parameterNames.Length == 0)
@@ -98,6 +145,35 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException("Elements in ParameterNames should be ignore case unique.");
             }
+        }
+
+        private bool IsLegalClassBasedParameter(ParameterInfo parameter)
+        {
+            // In class based model, we treat all the parameters as a legal parameter except the cases below
+            // 1. Parameter decorated by [SignalRIgnore]
+            // 2. Parameter decorated Attribute that has BindingAttribute
+            // 3. Two special type ILogger and CancellationToken
+
+            if (parameter.ParameterType.IsAssignableFrom(typeof(ILogger)) ||
+                parameter.ParameterType.IsAssignableFrom(typeof(CancellationToken)))
+            {
+                return false;
+            }
+            if (parameter.GetCustomAttribute<SignalRIgnoreAttribute>() != null)
+            {
+                return false;
+            }
+            if (HasBindingAttribute(parameter.GetCustomAttributes()))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool HasBindingAttribute(IEnumerable<Attribute> attributes)
+        {
+            return attributes.Any(attribute => attribute.GetType().GetCustomAttribute<BindingAttribute>(false) != null);
         }
     }
 }
