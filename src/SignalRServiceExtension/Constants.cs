@@ -18,6 +18,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public const string AsrsSignature = AsrsHeaderPrefix + "Signature";
         public const string JsonContentType = "application/json";
         public const string MessagePackContentType = "application/x-msgpack";
+        public const string OnConnected = "OnConnected";
+        public const string OnDisconnected = "OnDisconnected";
     }
 
     public static class Category
