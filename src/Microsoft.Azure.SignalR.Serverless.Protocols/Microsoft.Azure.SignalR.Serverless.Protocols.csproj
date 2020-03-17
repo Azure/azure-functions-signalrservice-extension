@@ -8,6 +8,7 @@
     <PackageReference Include="MessagePack" Version="$(MessagePackPackageVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="System.Memory" Version="$(SystemMemoryPackageVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="$(MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion)" />
   </ItemGroup>
 
 </Project>
