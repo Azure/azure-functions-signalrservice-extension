@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -8,21 +9,22 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class SignalRConnectionInputBinding : IBinding
+    internal class SignalRConnectionInputBinding <TAttribute>: BindingBase<TAttribute> where TAttribute : Attribute
     {
         private const string HttpRequestName = "$request";
-        private readonly SignalRConnectionInfoAttribute attribute;
         private readonly ISecurityTokenValidator securityTokenValidator;
         private readonly AzureSignalRClient azureSignalRClient;
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
 
-        public bool FromAttribute => true;
-
-        public SignalRConnectionInputBinding(SignalRConnectionInfoAttribute attribute, AzureSignalRClient azureSignalRClient, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
+        public SignalRConnectionInputBinding(
+            AttributeCloner<TAttribute> cloner, 
+            ParameterDescriptor param, 
+            AzureSignalRClient azureSignalRClient, 
+            ISecurityTokenValidator securityTokenValidator, 
+            ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer) : base(cloner, param)
         {
             this.securityTokenValidator = securityTokenValidator;
             this.azureSignalRClient = azureSignalRClient;
-            this.attribute = attribute;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
         }
 
@@ -32,7 +34,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (!bindingData.ContainsKey(HttpRequestName) || securityTokenValidator == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
+                var info = azureSignalRClient.GetClientConnectionInfo(cloner.UserId, cloner.IdToken, cloner.ClaimTypeList);
                 return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
             }
 
@@ -47,14 +49,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (signalRConnectionInfoConfigurer == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(attribute.UserId, attribute.IdToken, attribute.ClaimTypeList);
+                var info = azureSignalRClient.GetClientConnectionInfo(cloner.UserId, cloner.IdToken, cloner.ClaimTypeList);
                 return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
             }
 
             var signalRConnectionDetail = new SignalRConnectionDetail
             {
-                UserId = attribute.UserId,
-                Claims = azureSignalRClient.GetCustomClaims(attribute.IdToken, attribute.ClaimTypeList),
+                UserId = cloner.UserId,
+                Claims = azureSignalRClient.GetCustomClaims(cloner.IdToken, cloner.ClaimTypeList),
             };
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
             var customizedInfo = azureSignalRClient.GetClientConnectionInfo(signalRConnectionDetail.UserId, signalRConnectionDetail.Claims);
@@ -66,9 +68,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return BindAsync(context, null);
         }
 
-        public ParameterDescriptor ToParameterDescriptor()
+        protected override Task<IValueProvider> BuildAsync(TAttribute attrResolved, ValueBindingContext context)
         {
-            return new ParameterDescriptor();
+            throw new NotImplementedException();
         }
     }
 }
