@@ -78,8 +78,8 @@ namespace FunctionApp
             await UserGroups.RemoveFromGroupAsync(userName, groupName);
         }
 
-        [FunctionName(nameof(OnDisconnect))]
-        public void OnDisconnect([SignalRTrigger]InvocationContext invocationContext)
+        [FunctionName(nameof(OnDisconnected))]
+        public void OnDisconnected([SignalRTrigger]InvocationContext invocationContext)
         {
         }
 

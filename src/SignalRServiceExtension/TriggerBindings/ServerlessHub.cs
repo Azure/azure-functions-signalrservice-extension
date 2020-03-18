@@ -32,12 +32,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             UserGroups = hubContext.UserGroups;
         }
 
+        /// <summary>
+        /// Gets an object that can be used to invoke methods on the clients connected to this hub.
+        /// </summary>
         public IHubClients Clients { get; }
 
+        /// <summary>
+        /// Get the group manager of this hub.
+        /// </summary>
         public IGroupManager Groups { get; }
 
+        /// <summary>
+        /// Get the user group manager of this hub.
+        /// </summary>
         public IUserGroupManager UserGroups { get; }
 
+        /// <summary>
+        /// Get the hub name of this hub.
+        /// </summary>
         public string HubName { get; }
 
         /// <summary>
