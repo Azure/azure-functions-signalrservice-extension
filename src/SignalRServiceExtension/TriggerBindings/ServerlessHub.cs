@@ -13,7 +13,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
     /// When a class derived from <see cref="ServerlessHub"/>,
-    /// all the method in the are identified as using class based model.
+    /// all the method in the class are identified as using class based model.
+    /// <b>HubName</b> is resolved from class name.
+    /// <b>Event</b> is resolved from method name.
+    /// <b>Category</b> is determined by the method name. Only <b>OnConnected</b> and <b>OnDisconnected</b> will
+    /// be considered as Connections and others will be Messages.
+    /// <b>ParameterNames</b> will be automatically resolved by all the parameters of the method in order, except the
+    /// parameter which belongs to a binding parameter, or has the type of <see cref="Microsoft.Extensions.Logging.ILogger"/> or
+    /// <see cref="System.Threading.CancellationToken"/>, or marked by <see cref="SignalRIgnoreAttribute"/>.
+    /// Note that <see cref="SignalRTriggerAttribute"/> MUST use no-argument constructor in class based model.
     /// </summary>
     public abstract class ServerlessHub : IDisposable
     {
