@@ -29,6 +29,7 @@ namespace FunctionApp
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
+            // todo [wanl]: check if exists
             var issuerSigningKey = config["IssuerSigningKey"]; // base64 encoded for "myfunctionauthtest";
 
             // Register the access token provider as a singleton, customer can register one's own
