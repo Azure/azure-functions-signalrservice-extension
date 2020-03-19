@@ -17,7 +17,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly INameResolver nameResolver;
         private readonly IConfiguration configuration;
 
-        public InputBindingProvider(IConfiguration configuration, INameResolver nameResolver, SignalROptions options, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
+        // todo [wanl]: hubName uses [AutoResolve]
+        public InputBindingProvider(IConfiguration configuration, INameResolver nameResolver, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
         {
             this.configuration = configuration;
             this.nameResolver = nameResolver;
@@ -32,11 +33,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 switch (attr)
                 {
-                    case SignalRConnectionInfoAttribute connectionInfoAttribute:
-                        var attributeSource = TypeUtility.GetResolvedAttribute<SignalRConnectionInfoAttribute>(parameterInfo);
-                        var cloner = new AttributeCloner<SignalRConnectionInfoAttribute>(attributeSource, context.BindingDataContract, configuration, nameResolver);
-                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(cloner, parameterInfo, securityTokenValidator, signalRConnectionInfoConfigurer));
-                    case SecurityTokenValidationAttribute validationAttribute:
+                    case SignalRConnectionInfoAttribute signalRConnectionInfoAttribute:
+                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(context, configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer));
+                    case SecurityTokenValidationAttribute securityTokenValidationAttribute:
                         return Task.FromResult((IBinding) new SecurityTokenValidationInputBinding(securityTokenValidator));
                 }
             }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -18,10 +19,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
 
         public SignalRConnectionInputBinding(
-            AttributeCloner<SignalRConnectionInfoAttribute> cloner,
-            ParameterInfo param,
+            BindingProviderContext context,
+            IConfiguration configuration,
+            INameResolver nameResolver,
             ISecurityTokenValidator securityTokenValidator,
-            ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer) : base(cloner, param)
+            ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer) : base(context, configuration, nameResolver)
         {
             this.securityTokenValidator = securityTokenValidator;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;

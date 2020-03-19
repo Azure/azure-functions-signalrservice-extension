@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // todo [wanl]: remove hardcode key = hubName, HubName in attribute already marked as [AutoResolve], its behavior should be [AutoResolve].
+    // Then all resolve jobs are put in resolvers, we can also remove the SignalROption after we apply resolve jobs inside bindings.
+    
     /// <summary>
     /// Extension methods for SignalR Service integration
     /// </summary>

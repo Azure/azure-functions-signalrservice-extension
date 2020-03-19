@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.nameResolver = nameResolver;
             this.configuration = configuration;
             this._dispatcher = new SignalRTriggerDispatcher();
-            inputBindingProvider = new InputBindingProvider(configuration, nameResolver, options.Value, securityTokenValidator, signalRConnectionInfoConfigurer);
+            inputBindingProvider = new InputBindingProvider(configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer);
         }
 
         // GetWebhookHandler() need the Obsolete

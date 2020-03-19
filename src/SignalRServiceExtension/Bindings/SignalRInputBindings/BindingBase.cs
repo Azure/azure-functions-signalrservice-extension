@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -15,20 +16,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         where TAttribute : Attribute
     {
         protected readonly AttributeCloner<TAttribute> Cloner;
-        private readonly ParameterDescriptor _param;
+        private readonly ParameterDescriptor param;
 
-        public BindingBase(AttributeCloner<TAttribute> cloner, ParameterDescriptor param)
+        public BindingBase(BindingProviderContext context, IConfiguration configuration, INameResolver nameResolver)
         {
-            Cloner = cloner;
-            _param = param;
-        }
+            var attributeSource = TypeUtility.GetResolvedAttribute<TAttribute>(context.Parameter);
+            var cloner = new AttributeCloner<TAttribute>(attributeSource, context.BindingDataContract, configuration, nameResolver);
 
-        public BindingBase(AttributeCloner<TAttribute> cloner, ParameterInfo parameterInfo)
-        {
             Cloner = cloner;
-            _param = new ParameterDescriptor
+            param = new ParameterDescriptor
             {
-                Name = parameterInfo.Name,
+                Name = context.Parameter.Name,
                 DisplayHints = new ParameterDisplayHints
                 {
                     Description = "value"
@@ -73,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public ParameterDescriptor ToParameterDescriptor()
         {
-            return _param;
+            return param;
         }
     }
 }
