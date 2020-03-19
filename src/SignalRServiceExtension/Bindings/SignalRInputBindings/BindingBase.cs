@@ -22,9 +22,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public BindingBase(BindingProviderContext context, IConfiguration configuration, INameResolver nameResolver)
         {
             var attributeSource = TypeUtility.GetResolvedAttribute<TAttribute>(context.Parameter);
-            var cloner = new AttributeCloner<TAttribute>(attributeSource, context.BindingDataContract, configuration, nameResolver);
+            Cloner = new AttributeCloner<TAttribute>(attributeSource, context.BindingDataContract, configuration, nameResolver);
 
-            Cloner = cloner;
             param = new ParameterDescriptor
             {
                 Name = context.Parameter.Name,
@@ -53,21 +52,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task<IValueProvider> BindAsync(object value, ValueBindingContext context)
         {
-            var str = value as string;
-            if (str != null)
-            {
-                //todo [wanl]: confirm what will trigger it
-                // Called when we invoke from dashboard. 
-                // str --> attribute --> obj 
-                //var resolvedAttr = Cloner.ResolveFromInvokeString(str);
-                //return await BuildAsync(resolvedAttr, context);
+                //todo [wanl]: figure out what will trigger it
                 throw new NotImplementedException();
-            }
-            else
-            {
-                // Passed a direct object, such as JobHost.Call 
-                throw new NotImplementedException();
-            }
         }
 
         public ParameterDescriptor ToParameterDescriptor()

@@ -266,45 +266,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return (newAttr, bindingData) => TemplateBind(policy, propInfo, newAttr, template, bindingData, validator);
         }
 
-        // Get a attribute with %% resolved, but not runtime {} resolved.
-        public TAttribute GetNameResolvedAttribute()
-        {
-            TAttribute attr = ResolveFromBindings(null);
-            return attr;
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        public string GetInvokeString(TAttribute attributeResolved)
-        {
-            string invokeString;
-
-            var resolver = _source as IAttributeInvokeDescriptor<TAttribute>;
-            if (resolver == null)
-            {
-                invokeString = DefaultAttributeInvokerDescriptor.ToInvokeString(_autoResolves, attributeResolved);
-            }
-            else
-            {
-                invokeString = resolver.ToInvokeString();
-            }
-            return invokeString;
-        }
-
-        public TAttribute ResolveFromInvokeString(string invokeString)
-        {
-            TAttribute attr;
-            var resolver = _source as IAttributeInvokeDescriptor<TAttribute>;
-            if (resolver == null)
-            {
-                attr = DefaultAttributeInvokerDescriptor.FromInvokeString(this, invokeString);
-            }
-            else
-            {
-                attr = resolver.FromInvokeString(invokeString);
-            }
-            return attr;
-        }
-
         public TAttribute ResolveFromBindingData(BindingContext ctx)
         {
             var attr = ResolveFromBindings(ctx.BindingData);
