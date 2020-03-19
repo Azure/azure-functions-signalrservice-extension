@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // todo: extend to implement ITriggerBinding
     // Helper class for implementing IBinding with the attribute resolver pattern. 
     internal abstract class BindingBase<TAttribute> : IBinding
         where TAttribute : Attribute

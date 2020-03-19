@@ -32,13 +32,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         protected override Task<IValueProvider> BuildAsync(SignalRConnectionInfoAttribute attrResolved,
             IReadOnlyDictionary<string, object> bindingData)
         {
-            var azureSignalRClient = Utils.GetAzureSignalRClient(attrResolved.ConnectionStringSetting, attrResolved.HubName); // todo: add option
-
-            var exactAttr = attrResolved as SignalRConnectionInfoAttribute;
+            var azureSignalRClient = Utils.GetAzureSignalRClient(attrResolved.ConnectionStringSetting, attrResolved.HubName);
             if (!bindingData.ContainsKey(HttpRequestName) || securityTokenValidator == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(exactAttr.UserId, exactAttr.IdToken,
-                    exactAttr.ClaimTypeList);
+                var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
+                    attrResolved.ClaimTypeList);
                 return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
             }
 
@@ -53,15 +51,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (signalRConnectionInfoConfigurer == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(exactAttr.UserId, exactAttr.IdToken,
-                    exactAttr.ClaimTypeList);
+                var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
+                    attrResolved.ClaimTypeList);
                 return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
             }
 
             var signalRConnectionDetail = new SignalRConnectionDetail
             {
-                UserId = exactAttr.UserId,
-                Claims = azureSignalRClient.GetCustomClaims(exactAttr.IdToken, exactAttr.ClaimTypeList),
+                UserId = attrResolved.UserId,
+                Claims = azureSignalRClient.GetCustomClaims(attrResolved.IdToken, attrResolved.ClaimTypeList),
             };
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
             var customizedInfo = azureSignalRClient.GetClientConnectionInfo(signalRConnectionDetail.UserId,
