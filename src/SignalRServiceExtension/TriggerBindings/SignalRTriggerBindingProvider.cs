@@ -67,7 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     !string.IsNullOrEmpty(@event) ||
                     parameterNames.Length != 0)
                 {
-                    throw new ArgumentException($"{nameof(SignalRTriggerAttribute)} must use No-Arg Constructor in class based model.");
+                    throw new ArgumentException($"{nameof(SignalRTriggerAttribute)} must use parameterless constructor in class based model.");
                 }
                 parameterNamesFromAttribute = method.GetParameters().Where(IsLegalClassBasedParameter).Select(p => p.Name).ToArray();
                 hubName = declaredType.Name;
