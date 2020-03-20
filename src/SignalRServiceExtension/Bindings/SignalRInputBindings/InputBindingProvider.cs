@@ -1,24 +1,28 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
+using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class SignalRConnectionInputBindingProvider : IBindingProvider
+    // this input binding provider doesn't support converter and pattern matcher
+    internal class InputBindingProvider : IBindingProvider
     {
         private readonly ISecurityTokenValidator securityTokenValidator;
-        private readonly SignalROptions options;
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
         private readonly INameResolver nameResolver;
+        private readonly IConfiguration configuration;
 
-        public SignalRConnectionInputBindingProvider(INameResolver nameResolver, SignalROptions options, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
+        // todo [wanl]: hubName uses [AutoResolve]
+        public InputBindingProvider(IConfiguration configuration, INameResolver nameResolver, ISecurityTokenValidator securityTokenValidator, ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer)
         {
+            this.configuration = configuration;
             this.nameResolver = nameResolver;
             this.securityTokenValidator = securityTokenValidator;
-            this.options = options;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
         }
 
@@ -29,10 +33,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 switch (attr)
                 {
-                    case SignalRConnectionInfoAttribute connectionInfoAttribute:
-                        var resolvedConnectionString = nameResolver.Resolve(connectionInfoAttribute.ConnectionStringSetting);
-                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(connectionInfoAttribute, Utils.GetAzureSignalRClient(resolvedConnectionString, connectionInfoAttribute.HubName, options), securityTokenValidator, signalRConnectionInfoConfigurer));
-                    case SecurityTokenValidationAttribute validationAttribute:
+                    case SignalRConnectionInfoAttribute signalRConnectionInfoAttribute:
+                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(context, configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer));
+                    case SecurityTokenValidationAttribute securityTokenValidationAttribute:
                         return Task.FromResult((IBinding) new SecurityTokenValidationInputBinding(securityTokenValidator));
                 }
             }

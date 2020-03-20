@@ -12,10 +12,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return values.FirstOrDefault(v => !string.IsNullOrEmpty(v));
         }
 
-        public static AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName, SignalROptions options)
+        public static AzureSignalRClient GetAzureSignalRClient(string attributeConnectionString, string attributeHubName, SignalROptions options = null)
         {
-            var connectionString = FirstOrDefault(attributeConnectionString, options.ConnectionString);
-            var hubName = FirstOrDefault(attributeHubName, options.HubName);
+            var connectionString = FirstOrDefault(attributeConnectionString, options?.ConnectionString);
+            var hubName = FirstOrDefault(attributeHubName, options?.HubName);
 
             return new AzureSignalRClient(StaticServiceHubContextStore.ServiceManagerStore, connectionString, hubName);
         }

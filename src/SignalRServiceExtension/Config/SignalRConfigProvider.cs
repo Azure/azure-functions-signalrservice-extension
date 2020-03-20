@@ -28,7 +28,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalROptions options;
         private readonly ILoggerFactory loggerFactory;
         private readonly ISignalRTriggerDispatcher _dispatcher;
-        private readonly SignalRConnectionInputBindingProvider signalRConnectionInputBindingProvider;
+        private readonly InputBindingProvider inputBindingProvider;
 
         public SignalRConfigProvider(
             IOptions<SignalROptions> options,
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.nameResolver = nameResolver;
             this.configuration = configuration;
             this._dispatcher = new SignalRTriggerDispatcher();
-            signalRConnectionInputBindingProvider = new SignalRConnectionInputBindingProvider(nameResolver, options.Value, securityTokenValidator, signalRConnectionInfoConfigurer);
+            inputBindingProvider = new InputBindingProvider(configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer);
         }
 
         // GetWebhookHandler() need the Obsolete
@@ -89,10 +89,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
-            signalRConnectionInfoAttributeRule.Bind(signalRConnectionInputBindingProvider);
+            signalRConnectionInfoAttributeRule.Bind(inputBindingProvider);
 
             var securityTokenValidationAttributeRule = context.AddBindingRule<SecurityTokenValidationAttribute>();
-            securityTokenValidationAttributeRule.Bind(signalRConnectionInputBindingProvider);
+            securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
