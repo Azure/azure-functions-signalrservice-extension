@@ -26,13 +26,21 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
                 var jObject = JObject.Load(textReader);
 
                 if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token))
-                    message = token.Value<int>() switch
+                    switch (token.Value<int>())
                     {
-                        ServerlessProtocolConstants.InvocationMessageType => jObject.ToObject<InvocationMessage>(),
-                        ServerlessProtocolConstants.OpenConnectionMessageType => jObject.ToObject<OpenConnectionMessage>(),
-                        ServerlessProtocolConstants.CloseConnectionMessageType => jObject.ToObject<CloseConnectionMessage>(),
-                        _ => null
-                    };
+                        case ServerlessProtocolConstants.InvocationMessageType:
+                            message = jObject.ToObject<InvocationMessage>();
+                            break;
+                        case ServerlessProtocolConstants.OpenConnectionMessageType:
+                            message = jObject.ToObject<OpenConnectionMessage>();
+                            break;
+                        case ServerlessProtocolConstants.CloseConnectionMessageType:
+                            message = jObject.ToObject<CloseConnectionMessage>();
+                            break;
+                        default:
+                            message = null;
+                            break;
+                    }
                 else
                     message = null;
             }
