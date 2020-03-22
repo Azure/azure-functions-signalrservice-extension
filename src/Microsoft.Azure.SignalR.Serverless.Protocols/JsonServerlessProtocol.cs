@@ -4,7 +4,6 @@
 using System;
 using System.Buffers;
 using System.IO;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,46 +24,28 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
             try
             {
                 var jObject = JObject.Load(textReader);
+
                 if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token))
-                {
-                    var type = token.Value<int>();
-                    switch (type)
+                    message = token.Value<int>() switch
                     {
-                        case ServerlessProtocolConstants.InvocationMessageType:
-                            message = SafeParseMessage<InvocationMessage>(jObject);
-                            break;
-                        case ServerlessProtocolConstants.OpenConnectionMessageType:
-                            message = SafeParseMessage<OpenConnectionMessage>(jObject);
-                            break;
-                        case ServerlessProtocolConstants.CloseConnectionMessageType:
-                            message = SafeParseMessage<CloseConnectionMessage>(jObject);
-                            break;
-                        default:
-                            message = null;
-                            break;
-                    }
-                }
+                        ServerlessProtocolConstants.InvocationMessageType => jObject.ToObject<InvocationMessage>(),
+                        ServerlessProtocolConstants.OpenConnectionMessageType => jObject.ToObject<OpenConnectionMessage>(),
+                        ServerlessProtocolConstants.CloseConnectionMessageType => jObject.ToObject<CloseConnectionMessage>(),
+                        _ => null
+                    };
                 else
                     message = null;
-
-                return message != null;
+            }
+            catch
+            {
+                message = null;
             }
             finally
             {
                 textReader.Close();
             }
-        }
 
-        private ServerlessMessage SafeParseMessage<T>(JObject jObject) where T : ServerlessMessage
-        {
-            try
-            {
-                return jObject.ToObject<T>();
-            }
-            catch
-            {
-                return null;
-            }
+            return message != null;
         }
     }
 }
