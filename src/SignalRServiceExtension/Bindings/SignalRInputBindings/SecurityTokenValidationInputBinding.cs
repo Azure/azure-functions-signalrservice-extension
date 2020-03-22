@@ -30,12 +30,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new NotSupportedException($"Argument {nameof(HttpRequest)} is null. {nameof(SecurityTokenValidationAttribute)} must work with HttpTrigger.");
             }
 
-            if (securityTokenValidator == null)
-            {
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(null));
-            }
-
-            return Task.FromResult((IValueProvider)new SignalRValueProvider(securityTokenValidator.ValidateToken(request)));
+            return Task.FromResult(SignalRValueProvider.Create(
+                securityTokenValidator?.ValidateToken(request)));
         }
 
         public Task<IValueProvider> BindAsync(BindingContext context)

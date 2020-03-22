@@ -37,7 +37,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
                     attrResolved.ClaimTypeList);
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
+                return Task.FromResult(SignalRValueProvider.Create(info));
             }
 
             var request = bindingData[HttpRequestName] as HttpRequest;
@@ -46,14 +46,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (tokenResult.Status != SecurityTokenStatus.Valid)
             {
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(null));
+                return Task.FromResult((IValueProvider)SignalRNullValueProvider<SignalRConnectionInfo>.Instance);
             }
 
             if (signalRConnectionInfoConfigurer == null)
             {
                 var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
                     attrResolved.ClaimTypeList);
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(info));
+                return Task.FromResult(SignalRValueProvider.Create(info));
             }
 
             var signalRConnectionDetail = new SignalRConnectionDetail
@@ -64,7 +64,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
             var customizedInfo = azureSignalRClient.GetClientConnectionInfo(signalRConnectionDetail.UserId,
                 signalRConnectionDetail.Claims);
-            return Task.FromResult((IValueProvider)new SignalRValueProvider(customizedInfo));
+            return Task.FromResult(SignalRValueProvider.Create(customizedInfo));
         }
     }
 }
