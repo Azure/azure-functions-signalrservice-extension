@@ -37,25 +37,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// The hub of request belongs to.
         /// </summary>
         [AutoResolve]
-        public string HubName { get; set; }
+        public string HubName { get; }
 
         /// <summary>
         /// The event of the request.
         /// </summary>
         [AutoResolve]
-        public string Event { get; set; }
+        public string Event { get; }
 
         /// <summary>
         /// Two optional value: connections and messages
         /// </summary>
         [AutoResolve]
-        public string Category { get; set; }
+        public string Category { get; }
 
         /// <summary>
         /// Used for messages category. All the name defined in <see cref="ParameterNames"/> will map to
         /// Arguments in InvocationMessage by order. And the name can be used in parameters of method
         /// directly.
         /// </summary>
-        public string[] ParameterNames { get; set; }
+        public string[] ParameterNames { get; }
     }
 }

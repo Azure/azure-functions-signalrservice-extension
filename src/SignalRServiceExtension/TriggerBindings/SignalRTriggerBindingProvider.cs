@@ -62,22 +62,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (declaredType != null && declaredType.IsSubclassOf(typeof(ServerlessHub)))
             {
                 // Class based model
+                if (!string.IsNullOrEmpty(hubName) ||
+                    !string.IsNullOrEmpty(category) ||
+                    !string.IsNullOrEmpty(@event) ||
+                    parameterNames.Length != 0)
+                {
+                    throw new ArgumentException($"{nameof(SignalRTriggerAttribute)} must use parameterless constructor in class based model.");
+                }
                 parameterNamesFromAttribute = method.GetParameters().Where(IsLegalClassBasedParameter).Select(p => p.Name).ToArray();
-                hubName = string.IsNullOrEmpty(hubName) ? declaredType.Name : hubName;
-                category = string.IsNullOrEmpty(category) ? GetCategoryFromMethodName(method.Name) : category;
-                @event = string.IsNullOrEmpty(@event) ? method.Name : @event;
+                hubName = declaredType.Name;
+                category = GetCategoryFromMethodName(method.Name);
+                @event = GetEventFromMethodName(method.Name, category);
             }
             else
             {
                 parameterNamesFromAttribute = method.GetParameters().
                     Where(p => p.GetCustomAttribute<SignalRParameterAttribute>(false) != null).
                     Select(p => p.Name).ToArray();
-            }
 
-            if (parameterNamesFromAttribute.Length != 0 && parameterNames.Length != 0)
-            {
-                throw new InvalidOperationException(
-                    $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRTriggerAttribute.ParameterNames)} and {nameof(SignalRParameterAttribute)} can not be set in the same Function.");
+                if (parameterNamesFromAttribute.Length != 0 && parameterNames.Length != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRTriggerAttribute.ParameterNames)} and {nameof(SignalRParameterAttribute)} can not be set in the same Function.");
+                }
             }
 
             parameterNames = parameterNamesFromAttribute.Length != 0
@@ -125,13 +132,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private string GetCategoryFromMethodName(string name)
         {
-            if (string.Equals(name, Event.Connected, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(name, Event.Disconnected, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, Constants.OnConnected, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(name, Constants.OnDisconnected, StringComparison.OrdinalIgnoreCase))
             {
                 return Category.Connections;
             }
 
             return Category.Messages;
+        }
+
+        private string GetEventFromMethodName(string name, string category)
+        {
+            if (category == Category.Connections)
+            {
+                if (string.Equals(name, Constants.OnConnected, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Event.Connected;
+                }
+                if (string.Equals(name, Constants.OnDisconnected, StringComparison.OrdinalIgnoreCase))
+                {
+                    return Event.Disconnected;
+                }
+            }
+
+            return name;
         }
 
         private void ValidateParameterNames(string[] parameterNames)

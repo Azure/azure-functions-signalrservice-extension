@@ -12,25 +12,23 @@ namespace FunctionApp
 {
     public class SimpleChat : ServerlessHub
     {
-        private const string Hub = nameof(SimpleChat);
         private const string NewMessageTarget = "newMessage";
         private const string NewConnectionTarget = "newConnection";
 
         [FunctionName("negotiate")]
-        public static SignalRConnectionInfo GetSignalRInfo(
-            [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-            [SignalRConnectionInfo(HubName = Hub, UserId = "{headers.x-ms-signalr-user-id}")] SignalRConnectionInfo connectionInfo)
+        public SignalRConnectionInfo Negotiate([HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req)
         {
-            return connectionInfo;
+            return Negotiate(req.Headers["x-ms-signalr-user-id"], GetClaims(req.Headers["Authorization"]));
         }
 
-        [FunctionName(nameof(Connected))]
-        public async Task Connected([SignalRTrigger]InvocationContext invocationContext, ILogger logger)
+        [FunctionName(nameof(OnConnected))]
+        public async Task OnConnected([SignalRTrigger]InvocationContext invocationContext, ILogger logger)
         {
             await Clients.All.SendAsync(NewConnectionTarget, new NewConnection(invocationContext.ConnectionId));
             logger.LogInformation($"{invocationContext.ConnectionId} has connected");
         }
 
+        [FunctionAuthorize]
         [FunctionName(nameof(Broadcast))]
         public async Task Broadcast([SignalRTrigger]InvocationContext invocationContext, string message, ILogger logger)
         {
@@ -80,8 +78,8 @@ namespace FunctionApp
             await UserGroups.RemoveFromGroupAsync(userName, groupName);
         }
 
-        [FunctionName(nameof(Disconnect))]
-        public void Disconnect([SignalRTrigger]InvocationContext invocationContext)
+        [FunctionName(nameof(OnDisconnected))]
+        public void OnDisconnected([SignalRTrigger]InvocationContext invocationContext)
         {
         }
 

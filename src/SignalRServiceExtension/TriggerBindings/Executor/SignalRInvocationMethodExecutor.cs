@@ -47,8 +47,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 if (!functionResult.Succeeded)
                 {
-                    // TODO: Consider more error details
-                    completionMessage = CompletionMessage.WithError(message.InvocationId, "Execution failed");
+                    var errorMessage = functionResult.Exception?.InnerException?.Message ??
+                                       functionResult.Exception?.Message ?? 
+                                       "Method execution failed.";
+                    completionMessage = CompletionMessage.WithError(message.InvocationId, errorMessage);
                     response = new HttpResponseMessage(HttpStatusCode.OK);
                 }
                 else
