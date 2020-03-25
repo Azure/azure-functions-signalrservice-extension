@@ -9,11 +9,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRValueProvider : IValueProvider
     {
-        private readonly object value;
+        private readonly Task<object> value;
+
+        public Type Type { get; }
 
         private SignalRValueProvider(object value, Type valueType)
         {
-            this.value = value;
+            this.value = Task.FromResult(value);
 
             Type = valueType;
         }
@@ -23,12 +25,31 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 ? (IValueProvider) SignalRNullValueProvider<T>.Instance
                 : new SignalRValueProvider(value, typeof(T));
 
-        public Type Type { get; }
+        internal static IValueProvider NullOf<T>() where T : class
+            => SignalRNullValueProvider<T>.Instance;
 
         public Task<object> GetValueAsync()
-            => Task.FromResult(value);
+            => value;
 
         public string ToInvokeString()
             => value.ToString();
+
+        private class SignalRNullValueProvider<T> : IValueProvider
+        {
+            private readonly Task<object> nullObjectTask = Task.FromResult<object>(null);
+
+            internal static readonly SignalRNullValueProvider<T> Instance = new SignalRNullValueProvider<T>();
+
+            public Type Type { get; }
+
+            private SignalRNullValueProvider()
+                => Type = typeof(T);
+
+            public Task<object> GetValueAsync()
+                => nullObjectTask;
+
+            public string ToInvokeString()
+                => null;
+        }
     }
 }
