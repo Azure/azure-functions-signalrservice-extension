@@ -28,15 +28,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             try
             {
-                // Gets the token from the Authorization header
-                if (request != null &&
-                    request.Headers.ContainsKey(AuthHeaderName) &&
-                    request.Headers[AuthHeaderName].ToString().StartsWith(BearerPrefix))
+                if (request?.Headers.TryGetValue(AuthHeaderName, out var authHeader) == true)
                 {
-                    var token = request.Headers[AuthHeaderName].ToString().Substring(BearerPrefix.Length);
-                    // Validates the token
-                    var principal = handler.ValidateToken(token, tokenValidationParameters, out _);
-                    return SecurityTokenResult.Success(principal);
+                    var authHeaderValue =  authHeader.ToString();
+                    if (authHeaderValue.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var token = authHeaderValue.Substring(BearerPrefix.Length);
+                        var principal = handler.ValidateToken(token, tokenValidationParameters, out _);
+
+                        return SecurityTokenResult.Success(principal);
+                    }
                 }
 
                 // token is null or whitespace
