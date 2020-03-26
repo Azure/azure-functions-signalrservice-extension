@@ -266,6 +266,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return (newAttr, bindingData) => TemplateBind(policy, propInfo, newAttr, template, bindingData, validator);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
+        public string GetInvokeString(TAttribute attributeResolved)
+        {
+            string invokeString;
+
+            var resolver = _source as IAttributeInvokeDescriptor<TAttribute>;
+            if (resolver == null)
+            {
+                invokeString = DefaultAttributeInvokerDescriptor.ToInvokeString(_autoResolves, attributeResolved);
+            }
+            else
+            {
+                invokeString = resolver.ToInvokeString();
+            }
+            return invokeString;
+        }
+
         public TAttribute ResolveFromBindingData(BindingContext ctx)
         {
             var attr = ResolveFromBindings(ctx.BindingData);
