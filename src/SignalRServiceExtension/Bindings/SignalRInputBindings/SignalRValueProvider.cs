@@ -22,8 +22,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         internal static IValueProvider Create<T>(T value) where T : class
             => value == null
-                ? (IValueProvider) SignalRNullValueProvider<T>.Instance
-                : new SignalRValueProvider(value, typeof(T));
+                ? NullOf<T>()
+                : new SignalRValueProvider(value, value.GetType());
 
         internal static IValueProvider NullOf<T>() where T : class
             => SignalRNullValueProvider<T>.Instance;
