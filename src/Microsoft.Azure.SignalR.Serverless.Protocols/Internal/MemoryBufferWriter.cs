@@ -140,10 +140,10 @@ namespace Microsoft.AspNetCore.Internal
             if (_completedSegments == null)
             {
                 // There is only one segment so write without awaiting.
-                return destination.WriteAsync(_currentSegment, 0, _position);
+                return destination.WriteAsync(_currentSegment, 0, _position, cancellationToken);
             }
 
-            return CopyToSlowAsync(destination);
+            return CopyToSlowAsync(destination, cancellationToken);
         }
 
         private void EnsureCapacity(int sizeHint)
@@ -184,7 +184,7 @@ namespace Microsoft.AspNetCore.Internal
             _position = 0;
         }
 
-        private async Task CopyToSlowAsync(Stream destination)
+        private async Task CopyToSlowAsync(Stream destination, CancellationToken cancellationToken)
         {
             if (_completedSegments != null)
             {
@@ -193,11 +193,11 @@ namespace Microsoft.AspNetCore.Internal
                 for (var i = 0; i < count; i++)
                 {
                     var segment = _completedSegments[i];
-                    await destination.WriteAsync(segment.Buffer, 0, segment.Length);
+                    await destination.WriteAsync(segment.Buffer, 0, segment.Length, cancellationToken);
                 }
             }
 
-            await destination.WriteAsync(_currentSegment, 0, _position);
+            await destination.WriteAsync(_currentSegment, 0, _position, cancellationToken);
         }
 
         public byte[] ToArray()
