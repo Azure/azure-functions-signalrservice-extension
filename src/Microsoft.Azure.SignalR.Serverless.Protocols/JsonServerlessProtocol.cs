@@ -26,7 +26,8 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
                 {
                     var jObject = JObject.Load(textReader);
 
-                    if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token))
+                    if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token)
+                        && token.Type == JTokenType.Integer)
                         switch (token.Value<int>())
                         {
                             case ServerlessProtocolConstants.InvocationMessageType:
