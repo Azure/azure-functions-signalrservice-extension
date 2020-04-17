@@ -10,10 +10,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class SignalRValueProvider : IValueProvider
     {
         private object value;
+        private string invokeString;
 
-        public SignalRValueProvider(object value)
+        // todo: fix invoke string in another PR
+        public SignalRValueProvider(object value, Type type, string invokeString)
         {
             this.value = value;
+            this.invokeString = invokeString;
+            this.Type = type;
         }
 
         public Task<object> GetValueAsync()
@@ -23,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public string ToInvokeString()
         {
-            return value?.ToString();
+            return invokeString;
         }
 
         public Type Type { get; }

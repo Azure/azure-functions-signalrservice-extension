@@ -32,10 +32,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (securityTokenValidator == null)
             {
-                return Task.FromResult((IValueProvider)new SignalRValueProvider(null));
+                return Task.FromResult((IValueProvider)new SignalRValueProvider(null, typeof(SecurityTokenResult), ""));
             }
 
-            return Task.FromResult((IValueProvider)new SignalRValueProvider(securityTokenValidator.ValidateToken(request)));
+            return Task.FromResult((IValueProvider)new SignalRValueProvider(securityTokenValidator.ValidateToken(request), typeof(SecurityTokenResult), ""));
         }
 
         public Task<IValueProvider> BindAsync(BindingContext context)
