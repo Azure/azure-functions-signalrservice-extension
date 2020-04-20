@@ -7,22 +7,21 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class SignalRValueProvider : IValueProvider
+    internal class SecurityTokenValidationValueProvider : IValueProvider
     {
-        private object value;
+        private SecurityTokenResult result;
         private string invokeString;
 
         // todo: fix invoke string in another PR
-        public SignalRValueProvider(object value, Type type, string invokeString)
+        public SecurityTokenValidationValueProvider(SecurityTokenResult result, string invokeString)
         {
-            this.value = value;
+            this.result= result;
             this.invokeString = invokeString;
-            this.Type = type;
         }
 
         public Task<object> GetValueAsync()
         {
-            return Task.FromResult(value);
+            return Task.FromResult<object>(result);
         }
 
         public string ToInvokeString()
@@ -30,6 +29,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return invokeString;
         }
 
-        public Type Type { get; }
+        public Type Type => typeof(SecurityTokenResult);
     }
 }
