@@ -10,7 +10,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class SignalRConnectionInfoValueProvider : IValueProvider
     {
-        private object info;
+        private SignalRConnectionInfo info;
         private string invokeString;
 
         // todo: fix invoke string in another PR
