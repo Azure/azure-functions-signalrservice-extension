@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
@@ -29,15 +28,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public Task<IBinding> TryCreateAsync(BindingProviderContext context)
         {
             var parameterInfo = context.Parameter;
-            foreach (var attr in parameterInfo.GetCustomAttributes())
+
+            if (parameterInfo.GetCustomAttribute<SignalRConnectionInfoAttribute>() != null)
             {
-                switch (attr)
-                {
-                    case SignalRConnectionInfoAttribute signalRConnectionInfoAttribute:
-                        return Task.FromResult((IBinding)new SignalRConnectionInputBinding(context, configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer));
-                    case SecurityTokenValidationAttribute securityTokenValidationAttribute:
-                        return Task.FromResult((IBinding) new SecurityTokenValidationInputBinding(securityTokenValidator));
-                }
+                return Task.FromResult<IBinding>(new SignalRConnectionInputBinding(context, configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer));
+            }
+            if (parameterInfo.GetCustomAttribute<SecurityTokenValidationAttribute>() != null)
+            {
+                return Task.FromResult<IBinding>(new SecurityTokenValidationInputBinding(securityTokenValidator));
             }
             return Task.FromResult<IBinding>(null);
         }
