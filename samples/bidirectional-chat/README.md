@@ -1,6 +1,6 @@
 # Azure function bidirectional chatroom sample
 
-This is a chatroom sample that demonstrates bidirectional message pushing between Azure SignalR Service and Azure Function in serverless scenario. It leverage the "upstream" provided by Azure SignalR Service that features proxying messages from client to upstream endpoints in serverless scenario. Azure Functions with signalr trigger binding allow you to write code to receive and push messages in several languages, including JavaScript, Python, C#, etc.
+This is a chatroom sample that demonstrates bidirectional message pushing between Azure SignalR Service and Azure Function in serverless scenario. It leverages the **upstream** provided by Azure SignalR Service that features proxying messages from client to upstream endpoints in serverless scenario. Azure Functions with SignalR trigger binding allows you to write code to receive and push messages in several languages, including JavaScript, Python, C#, etc.
 
 - [Prerequisites](#prerequisites)
 - [Run sample in Azure](#run-sample-in-azure)
@@ -20,7 +20,7 @@ The following softwares are required to build this tutorial.
 
 It's a quick try of this sample. You will create an Azure Signalr Service and an Azure Function app to host sample. And you will launch chatroom locally but connecting to Azure SignalR Service and Azure Function.
 
-### Create SignalR Service
+### Create Azure SignalR Service
 
 1. Create Azure SignalR Service using `az cli`
 
@@ -78,13 +78,13 @@ It's a quick try of this sample. You will create an Azure Signalr Service and an
     az functionapp config appsettings set --resource-group <resource_group_name> --name <function_name> --setting AzureSignalRConnectionString="<signalr_connection_string>"
     ```
 
-3. Update Azure SignalR upstream settings
+3. Update Azure SignalR Service Upstream settings
 
-    Open the Azure Portal and nevigate to the Function App created before. Find `signalr_extension` key in the App keys blade.
+    Open the Azure Portal and nevigate to the Function App created before. Find `signalr_extension` key in the **App keys** blade.
 
     ![Overview with auth](getkeys.png)
 
-    Copy the `signalr_extensions` value and use `az resource` command to set the upstream setting
+    Copy the `signalr_extensions` value and use `az resource` command to set the upstream setting.
 
     ```bash
     az resource update --ids <signalr-resource-id> --set properties.upstream.templates="[{'UrlTemplate': '<function-url>/runtime/webhooks/signalr?code=<signalr_extension-key>', 'EventPattern': '*', 'HubPattern': '*', 'CategoryPattern': '*'}]"
@@ -96,11 +96,11 @@ It's a quick try of this sample. You will create an Azure Signalr Service and an
 
     Although there is a CORS setting in local.settings.json, it is not propagated to the function app in Azure. You need to set it separately.
 
-    1. Open the function app in the Azure portal.
-    2. In the left blade, select CORS blade.
-    3. In the Allowed origins section, add `http://127.0.0.1:5500` (It is the local web server's url).
-    4. In order for the SignalR JavaScript SDK call your function app from a browser, support for credentials in CORS must be enabled. Select the "Enable Access-Control-Allow-Credentials" checkbox.
-    5. Click Save to persist the CORS settings.
+    1. Open the function app in the Azure Portal.
+    2. In the left blade, select **CORS** blade.
+    3. In the **Allowed Origins** section, add `http://127.0.0.1:5500` (It is the local web server's url).
+    4. In order for the SignalR JavaScript SDK call your function app from a browser, support for credentials in CORS must be enabled. Select the **Enable Access-Control-Allow-Credentials** checkbox.
+    5. Click **Save** to persist the CORS settings.
     ![CORS](cors.png)
 
 2. Install [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) for your VS Code, that can serve web pages locally
@@ -110,6 +110,7 @@ It's a quick try of this sample. You will create an Azure Signalr Service and an
     window.apiBaseUrl = '<function-app-url>';
     ```
 
-4. With **index.html** open, start Live Server by opening the VS Code command palette (F1) and selecting **Live Server: Open with Live Server**. Live Server will open the application in a browser.
+4. With **index.html** open, start Live Server by opening the VS Code command palette (**F1**) and selecting **Live Server: Open with Live Server**. Live Server will open the application in a browser.
 
 5. Try send messages by entering them into the main chat box.
+    ![Chatroom](chatroom.png)
