@@ -18,7 +18,7 @@ The following softwares are required to build this tutorial.
 
 ## Run sample in Azure
 
-It's a quick try of this sample. You will create an Azure Signalr Service and an Azure Function app to host sample. And you will launch chatroom locally but connecting to Azure SignalR Service and Azure Function.
+It's a quick try of this sample. You will create an Azure SignalR Service and an Azure Function app to host sample. And you will launch chatroom locally but connecting to Azure SignalR Service and Azure Function.
 
 ### Create Azure SignalR Service
 
