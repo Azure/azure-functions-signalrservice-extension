@@ -7,7 +7,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.SignalR.Management" Version="$(MicrosoftAzureSignalRManagement)" />
-    <PackageReference Include="Microsoft.Azure.WebJobs" Version="$(MicrosoftAzureWebJobsPackageVersion)" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="$(MicrosoftAzureFunctionsExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Azure.SignalR.Serverless.Protocols\Microsoft.Azure.SignalR.Serverless.Protocols.csproj" />
   </ItemGroup>
 
 </Project>

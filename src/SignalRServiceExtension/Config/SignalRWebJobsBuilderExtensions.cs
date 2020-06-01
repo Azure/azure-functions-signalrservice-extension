@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    // Then all resolve jobs are put in resolvers, we can also remove the SignalROption after we apply resolve jobs inside bindings.
+    
     /// <summary>
     /// Extension methods for SignalR Service integration
     /// </summary>
@@ -37,12 +39,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             config.Bind(options);
-
-            var hubName = config.GetValue<string>("hubName");
-            if (!string.IsNullOrEmpty(hubName))
-            {
-                options.HubName = hubName;
-            }
         }
     }
 }

@@ -7,5 +7,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
         public const string ServiceTransportTypeName = "AzureSignalRServiceTransportType";
+        public const string AsrsHeaderPrefix = "X-ASRS-";
+        public const string AsrsConnectionIdHeader = AsrsHeaderPrefix + "Connection-Id";
+        public const string AsrsUserClaims = AsrsHeaderPrefix + "User-Claims";
+        public const string AsrsUserId = AsrsHeaderPrefix + "User-Id";
+        public const string AsrsHubNameHeader = AsrsHeaderPrefix + "Hub";
+        public const string AsrsCategory = AsrsHeaderPrefix + "Category";
+        public const string AsrsEvent = AsrsHeaderPrefix + "Event";
+        public const string AsrsClientQueryString = AsrsHeaderPrefix + "Client-Query";
+        public const string AsrsSignature = AsrsHeaderPrefix + "Signature";
+        public const string JsonContentType = "application/json";
+        public const string MessagePackContentType = "application/x-msgpack";
+        public const string OnConnected = "OnConnected";
+        public const string OnDisconnected = "OnDisconnected";
+    }
+
+    public static class Category
+    {
+        public const string Connections = "connections";
+        public const string Messages = "messages";
+    }
+
+    public static class Event
+    {
+        public const string Connected = "connected";
+        public const string Disconnected = "disconnected";
     }
 }
