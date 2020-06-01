@@ -11,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // todo: extend to implement ITriggerBinding
     // Helper class for implementing IBinding with the attribute resolver pattern. 
     internal abstract class BindingBase<TAttribute> : IBinding
         where TAttribute : Attribute
@@ -52,7 +51,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task<IValueProvider> BindAsync(object value, ValueBindingContext context)
         {
-                //todo [wanl]: figure out what will trigger it
                 throw new NotImplementedException();
         }
 
