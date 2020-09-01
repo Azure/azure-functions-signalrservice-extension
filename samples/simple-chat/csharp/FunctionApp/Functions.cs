@@ -64,13 +64,25 @@ namespace FunctionApp
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
             [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+
+            var msg = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
+
+
+            var obj = new B
+            {
+                Code = 2,
+                MyArray = new A[] { new A { Id = 44, Name = "sss" } }
+            };
+
+            var str = JsonConvert.SerializeObject(obj);
+
+            var message = JsonConvert.DeserializeObject(str);
 
             return signalRMessages.AddAsync(
                 new SignalRMessage
                 {
-                    UserId = message.Recipient,
-                    GroupName = message.Groupname,
+                    UserId = msg.Recipient,
+                    GroupName = msg.Groupname,
                     Target = "newMessage",
                     Arguments = new[] { message }
                 });
@@ -163,6 +175,18 @@ namespace FunctionApp
 
                 return Task.CompletedTask;
             }
+        }
+
+        public class A
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class B
+        {
+            public int Code { get; set; }
+            public A[] MyArray { get; set; }
         }
 
         public class ChatMessage

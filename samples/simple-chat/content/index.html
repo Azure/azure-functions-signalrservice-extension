@@ -210,6 +210,7 @@
       }
       let counter = 0;
       function newMessage(message) {
+        console.log("msg", message)
         message.id = counter++; // vue transitions need an id
         data.messages.unshift(message);
       };
