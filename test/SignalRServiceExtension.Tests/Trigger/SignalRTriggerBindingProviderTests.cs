@@ -82,7 +82,7 @@ namespace SignalRServiceExtension.Tests
         private SignalRTriggerBindingProvider CreateBindingProvider()
         {
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new SignalROptions());
+            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new SignalROptions(), true);
         }
 
         public class TestServerlessHub : ServerlessHub

@@ -73,9 +73,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, configuration, loggerFactory);
 
-            var url = context.GetWebhookHandler();
-            logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
-
+            bool triggerEnabled = false;
+            try
+            {
+                var url = context.GetWebhookHandler();
+                logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
+                triggerEnabled = true;
+            }
+            catch(Exception ex)
+            {
+                logger.LogWarning("SignalR trigger requires 'AzureWebJobsStorage' connection string being set. All SignalR trigger functions will be suppressed. " + 
+                    $"It's expected if you're using Azure Static Web Apps but not in other secnarios. {ex}");
+            }
+            
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
@@ -84,8 +94,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Trigger binding rule
             var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
             triggerBindingRule.AddConverter<InvocationContext, JObject>(JObject.FromObject);
-            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options));
-
+            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options, triggerEnabled));
+                        
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
