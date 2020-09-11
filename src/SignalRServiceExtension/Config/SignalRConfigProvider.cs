@@ -80,10 +80,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
                 triggerEnabled = true;
             }
-            catch(Exception ex)
+            catch
             {
-                logger.LogWarning("SignalR trigger requires 'AzureWebJobsStorage' connection string being set. All SignalR trigger functions will be suppressed. " + 
-                    $"It's expected if you're using Azure Static Web Apps but not in other secnarios. {ex}");
+                logger.LogInformation("SignalR input and output bindings are enabled. " +
+                                      "To use the SignalR trigger, please set 'AzureWebJobsStorage' to a valid connection string.");
             }
             
             context.AddConverter<string, JObject>(JObject.FromObject)

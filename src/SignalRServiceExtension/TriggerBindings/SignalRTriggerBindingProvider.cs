@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (!_enabled)
             {
-                throw new InvalidOperationException("SignalR Trigger is disabled due to 'AzureWebJobsStorage' connection string is not set or invalid.");
+                throw new NotSupportedException("SignalR trigger is disabled due to 'AzureWebJobsStorage' connection string is not set or invalid.");
             }
 
             var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
