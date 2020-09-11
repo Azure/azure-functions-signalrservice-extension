@@ -86,7 +86,7 @@ namespace SignalRServiceExtension.Tests
             var bindingProvider = CreateBindingProvider(new Exception());
             var parameter = typeof(TestConnectedServerlessHub).GetMethod(nameof(TestConnectedServerlessHub.OnConnected), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             var context = new TriggerBindingProviderContext(parameter, default);
-            Assert.ThrowsAsync<Exception>(() => bindingProvider.TryCreateAsync(context));
+            Assert.ThrowsAsync<NotSupportedException>(() => bindingProvider.TryCreateAsync(context));
         }
 
         private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null)
