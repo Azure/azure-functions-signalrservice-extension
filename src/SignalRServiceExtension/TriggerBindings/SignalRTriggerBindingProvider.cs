@@ -18,14 +18,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ISignalRTriggerDispatcher _dispatcher;
         private readonly INameResolver _nameResolver;
         private readonly SignalROptions _options;
-        private readonly bool _enabled;
+        private readonly Exception _webhookException;
 
-        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher dispatcher, INameResolver nameResolver, SignalROptions options, bool enabled)
+        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher dispatcher, INameResolver nameResolver, SignalROptions options, Exception webhookException)
         {
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _enabled = enabled;
+            _webhookException = webhookException;
         }
 
         public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
@@ -42,9 +42,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return Task.FromResult<ITriggerBinding>(null);
             }
 
-            if (!_enabled)
+            if (_webhookException != null)
             {
-                throw new NotSupportedException("SignalR trigger is disabled due to 'AzureWebJobsStorage' connection string is not set or invalid.");
+                throw new NotSupportedException($"SignalR trigger is disabled due to 'AzureWebJobsStorage' connection string is not set or invalid. {_webhookException}");
             }
 
             var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);

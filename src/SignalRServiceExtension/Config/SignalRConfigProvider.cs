@@ -73,17 +73,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, configuration, loggerFactory);
 
-            bool triggerEnabled = false;
+            Exception webhookException = null;
             try
             {
                 var url = context.GetWebhookHandler();
                 logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
-                triggerEnabled = true;
             }
-            catch
+            catch (Exception ex)
             {
-                logger.LogInformation("SignalR input and output bindings are enabled. " +
-                                      "To use the SignalR trigger, please set 'AzureWebJobsStorage' to a valid connection string.");
+                webhookException = ex;
             }
             
             context.AddConverter<string, JObject>(JObject.FromObject)
@@ -94,7 +92,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Trigger binding rule
             var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
             triggerBindingRule.AddConverter<InvocationContext, JObject>(JObject.FromObject);
-            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options, triggerEnabled));
+            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options, webhookException));
                         
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
