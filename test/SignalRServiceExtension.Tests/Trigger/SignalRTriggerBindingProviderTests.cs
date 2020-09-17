@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SignalRServiceExtension.Tests.Utils;
@@ -79,10 +80,19 @@ namespace SignalRServiceExtension.Tests
             Assert.ThrowsAny<Exception>(() => bindingProvider.GetParameterResolvedAttribute(attribute, parameter));
         }
 
-        private SignalRTriggerBindingProvider CreateBindingProvider()
+        [Fact]
+        public void WebhookFailedTest()
+        {
+            var bindingProvider = CreateBindingProvider(new Exception());
+            var parameter = typeof(TestConnectedServerlessHub).GetMethod(nameof(TestConnectedServerlessHub.OnConnected), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
+            var context = new TriggerBindingProviderContext(parameter, default);
+            Assert.ThrowsAsync<NotSupportedException>(() => bindingProvider.TryCreateAsync(context));
+        }
+
+        private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null)
         {
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new SignalROptions());
+            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new SignalROptions(), exception);
         }
 
         public class TestServerlessHub : ServerlessHub

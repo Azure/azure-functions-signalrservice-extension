@@ -11,8 +11,14 @@ using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Azure.WebJobs.Host;
+using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Host.Indexers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Moq;
 using SignalRServiceExtension.Tests.Utils;
 using SignalRServiceExtension.Tests.Utils.Loggings;
 using Xunit;
@@ -115,6 +121,35 @@ namespace SignalRServiceExtension.Tests
             {
                 var indexException = await Assert.ThrowsAsync<FunctionIndexingException>(() => host.StartAsync());
                 Assert.Equal(expectedErrorMessage, indexException.InnerException.Message);
+            }
+        }
+
+        [Fact]
+        [Obsolete]
+        public void WebhookProviderThrowExceptionTest()
+        {
+            var builder = new HostBuilder();
+            builder.ConfigureWebJobs(b =>
+            {
+                b.AddSignalR();
+            });
+            var host = builder.Build();
+            using (host)
+            {
+                var configProvider = host.Services.GetRequiredService<IExtensionConfigProvider>();
+                var configuration = host.Services.GetRequiredService<IConfiguration>();
+                var nameResolver = host.Services.GetRequiredService<INameResolver>();
+                var converterManager = host.Services.GetRequiredService<IConverterManager>();
+                var webHookProviderMock = new Mock<IWebHookProvider>();
+                webHookProviderMock.Setup(w => w.GetUrl(It.IsAny<IExtensionConfigProvider>())).Returns(() =>
+                {
+                    throw new Exception(null);
+                });
+                IExtensionRegistry registry = new DefaultExtensionRegistry();
+                ExtensionConfigContext context = new ExtensionConfigContext(configuration, nameResolver, converterManager, webHookProviderMock.Object, registry);
+
+                // Assert no exceptions
+                configProvider.Initialize(context);
             }
         }
 
