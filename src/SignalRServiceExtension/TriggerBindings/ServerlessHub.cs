@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
             HubName = GetType().Name;
-            hubContext ??= StaticServiceHubContextStore.Get().GetAsync(HubName).GetAwaiter().GetResult();
+            hubContext = hubContext ?? StaticServiceHubContextStore.Get().GetAsync(HubName).GetAwaiter().GetResult();
             _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get().ServiceManager;
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
