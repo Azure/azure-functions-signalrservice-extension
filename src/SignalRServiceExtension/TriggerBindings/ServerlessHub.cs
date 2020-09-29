@@ -30,27 +30,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly IServiceManager _serviceManager;
 
         /// <summary>
-        /// Default ctor. that called by Azure Function infrastructure
+        /// Leave the parameters to be null when called by Azure Function infrastructure.
+        /// Or you can pass in your parameters in testing.
         /// </summary>
-        protected ServerlessHub()
+        protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
             HubName = GetType().Name;
-            var store = StaticServiceHubContextStore.Get();
-            var hubContext = store.GetAsync(HubName).GetAwaiter().GetResult();
-            _serviceManager = store.ServiceManager;
-            Clients = hubContext.Clients;
-            Groups = hubContext.Groups;
-            UserGroups = hubContext.UserGroups;
-        }
-
-        /// <summary>
-        /// For testing purpose.
-        /// </summary>
-        protected ServerlessHub(IServiceHubContext hubContext, IServiceManager serviceManager)
-        {
-            HubName = GetType().Name;
-            _serviceManager = serviceManager ?? throw new ArgumentNullException(nameof(serviceManager));
-            if (hubContext == null) throw new ArgumentNullException(nameof(hubContext));
+            hubContext ??= StaticServiceHubContextStore.Get().GetAsync(HubName).GetAwaiter().GetResult();
+            _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get().ServiceManager;
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;

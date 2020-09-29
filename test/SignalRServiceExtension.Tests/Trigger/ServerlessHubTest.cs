@@ -45,7 +45,8 @@ namespace SignalRServiceExtension.Tests.Trigger
 
     public class MyHub : ServerlessHub
     {
-        public MyHub(IServiceHubContext serviceHubContext, IServiceManager serviceManager): base(serviceHubContext, serviceManager)
+        // Use default value = null to reconcile testing and production purpose.
+        public MyHub(IServiceHubContext serviceHubContext = null, IServiceManager serviceManager = null): base(serviceHubContext, serviceManager)
         {
         }
 
