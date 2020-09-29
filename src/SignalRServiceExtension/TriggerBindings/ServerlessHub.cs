@@ -29,12 +29,28 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private bool _disposed;
         private readonly IServiceManager _serviceManager;
 
-        public ServerlessHub()
+        /// <summary>
+        /// Default ctor. that called by Azure Function infrastructure
+        /// </summary>
+        protected ServerlessHub()
         {
             HubName = GetType().Name;
             var store = StaticServiceHubContextStore.Get();
             var hubContext = store.GetAsync(HubName).GetAwaiter().GetResult();
             _serviceManager = store.ServiceManager;
+            Clients = hubContext.Clients;
+            Groups = hubContext.Groups;
+            UserGroups = hubContext.UserGroups;
+        }
+
+        /// <summary>
+        /// For testing purpose.
+        /// </summary>
+        protected ServerlessHub(IServiceHubContext hubContext, IServiceManager serviceManager)
+        {
+            HubName = GetType().Name;
+            _serviceManager = serviceManager ?? throw new ArgumentNullException(nameof(serviceManager));
+            if (hubContext == null) throw new ArgumentNullException(nameof(hubContext));
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
