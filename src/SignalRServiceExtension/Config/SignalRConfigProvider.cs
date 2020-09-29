@@ -73,9 +73,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, configuration, loggerFactory);
 
-            var url = context.GetWebhookHandler();
-            logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
-
+            Exception webhookException = null;
+            try
+            {
+                var url = context.GetWebhookHandler();
+                logger.LogInformation($"Registered SignalR trigger Endpoint = {url?.GetLeftPart(UriPartial.Path)}");
+            }
+            catch (Exception ex)
+            {
+                webhookException = ex;
+            }
+            
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
@@ -84,8 +92,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Trigger binding rule
             var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
             triggerBindingRule.AddConverter<InvocationContext, JObject>(JObject.FromObject);
-            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options));
-
+            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options, webhookException));
+                        
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
