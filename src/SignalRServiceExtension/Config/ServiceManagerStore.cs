@@ -52,7 +52,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 o.ConnectionString = connectionString;
                 o.ServiceTransportType = transportType;
-            }).Build();
+            }).WithCallingAssembly().Build();
         }
     }
 }
