@@ -168,7 +168,8 @@
       }).catch(alert);
       function getAxiosConfig() {
         const config = {
-          headers: { 'x-ms-signalr-userid': data.username }
+          // headers: { 'x-ms-signalr-userid': data.username }
+          headers: { 'X-MS-SIGNALR-USERID': data.username }
         };
         return config;
       }
