@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
@@ -25,7 +25,9 @@ namespace SignalRServiceExtension.Tests
             var expectedName = "John Doe";
             var expectedIat = "1516239022";
             var claimTypeList = new string[] { "name", "iat" };
-            var serviceManagerStore = new ServiceManagerStore(ServiceTransportType.Transient, null, null);
+            var configDict = new Dictionary<string, string>() { { Constants.ServiceTransportTypeName, "Transient" } };
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
+            var serviceManagerStore = new ServiceManagerStore(configuration, null);
             var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionString, hubName);
             var connectionInfo = azureSignalRClient.GetClientConnectionInfo(userId, idToken, claimTypeList);
 

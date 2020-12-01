@@ -15,10 +15,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly IConfiguration configuration;
         private readonly ConcurrentDictionary<string, IServiceHubContextStore> store = new ConcurrentDictionary<string, IServiceHubContextStore>();
 
-        public ServiceManagerStore(ServiceTransportType transportType, IConfiguration configuration, ILoggerFactory loggerFactory)
+        public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-            this.transportType = transportType;
+            this.transportType = configuration.GetValue<ServiceTransportType>(Constants.ServiceTransportTypeName);
             this.configuration = configuration;
         }
 
