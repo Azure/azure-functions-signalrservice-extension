@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Concurrent;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Configuration;
@@ -18,8 +19,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-            this.transportType = configuration.GetValue<ServiceTransportType>(Constants.ServiceTransportTypeName);
             this.configuration = configuration;
+            var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
+            var logger = loggerFactory.CreateLogger<ServiceManagerStore>();
+            if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
+            {
+                this.transportType = transport;
+            }
+            else
+            {
+                this.transportType = ServiceTransportType.Transient;
+                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {transportType} instead.");
+            }
         }
 
         public IServiceHubContextStore GetOrAddByConfigurationKey(string configurationKey)
