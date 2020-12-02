@@ -23,6 +23,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class SignalRConfigProvider : IExtensionConfigProvider, IAsyncConverter<HttpRequestMessage, HttpResponseMessage>
     {
         private readonly IConfiguration configuration;
+        private readonly IServiceManagerStore serviceManagerStore;
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
         private readonly SignalROptions options;
@@ -35,6 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             INameResolver nameResolver,
             ILoggerFactory loggerFactory,
             IConfiguration configuration,
+            IServiceManagerStore serviceManagerStore,
             ISecurityTokenValidator securityTokenValidator = null,
             ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer = null)
         {
@@ -43,6 +45,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("SignalR"));
             this.nameResolver = nameResolver;
             this.configuration = configuration;
+            this.serviceManagerStore = serviceManagerStore;
             this._dispatcher = new SignalRTriggerDispatcher();
             inputBindingProvider = new InputBindingProvider(configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer);
         }
@@ -61,17 +64,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 options.ConnectionString = nameResolver.Resolve(Constants.AzureSignalRConnectionStringName);
             }
 
-            var serviceTransportTypeStr = nameResolver.Resolve(Constants.ServiceTransportTypeName);
-            if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
-            {
-                options.AzureSignalRServiceTransportType = transport;
-            }
-            else
-            {
-                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {options.AzureSignalRServiceTransportType} instead.");
-            }
-
-            StaticServiceHubContextStore.ServiceManagerStore = new ServiceManagerStore(options.AzureSignalRServiceTransportType, configuration, loggerFactory);
+            StaticServiceHubContextStore.ServiceManagerStore = serviceManagerStore;
 
             Exception webhookException = null;
             try
