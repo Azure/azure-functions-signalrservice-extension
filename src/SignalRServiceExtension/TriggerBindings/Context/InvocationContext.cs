@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.Extensions.Primitives;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -46,16 +47,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// The headers of request.
         /// </summary>
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, StringValues> Headers { get; set; }
 
         /// <summary>
         /// The query of the request when client connect to the service.
         /// </summary>
-        public IDictionary<string, string> Query { get; set; }
+        public IDictionary<string, StringValues> Query { get; set; }
 
         /// <summary>
         /// The claims of the client.
         /// </summary>
-        public IDictionary<string, string> Claims { get; set; }
+        public IDictionary<string, StringValues> Claims { get; set; }
     }
 }

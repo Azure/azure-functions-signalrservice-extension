@@ -5,7 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.TriggerBindings.Utils;
+using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 { 
@@ -46,7 +52,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             throw new ArgumentException("Connection string missing required properties accessKey.");
         }
 
-        public static IDictionary<string, string> GetQueryDictionary(string queryString)
+        public static IDictionary<string, StringValues> GetQueryDictionary(string queryString)
         {
             if (string.IsNullOrEmpty(queryString))
             {
@@ -56,10 +62,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // The query string looks like "?key1=value1&key2=value2"
             var queryArray = queryString.TrimStart('?').Split(QuerySeparator, StringSplitOptions.RemoveEmptyEntries);
             return queryArray.Select(p => p.Split(KeyValueSeparator, StringSplitOptions.RemoveEmptyEntries))
-                .Where(l => l.Length == 2).ToDictionary(p => p[0].Trim(), p => p[1].Trim());
+                .Where(l => l.Length == 2).ToDictionaryWithStringValues();
         }
 
-        public static IDictionary<string, string> GetClaimDictionary(string claims)
+        public static IDictionary<string, StringValues> GetClaimDictionary(string claims)
         {
             if (string.IsNullOrEmpty(claims))
             {
@@ -69,7 +75,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // The claim string looks like "a: v, b: v"
             return claims.Split(HeaderSeparator, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Split(ClaimsSeparator, StringSplitOptions.RemoveEmptyEntries)).Where(l => l.Length == 2)
-                .ToDictionary(p => p[0].Trim(), p => p[1].Trim());
+                .ToDictionaryWithStringValues();
         }
 
         public static IReadOnlyList<string> GetSignatureList(string signatures)
@@ -82,9 +88,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return signatures.Split(HeaderSeparator, StringSplitOptions.RemoveEmptyEntries);
         }
 
-        public static IDictionary<string, string> GetHeaderDictionary(HttpRequestMessage request)
+        public static IDictionary<string, StringValues> GetHeaderDictionary(HttpRequestHeaders headers)
         {
-            return request.Headers.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FirstOrDefault(), StringComparer.OrdinalIgnoreCase);
+            return headers.ToDictionary(x => x.Key, x => new StringValues(x.Value.ToArray()), StringComparer.OrdinalIgnoreCase);
+        }
+
+        public static JObject ToJObject(this InvocationContext invocationContext)
+        {
+            return JObject.Parse(JsonConvert.SerializeObject(invocationContext, new StringValuesConverter()));
+        }
+
+        private static IDictionary<string, StringValues> ToDictionaryWithStringValues(
+            this IEnumerable<string[]> source)
+        {
+            return source
+                .GroupBy(s => s[0].Trim(),
+                    (k, g) => new KeyValuePair<string, StringValues>(k, g.Select(gk => gk[1].Trim()).ToArray()))
+                .ToDictionary(x => x.Key, x => x.Value);
         }
     }
 }

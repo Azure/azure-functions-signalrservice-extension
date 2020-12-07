@@ -191,7 +191,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 else if (_parameter.ParameterType == typeof(object) ||
                          _parameter.ParameterType == typeof(JObject))
                 {
-                    return Task.FromResult<object>(JObject.FromObject(_value));
+                    return Task.FromResult<object>(_value.ToJObject());
                 }
 
                 return Task.FromResult<object>(null);
