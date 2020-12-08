@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Text;
 
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.TriggerBindings.Utils;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -56,7 +55,7 @@ namespace SignalRServiceExtension.Tests
         public void GetQueryDictionaryTest(string queryString, object expectedResult)
         {
             var result = SignalRTriggerUtils.GetQueryDictionary(queryString);
-            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result, new StringValuesConverter()));
+            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result));
         }
 
         [Theory]
@@ -64,7 +63,7 @@ namespace SignalRServiceExtension.Tests
         public void GetHeaderDictionaryTest(HttpRequestHeaders headers, object expectedResult)
         {
             var result = SignalRTriggerUtils.GetHeaderDictionary(headers);
-            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result, new StringValuesConverter()));
+            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result));
         }
 
         [Theory]
@@ -72,7 +71,7 @@ namespace SignalRServiceExtension.Tests
         public void GetClaimsDictionaryTest(string claims, object expectedResult)
         {
             var result = SignalRTriggerUtils.GetClaimDictionary(claims);
-            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result, new StringValuesConverter()));
+            Assert.Equal(JsonConvert.SerializeObject(expectedResult), JsonConvert.SerializeObject(result));
         }
     }
 }

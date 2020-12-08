@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Azure.WebJobs.Extensions.SignalRService.TriggerBindings.Utils;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

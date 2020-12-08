@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Claims;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
@@ -27,7 +28,7 @@ namespace SignalRServiceExtension.Tests
             var claimTypeList = new string[] { "name", "iat" };
             var configDict = new Dictionary<string, string>() { { Constants.ServiceTransportTypeName, "Transient" } };
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
-            var serviceManagerStore = new ServiceManagerStore(configuration, null);
+            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
             var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionString, hubName);
             var connectionInfo = azureSignalRClient.GetClientConnectionInfo(userId, idToken, claimTypeList);
 
