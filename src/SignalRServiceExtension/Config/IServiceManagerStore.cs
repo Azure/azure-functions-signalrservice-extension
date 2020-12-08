@@ -5,8 +5,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal interface IServiceManagerStore
     {
-        IServiceHubContextStore GetOrAddByConfigurationKey(string configurationKey);
-
-        IServiceHubContextStore GetOrAddByConnectionString(string connectionString);
+        IServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey);
     }
 }
