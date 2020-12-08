@@ -46,17 +46,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         /// <summary>
         /// The headers of request.
+        /// Headers with duplicated key will be joined by comma.
         /// </summary>
-        public IDictionary<string, StringValues> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; }
 
         /// <summary>
         /// The query of the request when client connect to the service.
+        /// Queries with duplicated key will be joined by comma.
         /// </summary>
-        public IDictionary<string, StringValues> Query { get; set; }
+        public IDictionary<string, string> Query { get; set; }
 
         /// <summary>
         /// The claims of the client.
+        /// If you multiple claims have the same key, only the first one will be reserved.
         /// </summary>
-        public IDictionary<string, StringValues> Claims { get; set; }
+        public IDictionary<string, string> Claims { get; set; }
     }
 }
