@@ -93,10 +93,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             return headers.ToDictionary(x => x.Key, x => string.Join(CommaSeparator, x.Value.ToArray()), StringComparer.OrdinalIgnoreCase);
         }
-
-        public static JObject ToJObject(this InvocationContext invocationContext)
-        {
-            return JObject.Parse(JsonConvert.SerializeObject(invocationContext, new StringValuesConverter()));
-        }
     }
 }
