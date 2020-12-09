@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.SignalR.Management" Version="$(MicrosoftAzureSignalRManagement)" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="$(MicrosoftAzureFunctionsExtensionsVersion)" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="$(SystemIdentityModelTokensJwtVersion)"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="$(MicrosoftAspNetCoreSignalRPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
