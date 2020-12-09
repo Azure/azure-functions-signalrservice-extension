@@ -87,7 +87,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 context.Claims = SignalRTriggerUtils.GetClaimDictionary(values.FirstOrDefault());
             }
-            context.Headers = SignalRTriggerUtils.GetHeaderDictionary(request);
+            context.Headers = SignalRTriggerUtils.GetHeaderDictionary(request.Headers);
 
             return true;
         }
