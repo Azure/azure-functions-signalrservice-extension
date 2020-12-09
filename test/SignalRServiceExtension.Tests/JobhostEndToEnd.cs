@@ -8,12 +8,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Config;
-using Microsoft.Azure.WebJobs.Host.Indexers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,7 +23,6 @@ using SignalRServiceExtension.Tests.Utils;
 using SignalRServiceExtension.Tests.Utils.Loggings;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace SignalRServiceExtension.Tests
 {
@@ -68,7 +67,6 @@ namespace SignalRServiceExtension.Tests
             ConnStrOutsideOfAttrConfigDict,
             DiffConfigKeySameConnStrConfigDict,
             DiffConfigKeyDiffConnStrConfigDict,
-            null,
             DiffConfigKeyDiffConnStrConfigDict,
         };
 
@@ -78,7 +76,6 @@ namespace SignalRServiceExtension.Tests
             typeof(SignalRFunctionsWithoutConnectionString),
             typeof(SignalRFunctionsWithConnectionString),
             typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithoutConnectionString),
             typeof(SignalRFunctionsWithMultipleConnectionStrings),
         };
 
@@ -88,13 +85,12 @@ namespace SignalRServiceExtension.Tests
             typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
             typeof(SignalRConnectionInfoFunctionsWithConnectionString),
             typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
             typeof(SignalRConnectionInfoFunctionsWithMultipleConnectionStrings),
         };
 
-        public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRAttribute)}.{nameof(SignalRAttribute.ConnectionStringSetting)}"));
+        public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts);
 
-        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => GenerateTestData(TestClassTypesForSignalRConnectionInfoAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"));
+        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => GenerateTestData(TestClassTypesForSignalRConnectionInfoAttribute, TestConfigDicts);
 
         public JobhostEndToEnd(ITestOutputHelper output)
         {
@@ -104,25 +100,28 @@ namespace SignalRServiceExtension.Tests
         [Theory]
         [MemberData(nameof(SignalRAttributeTestData))]
         [MemberData(nameof(SignalRConnectionInfoAttributeTestData))]
-        public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict, string expectedErrorMessage)
+        public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict)
         {
-            if (configDict != null)
-            {
                 configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
-            }
             _curConfigDict = configDict;
-            var host = TestHelpers.NewHost(classType, configuration: configDict, loggerProvider: new XunitLoggerProvider(_output));
-            if (expectedErrorMessage == null)
-            {
-                await Task.WhenAll(from method in classType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
-                                   select host.GetJobHost().CallAsync($"{classType.Name}.{method.Name}"));
+            await CreateTestTask(classType, configDict);
             }
-            else
+
+        [Fact]
+        public async Task SignalRAttribute_MissingConnectionStringSettingFacts()
             {
-                var indexException = await Assert.ThrowsAsync<FunctionIndexingException>(() => host.StartAsync());
-                Assert.Equal(expectedErrorMessage, indexException.InnerException.Message);
+            var task = CreateTestTask(typeof(SignalRFunctionsWithoutConnectionString), null);
+            var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.Message);
             }
-        }
+
+        [Fact]
+        public async Task SignalRConnectionInfoAttribute_MissingConnectionStringSettingFacts()
+            {
+            var task = CreateTestTask(typeof(SignalRConnectionInfoFunctionsWithoutConnectionString), null);
+            var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.InnerException.Message);
+            }
 
         [Fact]
         [Obsolete]
@@ -153,25 +152,15 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public static string[] GenerateTestExpectedErrorMessages(string attributePropertyName) => new string[]
+        public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts)
         {
-            null,
-            null,
-            null,
-            null,
-            string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributePropertyName),
-            null,
-        };
-
-        public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts, string[] expectedErrorMessages)
+            if (classType.Length != configDicts.Length)
         {
-            if (classType.Length != expectedErrorMessages.Length || classType.Length != configDicts.Length)
-            {
-                throw  new ArgumentException($"Length of {nameof(classType)}, {nameof(configDicts)} and {nameof(expectedErrorMessages)} are not the same.");
+                throw new ArgumentException($"Length of {nameof(classType)} and {nameof(configDicts)}  are not the same.");
             }
-            for (var i = 0; i < expectedErrorMessages.Length; i++)
+            for (var i = 0; i < classType.Length; i++)
             {
-                yield return new object[] { classType[i], configDicts[i], expectedErrorMessages[i] };
+                yield return new object[] { classType[i], configDicts[i] };
             }
         }
 
@@ -203,10 +192,21 @@ namespace SignalRServiceExtension.Tests
                         Arguments = new[] { "message" }
                     });
             }
-            catch
+            catch (AzureSignalRInaccessibleEndpointException)
             {
-                // ignore all the exception, since we only want to test whether the service manager for specific is added in the service manager store
+                // ignore, since we don't really connect to Azure SignalR Service
             }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            }
+
+        private Task CreateTestTask(Type classType, Dictionary<string, string> configuration)
+        {
+            var host = TestHelpers.NewHost(classType, configuration: configuration, loggerProvider: new XunitLoggerProvider(_output));
+            return Task.WhenAll(from method in classType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                                select host.GetJobHost().CallAsync($"{classType.Name}.{method.Name}"));
         }
 
         #region SignalRAttributeTests

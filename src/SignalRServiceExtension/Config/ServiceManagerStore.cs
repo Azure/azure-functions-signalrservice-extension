@@ -41,13 +41,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private IServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
-<<<<<<< HEAD
-            return new ServiceManagerBuilder().WithOptions(o =>
-            {
-                o.ConnectionString = connectionString;
-                o.ServiceTransportType = transportType;
-            }).WithCallingAssembly().Build();
-=======
             return new ServiceCollection().AddSignalRServiceManager()
                 .WithAssembly(Assembly.GetExecutingAssembly())
                 .SetupOptions<ServiceManagerOptions,OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
@@ -63,7 +56,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 .AddSingleton<IServiceHubContextStore, ServiceHubContextStore>()
                 .BuildServiceProvider()
                 .GetRequiredService<IServiceHubContextStore>();
->>>>>>> 5d38c1a (invokes SDK in DI way)
         }
     }
 }

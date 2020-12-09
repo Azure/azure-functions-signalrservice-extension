@@ -3,11 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -89,14 +87,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                         
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
-            signalRConnectionInfoAttributeRule.AddValidator(ValidateSignalRConnectionInfoAttributeBinding);
             signalRConnectionInfoAttributeRule.Bind(inputBindingProvider);
 
             var securityTokenValidationAttributeRule = context.AddBindingRule<SecurityTokenValidationAttribute>();
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
-            signalRAttributeRule.AddValidator(ValidateSignalRAttributeBinding);
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), options);
 
             logger.LogInformation("SignalRService binding initialized");
@@ -105,30 +101,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public Task<HttpResponseMessage> ConvertAsync(HttpRequestMessage input, CancellationToken cancellationToken)
         {
             return _dispatcher.ExecuteAsync(input, cancellationToken);
-        }
-
-        private void ValidateSignalRAttributeBinding(SignalRAttribute attribute, Type type)
-        {
-            ValidateConnectionString(
-                attribute.ConnectionStringSetting,
-                $"{nameof(SignalRAttribute)}.{nameof(SignalRAttribute.ConnectionStringSetting)}");
-        }
-
-        private void ValidateSignalRConnectionInfoAttributeBinding(SignalRConnectionInfoAttribute attribute, Type type)
-        {
-            ValidateConnectionString(
-                attribute.ConnectionStringSetting,
-                $"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}");
-        }
-
-        private void ValidateConnectionString(string attributeConnectionString, string attributeConnectionStringName)
-        {
-            var connectionString = Utils.FirstOrDefault(attributeConnectionString, options.ConnectionString);
-
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException(string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributeConnectionStringName));
-            }
         }
 
         private class SignalROpenType : OpenType.Poco
