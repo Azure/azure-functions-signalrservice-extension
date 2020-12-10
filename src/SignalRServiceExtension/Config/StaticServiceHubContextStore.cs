@@ -7,7 +7,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// A global <see cref="IServiceManagerStore"/> for the extension.
     /// It stores <see cref="IServiceHubContextStore"/> per connection string.
     /// </summary>
-    internal static class StaticServiceHubContextStore
+    public static class StaticServiceHubContextStore
     {
         /// <summary>
         /// Gets <see cref="IServiceHubContextStore"/>. 
