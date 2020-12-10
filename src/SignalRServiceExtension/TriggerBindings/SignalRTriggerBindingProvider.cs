@@ -17,14 +17,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly ISignalRTriggerDispatcher _dispatcher;
         private readonly INameResolver _nameResolver;
-        private readonly SignalROptions _options;
+        private readonly IServiceManagerStore _managerStore;
         private readonly Exception _webhookException;
 
-        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher dispatcher, INameResolver nameResolver, SignalROptions options, Exception webhookException)
+        public SignalRTriggerBindingProvider(ISignalRTriggerDispatcher dispatcher, INameResolver nameResolver, IServiceManagerStore managerStore, Exception webhookException)
         {
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _nameResolver = nameResolver ?? throw new ArgumentNullException(nameof(nameResolver));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _managerStore = managerStore ?? throw new ArgumentNullException(nameof(managerStore));
             _webhookException = webhookException;
         }
 
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentNullException(nameof(context));
             }
-            
+
             var parameterInfo = context.Parameter;
             var attribute = parameterInfo.GetCustomAttribute<SignalRTriggerAttribute>(false);
             if (attribute == null)
@@ -49,8 +49,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
             ValidateSignalRTriggerAttributeBinding(resolvedAttribute);
-            
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher));
+
+            var resolvedConnectionString = GetResolvedConnectionString(attribute.ConnectionStringSetting);
+
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, resolvedConnectionString));
         }
 
         internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
@@ -99,41 +101,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 ? parameterNamesFromAttribute
                 : parameterNames;
 
-            var resolvedConnectionString = GetResolvedConnectionString(
-                typeof(SignalRTriggerAttribute).GetProperty(nameof(attribute.ConnectionStringSetting)),
-                attribute.ConnectionStringSetting);
-
-            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) {ConnectionStringSetting = resolvedConnectionString};
+            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) { ConnectionStringSetting = attribute.ConnectionStringSetting };
         }
 
-        private string GetResolvedConnectionString(PropertyInfo property, string configurationName)
+        private string GetResolvedConnectionString(string connectionStringKey)
         {
-            string resolvedConnectionString;
-            if (!string.IsNullOrWhiteSpace(configurationName))
-            {
-                resolvedConnectionString = _nameResolver.Resolve(configurationName);
-            }
-            else
-            {
-                var attribute = property.GetCustomAttribute<AppSettingAttribute>();
-                if (attribute == null)
-                {
-                    throw new InvalidOperationException($"Unable to get AppSettingAttribute on property {property.Name}");
-                }
-                resolvedConnectionString = _nameResolver.Resolve(attribute.Default);
-            }
-
-            return string.IsNullOrEmpty(resolvedConnectionString)
-                ? _options.ConnectionString
-                : resolvedConnectionString;
+            var monitor = (_managerStore.GetOrAddByConnectionStringKey(connectionStringKey) as ServiceHubContextStore).OptionsMonitor;
+            return monitor.CurrentValue.ConnectionString;
         }
 
         private void ValidateSignalRTriggerAttributeBinding(SignalRTriggerAttribute attribute)
         {
-            if (string.IsNullOrEmpty(attribute.ConnectionStringSetting))
+            if (string.IsNullOrWhiteSpace(attribute.ConnectionStringSetting))
             {
-                throw new InvalidOperationException(string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat,
-                    $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"));
+                throw new InvalidOperationException(
+                    $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)} is not allowed to be null or whitespace.");
             }
             ValidateParameterNames(attribute.ParameterNames);
         }

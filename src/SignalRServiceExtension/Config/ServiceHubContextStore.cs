@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -14,10 +15,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
         private readonly ILoggerFactory loggerFactory;
 
-        public IServiceManager ServiceManager { get; set; }
+        public IServiceManager ServiceManager { get; }
 
-        public ServiceHubContextStore(IServiceManager serviceManager, ILoggerFactory loggerFactory)
+        public IOptionsMonitor<ServiceManagerOptions> OptionsMonitor { get; }
+
+        public ServiceHubContextStore(IOptionsMonitor<ServiceManagerOptions> optionsMonitor, IServiceManager serviceManager, ILoggerFactory loggerFactory)
         {
+            OptionsMonitor = optionsMonitor;
             ServiceManager = serviceManager;
             this.loggerFactory = loggerFactory;
         }

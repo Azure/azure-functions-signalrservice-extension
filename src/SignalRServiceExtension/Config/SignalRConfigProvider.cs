@@ -20,17 +20,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [Extension("SignalR", "signalr")]
     internal class SignalRConfigProvider : IExtensionConfigProvider, IAsyncConverter<HttpRequestMessage, HttpResponseMessage>
     {
-        private readonly IConfiguration configuration;
         private readonly IServiceManagerStore serviceManagerStore;
         private readonly INameResolver nameResolver;
         private readonly ILogger logger;
-        private readonly SignalROptions options;
-        private readonly ILoggerFactory loggerFactory;
         private readonly ISignalRTriggerDispatcher _dispatcher;
         private readonly InputBindingProvider inputBindingProvider;
 
         public SignalRConfigProvider(
-            IOptions<SignalROptions> options,
             INameResolver nameResolver,
             ILoggerFactory loggerFactory,
             IConfiguration configuration,
@@ -38,11 +34,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             ISecurityTokenValidator securityTokenValidator = null,
             ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer = null)
         {
-            this.options = options.Value;
-            this.loggerFactory = loggerFactory;
             this.logger = loggerFactory.CreateLogger(LogCategories.CreateTriggerCategory("SignalR"));
             this.nameResolver = nameResolver;
-            this.configuration = configuration;
             this.serviceManagerStore = serviceManagerStore;
             this._dispatcher = new SignalRTriggerDispatcher();
             inputBindingProvider = new InputBindingProvider(configuration, nameResolver, securityTokenValidator, signalRConnectionInfoConfigurer);
@@ -55,11 +48,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (context == null)
             {
                 throw new ArgumentNullException("context");
-            }
-
-            if (string.IsNullOrEmpty(options.ConnectionString))
-            {
-                options.ConnectionString = nameResolver.Resolve(Constants.AzureSignalRConnectionStringName);
             }
 
             StaticServiceHubContextStore.ServiceManagerStore = serviceManagerStore;
@@ -83,7 +71,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             // Trigger binding rule
             var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
             triggerBindingRule.AddConverter<InvocationContext, JObject>(JObject.FromObject);
-            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, options, webhookException));
+            triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, serviceManagerStore, webhookException));
                         
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
@@ -93,7 +81,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
-            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>), options);
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>));
 
             logger.LogInformation("SignalRService binding initialized");
         }

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using SignalRServiceExtension.Tests.Utils;
 using Xunit;
 
@@ -91,8 +91,10 @@ namespace SignalRServiceExtension.Tests
 
         private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null)
         {
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
+            configuration[Constants.AzureSignalRConnectionStringName]= "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new SignalROptions(), exception);
+            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new ServiceManagerStore(configuration, NullLoggerFactory.Instance), exception);
         }
 
         public class TestServerlessHub : ServerlessHub
