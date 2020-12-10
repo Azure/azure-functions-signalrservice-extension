@@ -43,7 +43,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             return new ServiceCollection().AddSignalRServiceManager()
                 .WithAssembly(Assembly.GetExecutingAssembly())
-                .SetupOptions<ServiceManagerOptions,OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
+                .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
                 .PostConfigure<ServiceManagerOptions>(o =>
                 {
                     if (string.IsNullOrWhiteSpace(o.ConnectionString))

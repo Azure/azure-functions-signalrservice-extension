@@ -12,9 +12,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class OptionsSetup : IConfigureOptions<ServiceManagerOptions>, IOptionsChangeTokenSource<ServiceManagerOptions>
     {
-        private readonly IConfiguration _configuration;
-        private readonly string _ConnectionStringKey;
-        private readonly ILogger _logger;
+        private readonly IConfiguration configuration;
+        private readonly string connectionStringKey;
+        private readonly ILogger logger;
 
         public OptionsSetup(IConfiguration configuration, ILoggerFactory loggerFactory, string connectionStringKey)
         {
@@ -28,17 +28,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentException($"'{nameof(connectionStringKey)}' cannot be null or whitespace", nameof(connectionStringKey));
             }
 
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _ConnectionStringKey = connectionStringKey;
-            _logger = loggerFactory.CreateLogger<OptionsSetup>();
+            this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            this.connectionStringKey = connectionStringKey;
+            logger = loggerFactory.CreateLogger<OptionsSetup>();
         }
 
         public string Name => Options.DefaultName;
 
         public void Configure(ServiceManagerOptions options)
         {
-            options.ConnectionString = _configuration[_ConnectionStringKey];
-            var serviceTransportTypeStr = _configuration[Constants.ServiceTransportTypeName];
+            options.ConnectionString = configuration[connectionStringKey];
+            var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {
                 options.ServiceTransportType = transport;
@@ -46,14 +46,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             else
             {
                 options.ServiceTransportType = ServiceTransportType.Transient;
-                _logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {ServiceTransportType.Transient} instead.");
+                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {ServiceTransportType.Transient} instead.");
             }
-            options.ConnectionCount = 3;//make connection more stable
+            //make connection more stable
+            options.ConnectionCount = 3;
         }
 
         public IChangeToken GetChangeToken()
         {
-            return _configuration.GetReloadToken();
+            return configuration.GetReloadToken();
         }
     }
 }

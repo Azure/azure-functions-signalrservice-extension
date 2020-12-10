@@ -102,26 +102,26 @@ namespace SignalRServiceExtension.Tests
         [MemberData(nameof(SignalRConnectionInfoAttributeTestData))]
         public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict)
         {
-                configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
+            configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
             _curConfigDict = configDict;
             await CreateTestTask(classType, configDict);
-            }
+        }
 
         [Fact]
         public async Task SignalRAttribute_MissingConnectionStringSettingFacts()
-            {
+        {
             var task = CreateTestTask(typeof(SignalRFunctionsWithoutConnectionString), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
             Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.Message);
-            }
+        }
 
         [Fact]
         public async Task SignalRConnectionInfoAttribute_MissingConnectionStringSettingFacts()
-            {
+        {
             var task = CreateTestTask(typeof(SignalRConnectionInfoFunctionsWithoutConnectionString), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
             Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.InnerException.Message);
-            }
+        }
 
         [Fact]
         [Obsolete]
