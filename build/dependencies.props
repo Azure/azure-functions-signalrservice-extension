@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
-    <MicrosoftAzureSignalRManagement>1.4.1</MicrosoftAzureSignalRManagement>
+    <MicrosoftAzureSignalRManagement>1.6.2-preview1-10689</MicrosoftAzureSignalRManagement>
     <MicrosoftAzureFunctionsExtensionsVersion>1.0.0</MicrosoftAzureFunctionsExtensionsVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
@@ -15,7 +15,8 @@
     <NewtonsoftJsonPackageVersion>11.0.2</NewtonsoftJsonPackageVersion>
     <SystemMemoryPackageVersion>4.5.3</SystemMemoryPackageVersion>
     <MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>1.1.5</MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>
-
+    <SystemIdentityModelTokensJwtVersion>5.5.0</SystemIdentityModelTokensJwtVersion>
+    <MicrosoftAspNetCoreSignalRPackageVersion>1.0.0</MicrosoftAspNetCoreSignalRPackageVersion>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>

@@ -3,8 +3,11 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Reflection;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -12,7 +15,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class ServiceManagerStore : IServiceManagerStore
     {
         private readonly ILoggerFactory loggerFactory;
-        private readonly ServiceTransportType transportType;
         private readonly IConfiguration configuration;
         private readonly ConcurrentDictionary<string, IServiceHubContextStore> store = new ConcurrentDictionary<string, IServiceHubContextStore>();
 
@@ -20,50 +22,40 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             this.loggerFactory = loggerFactory;
             this.configuration = configuration;
-            var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
-            var logger = loggerFactory.CreateLogger<ServiceManagerStore>();
-            if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
+        }
+
+        public IServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey)
+        {
+            if (string.IsNullOrWhiteSpace(connectionStringKey))
             {
-                this.transportType = transport;
+                throw new ArgumentException($"'{nameof(connectionStringKey)}' cannot be null or whitespace", nameof(connectionStringKey));
             }
-            else
-            {
-                this.transportType = ServiceTransportType.Transient;
-                logger.LogWarning($"Unsupported service transport type: {serviceTransportTypeStr}. Use default {transportType} instead.");
-            }
+            return store.GetOrAdd(connectionStringKey, CreateHubContextStore);
         }
 
-        public IServiceHubContextStore GetOrAddByConfigurationKey(string configurationKey)
+        //test only
+        public IServiceHubContextStore GetByConfigurationKey(string connectionStringKey)
         {
-            string connectionString = configuration[configurationKey];
-            return GetOrAddByConnectionString(connectionString);
+            return store.ContainsKey(connectionStringKey) ? store[connectionStringKey] : null;
         }
 
-        public IServiceHubContextStore GetOrAddByConnectionString(string connectionString)
+        private IServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
-            return store.GetOrAdd(connectionString, CreateHubContextStore);
-        }
-
-        // test only
-        public IServiceHubContextStore GetByConfigurationKey(string configurationKey)
-        {
-            string connectionString = configuration[configurationKey];
-            return store.ContainsKey(connectionString) ? store[connectionString] : null;
-        }
-
-        private IServiceHubContextStore CreateHubContextStore(string connectionString)
-        {
-            var serviceManager = CreateServiceManager(connectionString);
-            return new ServiceHubContextStore(serviceManager, loggerFactory);
-        }
-
-        private IServiceManager CreateServiceManager(string connectionString)
-        {
-            return new ServiceManagerBuilder().WithOptions(o =>
-            {
-                o.ConnectionString = connectionString;
-                o.ServiceTransportType = transportType;
-            }).WithCallingAssembly().Build();
+            return new ServiceCollection().AddSignalRServiceManager()
+                .WithAssembly(Assembly.GetExecutingAssembly())
+                .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
+                .PostConfigure<ServiceManagerOptions>(o =>
+                {
+                    if (string.IsNullOrWhiteSpace(o.ConnectionString))
+                    {
+                        throw new InvalidOperationException(ErrorMessages.EmptyConnectionStringErrorMessageFormat);
+                    }
+                })
+                .AddSingleton(loggerFactory)
+                .AddSingleton(configuration)
+                .AddSingleton<IServiceHubContextStore, ServiceHubContextStore>()
+                .BuildServiceProvider()
+                .GetRequiredService<IServiceHubContextStore>();
         }
     }
 }
