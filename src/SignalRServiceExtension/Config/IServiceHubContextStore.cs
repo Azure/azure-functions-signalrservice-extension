@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -24,5 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// The <see cref="IServiceManager"/> is used to create <see cref="IServiceHubContext"/>.
         /// </summary>
         IServiceManager ServiceManager { get; }
+
+        internal string AccessKey { get; }
     }
 }

@@ -16,41 +16,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 { 
     internal static class SignalRTriggerUtils
     {
-        private const string AccessKeyProperty = "accesskey";
         private const string CommaSeparator = ",";
-        private static readonly char[] PropertySeparator = { ';' };
-        private static readonly char[] KeyValueSeparator = { '=' };
-        private static readonly char[] QuerySeparator = { '&' };
         private static readonly char[] HeaderSeparator = { ',' };
         private static readonly string[] ClaimsSeparator = { ": " };
 
-        public static string GetAccessKey(string connectionString)
-        {
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                return null;
-            }
-
-            var properties = connectionString.Split(PropertySeparator, StringSplitOptions.RemoveEmptyEntries);
-            if (properties.Length < 2)
-            {
-                throw new ArgumentException("Connection string missing required properties endpoint and accessKey.");
-            }
-
-            foreach (var property in properties)
-            {
-                var kvp = property.Split(KeyValueSeparator, 2);
-                if (kvp.Length != 2) continue;
-
-                var key = kvp[0].Trim();
-                if (string.Equals(key, AccessKeyProperty, StringComparison.OrdinalIgnoreCase))
-                {
-                    return kvp[1].Trim();
-                }
-            }
-
-            throw new ArgumentException("Connection string missing required properties accessKey.");
-        }
 
         public static IDictionary<string, string> GetQueryDictionary(string queryString)
         {

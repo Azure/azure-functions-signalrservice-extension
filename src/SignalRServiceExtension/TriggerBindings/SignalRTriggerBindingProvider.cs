@@ -50,9 +50,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
             ValidateSignalRTriggerAttributeBinding(resolvedAttribute);
 
-            var resolvedConnectionString = GetResolvedConnectionString(attribute.ConnectionStringSetting);
+            var accessKey = _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).AccessKey;
 
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, resolvedConnectionString));
+            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKey));
         }
 
         internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
@@ -102,12 +102,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 : parameterNames;
 
             return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) { ConnectionStringSetting = attribute.ConnectionStringSetting };
-        }
-
-        private string GetResolvedConnectionString(string connectionStringKey)
-        {
-            var monitor = (_managerStore.GetOrAddByConnectionStringKey(connectionStringKey) as ServiceHubContextStore).OptionsMonitor;
-            return monitor.CurrentValue.ConnectionString;
         }
 
         private void ValidateSignalRTriggerAttributeBinding(SignalRTriggerAttribute attribute)
