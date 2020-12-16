@@ -16,7 +16,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfiguration configuration;
-        private readonly ConcurrentDictionary<string, IServiceHubContextStore> store = new ConcurrentDictionary<string, IServiceHubContextStore>();
+        private readonly ConcurrentDictionary<string, IInternalServiceHubContextStore> store = new ConcurrentDictionary<string, IInternalServiceHubContextStore>();
 
         public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory)
         {
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.configuration = configuration;
         }
 
-        public IServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey)
+        public IInternalServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey)
         {
             if (string.IsNullOrWhiteSpace(connectionStringKey))
             {
@@ -34,12 +34,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
 
         //test only
-        public IServiceHubContextStore GetByConfigurationKey(string connectionStringKey)
+        public IInternalServiceHubContextStore GetByConfigurationKey(string connectionStringKey)
         {
             return store.ContainsKey(connectionStringKey) ? store[connectionStringKey] : null;
         }
 
-        private IServiceHubContextStore CreateHubContextStore(string connectionStringKey)
+        private IInternalServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
             return new ServiceCollection().AddSignalRServiceManager()
                 .WithAssembly(Assembly.GetExecutingAssembly())
@@ -53,9 +53,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 })
                 .AddSingleton(loggerFactory)
                 .AddSingleton(configuration)
-                .AddSingleton<IServiceHubContextStore, ServiceHubContextStore>()
+                .AddSingleton<IInternalServiceHubContextStore, ServiceHubContextStore>()
                 .BuildServiceProvider()
-                .GetRequiredService<IServiceHubContextStore>();
+                .GetRequiredService<IInternalServiceHubContextStore>();
         }
     }
 }

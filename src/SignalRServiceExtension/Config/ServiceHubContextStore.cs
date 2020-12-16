@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class ServiceHubContextStore : IServiceHubContextStore
+    internal class ServiceHubContextStore : IInternalServiceHubContextStore
     {
         private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
         private readonly ILoggerFactory loggerFactory;
@@ -19,7 +19,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public IServiceManager ServiceManager { get; }
 
-        string IServiceHubContextStore.AccessKey => new ServiceEndpoint(monitor.CurrentValue.ConnectionString).AccessKey.Value;
+        public string AccessKey => new ServiceEndpoint(monitor.CurrentValue.ConnectionString).AccessKey.Value;
 
         public ServiceHubContextStore(IOptionsMonitor<ServiceManagerOptions> optionsMonitor, IServiceManager serviceManager, ILoggerFactory loggerFactory)
         {
