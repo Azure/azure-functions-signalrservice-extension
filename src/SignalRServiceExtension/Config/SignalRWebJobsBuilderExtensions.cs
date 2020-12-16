@@ -25,20 +25,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            builder.AddExtension<SignalRConfigProvider>()
-                .ConfigureOptions<SignalROptions>(ApplyConfiguration);
+            builder.AddExtension<SignalRConfigProvider>();
             builder.Services.AddSingleton<IServiceManagerStore, ServiceManagerStore>();
             return builder;
-        }
-
-        private static void ApplyConfiguration(IConfiguration config, SignalROptions options)
-        {
-            if (config == null)
-            {
-                return;
-            }
-
-            config.Bind(options);
         }
     }
 }

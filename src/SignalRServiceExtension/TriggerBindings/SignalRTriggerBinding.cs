@@ -5,10 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -24,12 +22,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly ParameterInfo _parameterInfo;
         private readonly SignalRTriggerAttribute _attribute;
         private readonly ISignalRTriggerDispatcher _dispatcher;
+        private readonly string _accessKey;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, string accessKey)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+            _accessKey = accessKey ?? throw new ArgumentNullException(nameof(accessKey));
             BindingDataContract = CreateBindingContract(_attribute, _parameterInfo);
         }
 
@@ -72,7 +72,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             // It's not a real listener, and it doesn't need a start or close.
             _dispatcher.Map((_attribute.HubName, _attribute.Category, _attribute.Event),
-                new ExecutionContext{Executor = context.Executor, AccessKey = SignalRTriggerUtils.GetAccessKey(_attribute.ConnectionStringSetting)});
+                new ExecutionContext { Executor = context.Executor, AccessKey = _accessKey });
 
             return Task.FromResult<IListener>(new NullListener());
         }
@@ -244,4 +244,4 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
     }
-}
+} 
