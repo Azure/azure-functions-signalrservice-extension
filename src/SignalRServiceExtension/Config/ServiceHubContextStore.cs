@@ -19,7 +19,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public IServiceManager ServiceManager { get; }
 
-        public string AccessKey => new ServiceEndpoint(monitor.CurrentValue.ConnectionString).AccessKey.Value;
+        public AccessKey[] AccessKeys => new AccessKey[] { new ServiceEndpoint(monitor.CurrentValue.ConnectionString).AccessKey };
 
         public ServiceHubContextStore(IOptionsMonitor<ServiceManagerOptions> optionsMonitor, IServiceManager serviceManager, ILoggerFactory loggerFactory)
         {
