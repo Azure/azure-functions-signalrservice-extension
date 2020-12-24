@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Serverless.Protocols;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -35,30 +36,45 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return contentType == Constants.JsonContentType || contentType == Constants.MessagePackContentType;
         }
 
-        // The algorithm is defined in spec: Hex_encoded(HMAC_SHA256(access-key, connection-id))
-        public bool ValidateSignature(HttpRequestMessage request, string accessToken)
+         // The algorithm is defined in spec: Hex_encoded(HMAC_SHA256(access-key, connection-id))
+        public bool ValidateSignature(HttpRequestMessage request, AccessKey[] accessKeys)
         {
             if (!_validateSignature)
             {
                 return true;
             }
 
-            if (!string.IsNullOrEmpty(accessToken) &&
-                request.Headers.TryGetValues(Constants.AsrsSignature, out var values))
+            if (accessKeys is null)
             {
-                var signatures = SignalRTriggerUtils.GetSignatureList(values.FirstOrDefault());
-                if (signatures == null)
-                {
-                    return false;
-                }
-                using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(accessToken)))
-                {
-                    var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Headers.GetValues(Constants.AsrsConnectionIdHeader).First()));
-                    var hash = "sha256=" + BitConverter.ToString(hashBytes).Replace("-", "");
-                    return signatures.Contains(hash, StringComparer.OrdinalIgnoreCase);
-                }
+                throw new ArgumentNullException(nameof(accessKeys));
             }
 
+            foreach (var accessKey in accessKeys)
+            {
+                var accessToken = accessKey.Value;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                     request.Headers.TryGetValues(Constants.AsrsSignature, out var values))
+                {
+                    var signatures = SignalRTriggerUtils.GetSignatureList(values.FirstOrDefault());
+                    if (signatures == null)
+                    {
+                        continue;
+                    }
+                    using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(accessToken)))
+                    {
+                        var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(request.Headers.GetValues(Constants.AsrsConnectionIdHeader).First()));
+                        var hash = "sha256=" + BitConverter.ToString(hashBytes).Replace("-", "");
+                        if (signatures.Contains(hash, StringComparer.OrdinalIgnoreCase))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
             return false;
         }
 
