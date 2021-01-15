@@ -8,8 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Common;
-using Microsoft.Azure.SignalR.Management;
+using Microsoft.Azure.SignalR.Common; 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
@@ -62,30 +61,40 @@ namespace SignalRServiceExtension.Tests
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
+        public static Dictionary<string, string> MultiConnStrOutsideOfAttrConfigDict = new Dictionary<string, string>
+        {
+            [AttrConnStrConfigKey] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey + ":a"] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey + ":b:primary"] = DefaultAttributeConnectionString
+        };
+
         public static Dictionary<string, string>[] TestConfigDicts = {
             ConnStrInsideOfAttrConfigDict,
             ConnStrOutsideOfAttrConfigDict,
             DiffConfigKeySameConnStrConfigDict,
             DiffConfigKeyDiffConnStrConfigDict,
             DiffConfigKeyDiffConnStrConfigDict,
+            MultiConnStrOutsideOfAttrConfigDict
         };
 
         public static Type[] TestClassTypesForSignalRAttribute =
         {
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithoutConnectionString),
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithMultipleConnectionStrings),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctions),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctionsWithMultiKeys),
+            typeof(SignalRFunctionsWithCustomizedKey),
         };
 
         public static Type[] TestClassTypesForSignalRConnectionInfoAttribute =
         {
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithMultipleConnectionStrings),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctions),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctionsWithMultiKeys),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
         };
 
         public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts);
@@ -102,7 +111,6 @@ namespace SignalRServiceExtension.Tests
         [MemberData(nameof(SignalRConnectionInfoAttributeTestData))]
         public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict)
         {
-            configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
             _curConfigDict = configDict;
             await CreateTestTask(classType, configDict);
         }
@@ -110,7 +118,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task SignalRAttribute_MissingConnectionStringSettingFacts()
         {
-            var task = CreateTestTask(typeof(SignalRFunctionsWithoutConnectionString), null);
+            var task = CreateTestTask(typeof(SignalRFunctions), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
             Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.Message);
         }
@@ -118,7 +126,7 @@ namespace SignalRServiceExtension.Tests
         [Fact]
         public async Task SignalRConnectionInfoAttribute_MissingConnectionStringSettingFacts()
         {
-            var task = CreateTestTask(typeof(SignalRConnectionInfoFunctionsWithoutConnectionString), null);
+            var task = CreateTestTask(typeof(SignalRConnectionInfoFunctions), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
             Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.InnerException.Message);
         }
@@ -210,7 +218,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         #region SignalRAttributeTests
-        public class SignalRFunctionsWithConnectionString
+        public class SignalRFunctionsWithCustomizedKey
         {
             public async Task Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -219,7 +227,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRFunctionsWithoutConnectionString
+        public class SignalRFunctions
         {
             public async Task Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -228,7 +236,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRFunctionsWithMultipleConnectionStrings
+        public class SignalRFunctionsWithMultiKeys
         {
             public async Task Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -245,7 +253,7 @@ namespace SignalRServiceExtension.Tests
         #endregion
 
         #region SignalRConnectionInfoAttributeTests
-        public class SignalRConnectionInfoFunctionsWithConnectionString
+        public class SignalRConnectionInfoFunctionsWithCustomizedKey
         {
             public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] SignalRConnectionInfo connectionInfo)
             {
@@ -253,7 +261,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRConnectionInfoFunctionsWithoutConnectionString
+        public class SignalRConnectionInfoFunctions
         {
             public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName)] SignalRConnectionInfo connectionInfo)
             {
@@ -261,7 +269,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRConnectionInfoFunctionsWithMultipleConnectionStrings
+        public class SignalRConnectionInfoFunctionsWithMultiKeys
         {
             public void Func1([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] SignalRConnectionInfo connectionInfo)
             {

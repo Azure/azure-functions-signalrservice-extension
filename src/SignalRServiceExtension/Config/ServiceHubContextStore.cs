@@ -1,38 +1,35 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceHubContextStore : IInternalServiceHubContextStore
     {
         private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
-        private readonly ILoggerFactory loggerFactory;
-        private readonly IOptionsMonitor<ServiceManagerOptions> monitor;
+        private readonly IServiceEndpointManager endpointManager;
 
         public IServiceManager ServiceManager { get; }
 
-        public AccessKey[] AccessKeys => new AccessKey[] { new ServiceEndpoint(monitor.CurrentValue.ConnectionString).AccessKey };
+        public AccessKey[] AccessKeys => endpointManager.Endpoints.Keys.Select(endpoint => endpoint.AccessKey).ToArray();
 
-        public ServiceHubContextStore(IOptionsMonitor<ServiceManagerOptions> optionsMonitor, IServiceManager serviceManager, ILoggerFactory loggerFactory)
+        public ServiceHubContextStore(IServiceEndpointManager endpointManager, IServiceManager serviceManager)
         {
-            monitor = optionsMonitor;
+            this.endpointManager = endpointManager;
             ServiceManager = serviceManager;
-            this.loggerFactory = loggerFactory;
         }
 
         public ValueTask<IServiceHubContext> GetAsync(string hubName)
         {
             var pair = store.GetOrAdd(hubName, 
                 (new Lazy<Task<IServiceHubContext>>(
-                    () => ServiceManager.CreateHubContextAsync(hubName, loggerFactory)), default));
+                    () => ServiceManager.CreateHubContextAsync(hubName)), default));
             return GetAsyncCore(hubName, pair);
         }
 

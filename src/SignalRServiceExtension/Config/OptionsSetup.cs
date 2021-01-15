@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -38,6 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public void Configure(ServiceManagerOptions options)
         {
             options.ConnectionString = configuration[connectionStringKey];
+            options.ServiceEndpoints = configuration.GetEndpoints(connectionStringKey).ToArray();
             var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {
