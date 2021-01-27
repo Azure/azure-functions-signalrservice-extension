@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.SignalR;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Runtime.Serialization;
@@ -25,6 +26,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public string GroupName { get; set; }
         [JsonProperty("action"), JsonRequired]
         public GroupAction Action { get; set; }
+        [JsonProperty("endpoints")]
+        public ServiceEndpoint[] Endpoints { get; set; }
     }
 
     [JsonConverter(typeof(StringEnumConverter))]
