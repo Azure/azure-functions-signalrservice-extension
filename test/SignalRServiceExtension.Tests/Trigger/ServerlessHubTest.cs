@@ -1,9 +1,13 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
@@ -15,6 +19,7 @@ namespace SignalRServiceExtension.Tests.Trigger
     public class ServerlessHubTest
     {
         [Fact]
+        [Obsolete]
         private async Task ServerlessHubUnitTest()
         {
             var clientProxyMoc = new Mock<IClientProxy>();
@@ -46,11 +51,12 @@ namespace SignalRServiceExtension.Tests.Trigger
     public class MyHub : ServerlessHub
     {
         // Use default value = null to reconcile testing and production purpose.
-        public MyHub(IServiceHubContext serviceHubContext = null, IServiceManager serviceManager = null): base(serviceHubContext, serviceManager)
+        public MyHub(IServiceHubContext serviceHubContext = null, IServiceManager serviceManager = null) : base(serviceHubContext, serviceManager)
         {
         }
 
         [FunctionName("negotiate")]
+        [Obsolete]
         public SignalRConnectionInfo Negotiate(string userId)
         {
             return base.Negotiate(userId);

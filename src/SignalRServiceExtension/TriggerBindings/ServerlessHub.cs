@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.SignalR.Management;
 
@@ -27,6 +29,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private static readonly Lazy<JwtSecurityTokenHandler> JwtSecurityTokenHandler = new Lazy<JwtSecurityTokenHandler>(() => new JwtSecurityTokenHandler());
         private bool _disposed;
+        private readonly IInternalServiceHubContext _hubContext;
         private readonly IServiceManager _serviceManager;
 
         /// <summary>
@@ -41,6 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
+            _hubContext = hubContext as IInternalServiceHubContext;
         }
 
         /// <summary>
@@ -64,15 +68,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public string HubName { get; }
 
         /// <summary>
-        /// Return a <see cref="SignalRConnectionInfo"/> to finish a client negotiation.
+        /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
         /// </summary>
-        protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifeTime = null)
+        [Obsolete("Please use async version instead.")]
+        protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null, HttpContext httpContext = null)
         {
-            return new SignalRConnectionInfo
+            return NegotiateAsync(userId, claims, lifetime, httpContext).Result;
+        }
+
+        /// <summary>
+        /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
+        /// </summary>
+        protected async Task<SignalRConnectionInfo> NegotiateAsync(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null, HttpContext httpContext = null)
+        {
+            if (_hubContext != null)
             {
-                Url = _serviceManager.GetClientEndpoint(HubName),
-                AccessToken = _serviceManager.GenerateClientAccessToken(HubName, userId, claims, lifeTime)
-            };
+                var negotiateResponse = await _hubContext.NegotiateAsync(httpContext, userId, claims, lifetime);
+                return new SignalRConnectionInfo
+                {
+                    Url = negotiateResponse.Url,
+                    AccessToken = negotiateResponse.AccessToken
+                };
+            }
+            else
+            {
+                //fall back to single endpoint negotiation
+                return new SignalRConnectionInfo
+                {
+                    Url = _serviceManager.GetClientEndpoint(HubName),
+                    AccessToken = _serviceManager.GenerateClientAccessToken(HubName, userId, claims, lifetime)
+                };
+            }
         }
 
         /// <summary>
@@ -103,7 +129,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return;
             }
-                
+
             Dispose(true);
             _disposed = true;
         }

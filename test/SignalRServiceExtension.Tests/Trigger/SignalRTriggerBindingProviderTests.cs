@@ -94,7 +94,7 @@ namespace SignalRServiceExtension.Tests
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             configuration[Constants.AzureSignalRConnectionStringName]= "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new ServiceManagerStore(configuration, NullLoggerFactory.Instance), exception);
+            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new ServiceManagerStore(configuration, NullLoggerFactory.Instance, null), exception);
         }
 
         public class TestServerlessHub : ServerlessHub

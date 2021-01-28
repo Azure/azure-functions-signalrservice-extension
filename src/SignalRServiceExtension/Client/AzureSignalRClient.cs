@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -17,6 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class AzureSignalRClient : IAzureSignalRSender
     {
         public const string AzureSignalRUserPrefix = "asrs.u.";
+
         private static readonly string[] SystemClaims =
         {
             "aud", // Audience claim, used by service to make sure token is matched with target resource.
@@ -24,6 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             "iat", // Issued At claim. Added by default. It is not validated by service.
             "nbf"  // Not Before claim. Added by default. It is not validated by service.
         };
+
         private readonly IServiceManagerStore serviceManagerStore;
         private readonly string connectionStringKey;
 
@@ -36,27 +39,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.connectionStringKey = connectionStringKey;
         }
 
-        public SignalRConnectionInfo GetClientConnectionInfo(string userId, string idToken, string[] claimTypeList)
+        public Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, string idToken, string[] claimTypeList)
         {
             var customerClaims = GetCustomClaims(idToken, claimTypeList);
-            var serviceManager = serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).ServiceManager;
-
-            return new SignalRConnectionInfo
-            {
-                Url = serviceManager.GetClientEndpoint(HubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(
-                    HubName, userId, BuildJwtClaims(customerClaims, AzureSignalRUserPrefix).ToList())
-            };
+            return GetClientConnectionInfoAsync(userId, customerClaims);
         }
 
-        public SignalRConnectionInfo GetClientConnectionInfo(string userId, IList<Claim> claims)
+        public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims)
         {
-            var serviceManager = serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).ServiceManager;
+            var serviceHubContext = (await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName)) as IInternalServiceHubContext;
+            var negotiateResponse = await serviceHubContext.NegotiateAsync(null, userId, BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList());
             return new SignalRConnectionInfo
             {
-                Url = serviceManager.GetClientEndpoint(HubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(
-                    HubName, userId, BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList())
+                Url = negotiateResponse.Url,
+                AccessToken = negotiateResponse.AccessToken
             };
         }
 

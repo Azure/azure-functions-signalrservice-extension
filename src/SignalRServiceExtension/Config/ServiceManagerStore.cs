@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
@@ -16,12 +18,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly IConfiguration configuration;
+        private readonly IEndpointRouter router;
         private readonly ConcurrentDictionary<string, IInternalServiceHubContextStore> store = new ConcurrentDictionary<string, IInternalServiceHubContextStore>();
 
-        public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory, IEndpointRouter router = null)
         {
             this.loggerFactory = loggerFactory;
             this.configuration = configuration;
+            this.router = router;
         }
 
         public IInternalServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey)
@@ -41,21 +45,26 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private IInternalServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
-            return new ServiceCollection().AddSignalRServiceManager()
+            var services = new ServiceCollection()
                 .WithAssembly(Assembly.GetExecutingAssembly())
                 .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
                 .PostConfigure<ServiceManagerOptions>(o =>
                 {
-                    if (string.IsNullOrWhiteSpace(o.ConnectionString))
+                    if ((o.ServiceEndpoints == null || o.ServiceEndpoints.Length == 0) && string.IsNullOrWhiteSpace(o.ConnectionString))
                     {
                         throw new InvalidOperationException(ErrorMessages.EmptyConnectionStringErrorMessageFormat);
                     }
                 })
+                .AddSignalRServiceManager()
                 .AddSingleton(loggerFactory)
-                .AddSingleton(configuration)
-                .AddSingleton<IInternalServiceHubContextStore, ServiceHubContextStore>()
-                .BuildServiceProvider()
-                .GetRequiredService<IInternalServiceHubContextStore>();
+                .AddSingleton<IInternalServiceHubContextStore, ServiceHubContextStore>();
+            if (router != null)
+            {
+                services.AddSingleton(router);
+            }
+            services.AddSingleton(services.ToList() as IReadOnlyCollection<ServiceDescriptor>);
+            return services.BuildServiceProvider()
+               .GetRequiredService<IInternalServiceHubContextStore>();
         }
     }
 }
