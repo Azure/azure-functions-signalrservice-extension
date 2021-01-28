@@ -57,8 +57,7 @@ namespace SignalRServiceExtension.Tests
         } }))
                 .ConfigureWebJobs(b => b.AddSignalR()).Build();
             var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as IInternalServiceHubContext;
-            var exp = await Assert.ThrowsAsync<AzureSignalRException>(() => hubContext.NegotiateAsync());
-            Assert.IsType<AzureSignalRNotConnectedException>(exp.InnerException);
+            await Assert.ThrowsAsync<AzureSignalRNotConnectedException>(() => hubContext.NegotiateAsync());
         }
     }
 }
