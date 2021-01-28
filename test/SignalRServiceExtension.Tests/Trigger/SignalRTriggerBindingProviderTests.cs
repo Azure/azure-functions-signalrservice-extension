@@ -72,6 +72,22 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
+        public void ResolveNonServerlessHubAttributeExpressionBindingParameterTest()
+        {
+            var bindingProvider = CreateBindingProvider();
+            var attribute = new SignalRTriggerAttribute(
+                "%Serverless_ExpressionBindings_HubName%",
+                "%Serverless_ExpressionBindings_HubCategory%",
+                "%Serverless_ExpressionBindings_HubEvent%");
+            var parameter = typeof(TestNonServerlessHub).GetMethod(nameof(TestNonServerlessHub.TestFunction), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
+            var resolvedAttribute = bindingProvider.GetParameterResolvedAttribute(attribute, parameter);
+            Assert.Equal("test_hub", resolvedAttribute.HubName);
+            Assert.Equal("connections", resolvedAttribute.Category);
+            Assert.Equal("connected", resolvedAttribute.Event);
+            Assert.Equal(new string[] { "arg0", "arg1" }, resolvedAttribute.ParameterNames);
+        }
+
+        [Fact]
         public void ResolveAttributeParameterConflictTest()
         {
             var bindingProvider = CreateBindingProvider();
@@ -93,8 +109,11 @@ namespace SignalRServiceExtension.Tests
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             configuration[Constants.AzureSignalRConnectionStringName]= "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
+            configuration["Serverless_ExpressionBindings_HubName"] = "test_hub";
+            configuration["Serverless_ExpressionBindings_HubCategory"] = "connections";
+            configuration["Serverless_ExpressionBindings_HubEvent"] = "connected";
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(new ConfigurationSection(new ConfigurationRoot(new List<IConfigurationProvider>()), String.Empty)), new ServiceManagerStore(configuration, NullLoggerFactory.Instance, null), exception);
+            return new SignalRTriggerBindingProvider(dispatcher, new DefaultNameResolver(configuration), new ServiceManagerStore(configuration, NullLoggerFactory.Instance, null), exception);
         }
 
         public class TestServerlessHub : ServerlessHub

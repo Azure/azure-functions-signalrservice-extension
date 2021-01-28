@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Logging;
 
@@ -95,6 +96,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     throw new InvalidOperationException(
                         $"{nameof(SignalRTriggerAttribute)}.{nameof(SignalRTriggerAttribute.ParameterNames)} and {nameof(SignalRParameterAttribute)} can not be set in the same Function.");
                 }
+
+                // If we aren't using the class-based model, make sure we resolve binding expressions for attribute properties here.
+                hubName = _nameResolver.ResolveWholeString(hubName);
+                category = _nameResolver.ResolveWholeString(category);
+                @event = _nameResolver.ResolveWholeString(@event);
             }
 
             parameterNames = parameterNamesFromAttribute.Length != 0
