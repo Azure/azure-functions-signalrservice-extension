@@ -3,16 +3,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -62,7 +63,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 webhookException = ex;
             }
-            
+
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
@@ -72,13 +73,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var triggerBindingRule = context.AddBindingRule<SignalRTriggerAttribute>();
             triggerBindingRule.AddConverter<InvocationContext, JObject>(JObject.FromObject);
             triggerBindingRule.BindToTrigger<InvocationContext>(new SignalRTriggerBindingProvider(_dispatcher, nameResolver, serviceManagerStore, webhookException));
-                        
+
             // Non-trigger binding rule
             var signalRConnectionInfoAttributeRule = context.AddBindingRule<SignalRConnectionInfoAttribute>();
             signalRConnectionInfoAttributeRule.Bind(inputBindingProvider);
 
             var securityTokenValidationAttributeRule = context.AddBindingRule<SecurityTokenValidationAttribute>();
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
+
+            _ = context.AddBindingRule<SignalREndpointsAttribute>()
+                   .AddConverter<LiteServiceEndpoint[], JArray>(endpoints => JArray.FromObject(endpoints))
+                   .BindToInput(new SignalREndpointsAsyncConverter());
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
             signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>));

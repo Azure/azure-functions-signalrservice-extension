@@ -4,7 +4,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -34,7 +33,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 var data = new SignalRData
                 {
                     Target = message.Target,
-                    Arguments = message.Arguments
+                    Arguments = message.Arguments,
+                    Endpoints = message.Endpoints
                 };
 
                 if (!string.IsNullOrEmpty(message.ConnectionId))
@@ -63,10 +63,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     switch (groupAction.Action)
                     {
                         case GroupAction.Add:
-                            await client.AddConnectionToGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                            await client.AddConnectionToGroup(groupAction).ConfigureAwait(false);
                             break;
+
                         case GroupAction.Remove:
-                            await client.RemoveConnectionFromGroup(groupAction.ConnectionId, groupAction.GroupName).ConfigureAwait(false);
+                            await client.RemoveConnectionFromGroup(groupAction).ConfigureAwait(false);
                             break;
                     }
                 }
@@ -75,13 +76,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     switch (groupAction.Action)
                     {
                         case GroupAction.Add:
-                            await client.AddUserToGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                            await client.AddUserToGroup(groupAction).ConfigureAwait(false);
                             break;
+
                         case GroupAction.Remove:
-                            await client.RemoveUserFromGroup(groupAction.UserId, groupAction.GroupName).ConfigureAwait(false);
+                            await client.RemoveUserFromGroup(groupAction).ConfigureAwait(false);
                             break;
+
                         case GroupAction.RemoveAll:
-                            await client.RemoveUserFromAllGroups(groupAction.UserId).ConfigureAwait(false);
+                            await client.RemoveUserFromAllGroups(groupAction).ConfigureAwait(false);
                             break;
                     }
                 }
