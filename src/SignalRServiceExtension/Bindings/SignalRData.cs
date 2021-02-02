@@ -7,5 +7,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public string Target { get; set; }
         public object[] Arguments { get; set; }
+        public LiteServiceEndpoint[] Endpoints { get; set; }
     }
 }
