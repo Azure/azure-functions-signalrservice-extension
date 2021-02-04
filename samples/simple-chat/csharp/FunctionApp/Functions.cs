@@ -2,15 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Claims;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.EventGrid.Models;
-using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -49,10 +47,26 @@ namespace FunctionApp
         //    return connectionInfo;
         //}
 
+        //Boardcast to multiple endpoints with routing logic. Only works in persistent mode.Transient mode always boardcast to the default service endpoint and ignore routing logic.
+        [FunctionName("selectiveBroadcast")]
+        public static async Task SelectiveBroadcast(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages, [SignalREndpoints(HubName = "simplechat")] LiteServiceEndpoint[] endpoints)
+        {
+             var content =await new StreamReader(req.Body).ReadToEndAsync();
+            await signalRMessages.AddAsync(new SignalRMessage
+            {
+                Target = "Target",
+                Arguments = new[] { content },
+                //if "Endpoints" is not set, then boardcast to all endpoints
+                Endpoints = endpoints.Where(endpoint => !string.IsNullOrWhiteSpace(endpoint.Name)).ToArray()
+            });
+        }
+
         [FunctionName("broadcast")]
         public static async Task Broadcast(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
             var serviceHubContext = await StaticServiceHubContextStore.Get().GetAsync("simplechat");
@@ -61,8 +75,8 @@ namespace FunctionApp
 
         [FunctionName("messages")]
         public static Task SendMessage(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages)
         {
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
@@ -78,10 +92,9 @@ namespace FunctionApp
 
         [FunctionName("addToGroup")]
         public static Task AddToGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
             var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
@@ -98,10 +111,9 @@ namespace FunctionApp
 
         [FunctionName("removeFromGroup")]
         public static Task RemoveFromGroup(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]HttpRequest req,
-            [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRGroupAction> signalRGroupActions)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-
             var message = new JsonSerializer().Deserialize<ChatMessage>(new JsonTextReader(new StreamReader(req.Body)));
 
             var decodedfConnectionId = GetBase64DecodedString(message.ConnectionId);
@@ -136,12 +148,11 @@ namespace FunctionApp
             return Encoding.UTF8.GetString(Convert.FromBase64String(source));
         }
 
-
         public static class EventGridTriggerCSharp
         {
             [FunctionName("onConnection")]
-            public static Task EventGridTest([EventGridTrigger]EventGridEvent eventGridEvent,
-                [SignalR(HubName = "simplechat")]IAsyncCollector<SignalRMessage> signalRMessages)
+            public static Task EventGridTest([EventGridTrigger] EventGridEvent eventGridEvent,
+                [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages)
             {
                 if (eventGridEvent.EventType == "Microsoft.SignalRService.ClientConnectionConnected")
                 {

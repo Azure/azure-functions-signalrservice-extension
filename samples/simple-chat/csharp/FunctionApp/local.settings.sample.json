@@ -5,7 +5,10 @@
     "AzureWebJobsDashboard": "",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
     "AzureSignalRConnectionString": "<signalr-connection-string>",
-    "AzureSignalRServiceTransportType": "Transient"
+    "AzureSignalRConnectionString:Endpoint2": "<signalr-connection-string> for the second primary Azure SignalR endpoints",
+    "AzureSignalRConnectionString:Endpoint3:Primary": "<signalr-connection-string> for the third primary Azure SignalR endpoints",
+    "AzureSignalRConnectionString:Endpoint4:Secondary": "<signalr-connection-string> for the fourth secondary Azure SignalR endpoints",
+    "AzureSignalRServiceTransportType": "Persistent"
   },
   "Host": {
     "LocalHttpPort": 7071,
