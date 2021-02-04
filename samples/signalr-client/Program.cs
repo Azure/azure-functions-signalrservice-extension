@@ -16,7 +16,7 @@ namespace SignalRClient
     static class Program
     {
         private const string Hub = "simplechat";
-        private const string Target = "Target";
+        private static string[] Targets = { "newMessage", "Target" };
         private const string SectionName = "AzureSignalRConnectionString";
         static void Main(string[] args)
         {
@@ -26,8 +26,6 @@ namespace SignalRClient
             };
             var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
             var serviceEndpoints = configuration.GetEndpoints(SectionName).ToArray();
-
-            app.HelpOption("--help");
 
             app.OnExecute(async () =>
             {
@@ -63,15 +61,17 @@ namespace SignalRClient
                 Options.AccessTokenProvider = () => Task.FromResult(serviceManager.GenerateClientAccessToken(Hub));
             })
             .Build();
-            connection.On(Target, (string message) =>
+            foreach (var target in Targets)
             {
-                Console.WriteLine($"{userId}: gets message from service: '{message}'");
-            });
+                connection.On(target, (object message) => Console.WriteLine($"{userId}: gets message from service: '{message}'"));
+            }
 
-            connection.Closed += async ex =>
+
+            connection.Closed += ex =>
             {
                 Console.WriteLine(ex);
                 Environment.Exit(1);
+                return Task.CompletedTask;
             };
 
             return connection;
