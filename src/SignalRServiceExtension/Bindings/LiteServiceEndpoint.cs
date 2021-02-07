@@ -7,10 +7,13 @@ using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
+    /// <summary>
+    /// Represents a Azure SignalR Service endpoints, whose members is a subset 
+    /// </summary>
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class LiteServiceEndpoint
     {
-        public string ConnectionString { get; set; }
+        private string _connectionString;
 
         public EndpointType EndpointType { get; set; }
 
@@ -20,11 +23,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public bool Online { get; set; }
 
-        public static LiteServiceEndpoint FromServiceEndpoint(ServiceEndpoint e)
+        internal static LiteServiceEndpoint FromServiceEndpoint(ServiceEndpoint e)
         {
             return new LiteServiceEndpoint
             {
-                ConnectionString = e.ConnectionString,
+                _connectionString = e.ConnectionString,
                 EndpointType = e.EndpointType,
                 Name = e.Name,
                 Endpoint = e.Endpoint,
@@ -32,9 +35,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        public ServiceEndpoint ToServiceEndpoint()
+        internal ServiceEndpoint ToServiceEndpoint()
         {
-            return new ServiceEndpoint(ConnectionString, EndpointType, Name);
+            return new ServiceEndpoint(_connectionString, EndpointType, Name);
         }
     }
 }
