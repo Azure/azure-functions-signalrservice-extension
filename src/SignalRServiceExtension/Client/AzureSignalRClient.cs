@@ -29,7 +29,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private readonly IServiceManagerStore serviceManagerStore;
         private readonly string connectionStringKey;
-        private ValueTask<IServiceHubContext> HubContext => serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName);
+
+        private async ValueTask<IInternalServiceHubContext> GetHubContext() => (await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName)) as IInternalServiceHubContext;
 
         public string HubName { get; }
 
@@ -48,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims)
         {
-            var serviceHubContext = (await HubContext) as IInternalServiceHubContext;
+            var serviceHubContext = await GetHubContext();
             var negotiateResponse = await serviceHubContext.NegotiateAsync(null, userId, BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList());
             return new SignalRConnectionInfo
             {
@@ -196,7 +197,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private async Task InvokeAsync(LiteServiceEndpoint[] endpoints, Func<IInternalServiceHubContext, Task> func)
         {
-            var serviceHubContext = (await HubContext) as IInternalServiceHubContext;
+            var serviceHubContext = await GetHubContext();
             var targetHubContext = endpoints == null ? serviceHubContext : serviceHubContext.WithEndpoints(endpoints.Select(e => e.ToServiceEndpoint()));
             await func.Invoke(targetHubContext);
             await targetHubContext.DisposeAsync();
