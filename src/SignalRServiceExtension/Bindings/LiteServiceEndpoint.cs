@@ -8,7 +8,7 @@ using Newtonsoft.Json.Serialization;
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
-    /// Represents a Azure SignalR Service endpoints, whose members is a subset 
+    /// Represents a Azure SignalR Service endpoint, a lite version of <see cref="ServiceEndpoint"/> for endpoints routing.
     /// </summary>
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     public class LiteServiceEndpoint
