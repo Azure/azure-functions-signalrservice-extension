@@ -83,6 +83,7 @@ namespace SignalRServiceExtension.Tests
                 Endpoints = FakeEndpointUtils.GetFakeEndpoint(2).ToArray()
             };
             await azureSignalRClient.SendToAll(data);
+            rootHubContextMock.Verify(c => c.WithEndpoints(data.Endpoints), Times.Once);
             rootHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()), Times.Never);
             childHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(data.Target, data.Arguments, default), Times.Once);
         }
