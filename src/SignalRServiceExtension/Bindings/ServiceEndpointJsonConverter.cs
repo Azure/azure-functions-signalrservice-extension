@@ -5,7 +5,7 @@ using System;
 using Microsoft.Azure.SignalR;
 using Newtonsoft.Json;
 
-namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Bindings
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceEndpointJsonConverter : JsonConverter<ServiceEndpoint>
     {

@@ -3,11 +3,11 @@
 
 using Microsoft.Azure.SignalR;
 
-namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Bindings
+namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal static class ServiceEndpointExtensions
     {
-        public const string FakeAccessKey = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private const string FakeAccessKey = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         public static LiteServiceEndpoint ToLiteServiceEndpoint(this ServiceEndpoint e)
         {
             return new LiteServiceEndpoint
