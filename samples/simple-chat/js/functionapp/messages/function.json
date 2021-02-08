@@ -20,12 +20,6 @@
       "name": "signalRMessages",
       "hubName": "simplechat",
       "direction": "out"
-    },
-    {
-      "type":"signalREndpoints",
-      "name":"endpoints",
-      "hubName":"simplechat",
-      "direction": "in"
     }
   ]
 }
