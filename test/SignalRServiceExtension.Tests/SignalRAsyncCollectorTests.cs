@@ -14,7 +14,7 @@ namespace SignalRServiceExtension.Tests
 {
     public class SignalRAsyncCollectorTests
     {
-        private static readonly LiteServiceEndpoint[] Endpoints = FakeEndpointUtils.GetFakeEndpoint(2).Select(e=>LiteServiceEndpoint.FromServiceEndpoint(e)).ToArray();
+        private static readonly ServiceEndpoint[] Endpoints = FakeEndpointUtils.GetFakeEndpoint(2).ToArray();
 
         [Fact]
         public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()

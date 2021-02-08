@@ -14,9 +14,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 output = input.ToObject<TOutput>();
             }
-            catch (Exception e)
+            catch
             {
-                Console.WriteLine(e.Message);
                 output = default;
                 return false;
             }
