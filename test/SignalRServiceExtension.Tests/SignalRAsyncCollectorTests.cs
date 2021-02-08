@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
@@ -14,10 +15,15 @@ namespace SignalRServiceExtension.Tests
 {
     public class SignalRAsyncCollectorTests
     {
-        private static readonly ServiceEndpoint[] Endpoints = FakeEndpointUtils.GetFakeEndpoint(2).ToArray();
+        public static IEnumerable<object[]> GetEndpoints()
+        {
+            yield return new object[] { FakeEndpointUtils.GetFakeEndpoint(2).ToArray() };
+            yield return new object[] { null };
+        }
 
-        [Fact]
-        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
+        [Theory]
+        [MemberData(nameof(GetEndpoints))]
+        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll(ServiceEndpoint[] endpoints)
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
@@ -26,7 +32,7 @@ namespace SignalRServiceExtension.Tests
             {
                 Target = "newMessage",
                 Arguments = new object[] { "arg1", "arg2" },
-                Endpoints = Endpoints
+                Endpoints = endpoints
             });
 
             signalRSenderMock.Verify(c => c.SendToAll(It.IsAny<SignalRData>()), Times.Once);
@@ -35,7 +41,7 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
-            Assert.Equal(Endpoints, actualData.Endpoints);
+            Assert.Equal(endpoints, actualData.Endpoints);
         }
 
         [Fact]
@@ -48,8 +54,7 @@ namespace SignalRServiceExtension.Tests
             {
                 UserId = "userId1",
                 Target = "newMessage",
-                Arguments = new object[] { "arg1", "arg2" },
-                Endpoints = Endpoints
+                Arguments = new object[] { "arg1", "arg2" }
             });
 
             signalRSenderMock.Verify(
@@ -60,7 +65,6 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
-            Assert.Equal(Endpoints, actualData.Endpoints);
         }
 
         [Fact]
@@ -73,8 +77,7 @@ namespace SignalRServiceExtension.Tests
             {
                 GroupName = "group1",
                 Target = "newMessage",
-                Arguments = new object[] { "arg1", "arg2" },
-                Endpoints = Endpoints
+                Arguments = new object[] { "arg1", "arg2" }
             });
 
             signalRSenderMock.Verify(
@@ -85,11 +88,11 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
-            Assert.Equal(Endpoints, actualData.Endpoints);
         }
 
-        [Fact]
-        public async Task AddAsync_WithUserId_CallsAddUserToGroup()
+        [Theory]
+        [MemberData(nameof(GetEndpoints))]
+        public async Task AddAsync_WithUserId_CallsAddUserToGroup(ServiceEndpoint[] endpoints)
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
@@ -99,7 +102,7 @@ namespace SignalRServiceExtension.Tests
                 UserId = "userId1",
                 GroupName = "group1",
                 Action = GroupAction.Add,
-                Endpoints = Endpoints
+                Endpoints = endpoints
             };
             await collector.AddAsync(action);
 
@@ -121,8 +124,7 @@ namespace SignalRServiceExtension.Tests
             {
                 UserId = "userId1",
                 GroupName = "group1",
-                Action = GroupAction.Remove,
-                Endpoints = Endpoints
+                Action = GroupAction.Remove
             };
             await collector.AddAsync(action);
 
@@ -143,8 +145,7 @@ namespace SignalRServiceExtension.Tests
             var action = new SignalRGroupAction
             {
                 UserId = "userId1",
-                Action = GroupAction.RemoveAll,
-                Endpoints = Endpoints
+                Action = GroupAction.RemoveAll
             };
             await collector.AddAsync(action);
 
@@ -178,8 +179,7 @@ namespace SignalRServiceExtension.Tests
                 UserId = "user1",
                 GroupName = "group1",
                 Target = "newMessage",
-                Arguments = new object[] { "arg1", "arg2" },
-                Endpoints = Endpoints
+                Arguments = new object[] { "arg1", "arg2" }
             });
 
             signalRSenderMock.Verify(
@@ -190,7 +190,6 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
-            Assert.Equal(Endpoints, actualData.Endpoints);
         }
 
         [Fact]
@@ -203,8 +202,7 @@ namespace SignalRServiceExtension.Tests
             {
                 ConnectionId = "connection1",
                 Target = "newMessage",
-                Arguments = new object[] { "arg1", "arg2" },
-                Endpoints = Endpoints
+                Arguments = new object[] { "arg1", "arg2" }
             });
 
             signalRSenderMock.Verify(
@@ -215,7 +213,6 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
-            Assert.Equal(Endpoints, actualData.Endpoints);
         }
 
         [Fact]
@@ -228,8 +225,7 @@ namespace SignalRServiceExtension.Tests
             {
                 ConnectionId = "connection1",
                 GroupName = "group1",
-                Action = GroupAction.Add,
-                Endpoints = Endpoints
+                Action = GroupAction.Add
             };
             await collector.AddAsync(action);
 
@@ -251,8 +247,7 @@ namespace SignalRServiceExtension.Tests
             {
                 ConnectionId = "connection1",
                 GroupName = "group1",
-                Action = GroupAction.Remove,
-                Endpoints = Endpoints
+                Action = GroupAction.Remove
             };
             await collector.AddAsync(action);
 
@@ -273,8 +268,7 @@ namespace SignalRServiceExtension.Tests
             var item = new SignalRGroupAction
             {
                 GroupName = "group1",
-                Action = GroupAction.Add,
-                Endpoints = Endpoints
+                Action = GroupAction.Add
             };
 
             await Assert.ThrowsAsync<ArgumentException>(() => collector.AddAsync(item));
