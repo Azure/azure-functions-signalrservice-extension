@@ -9,11 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs.Description;
+using Microsoft.Azure.WebJobs.Extensions.SignalRService.Bindings;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Microsoft.Azure.WebJobs.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -64,6 +66,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 webhookException = ex;
             }
 
+            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
+            {
+                Converters = new List<JsonConverter>() { new ServiceEndpointJsonConverter() }
+            };
+
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
@@ -82,7 +89,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             _ = context.AddBindingRule<SignalREndpointsAttribute>()
-                   .AddConverter<LiteServiceEndpoint[], JArray>(JArray.FromObject)
+                   .AddConverter<ServiceEndpoint[], JArray>(JArray.FromObject)
                    .BindToInput(new SignalREndpointsAsyncConverter());
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();

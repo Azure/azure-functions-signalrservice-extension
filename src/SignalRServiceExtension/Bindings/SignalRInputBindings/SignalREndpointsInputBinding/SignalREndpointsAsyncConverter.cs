@@ -4,11 +4,12 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class SignalREndpointsAsyncConverter : IAsyncConverter<SignalREndpointsAttribute, LiteServiceEndpoint[]>
+    internal class SignalREndpointsAsyncConverter : IAsyncConverter<SignalREndpointsAttribute, ServiceEndpoint[]>
     {
         private readonly IServiceManagerStore _serviceManagerStore;
 
@@ -17,10 +18,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _serviceManagerStore = StaticServiceHubContextStore.ServiceManagerStore;
         }
 
-        public async Task<LiteServiceEndpoint[]> ConvertAsync(SignalREndpointsAttribute input, CancellationToken cancellationToken)
+        public async Task<ServiceEndpoint[]> ConvertAsync(SignalREndpointsAttribute input, CancellationToken cancellationToken)
         {
             var hubContext = await _serviceManagerStore.GetOrAddByConnectionStringKey(input.ConnectionStringSetting).ServiceManager.CreateHubContextAsync(input.HubName, cancellationToken: cancellationToken) as IInternalServiceHubContext;
-            return hubContext.GetServiceEndpoints().Select(e => LiteServiceEndpoint.FromServiceEndpoint(e)).ToArray();
+            return hubContext.GetServiceEndpoints().ToArray();
         }
     }
 }

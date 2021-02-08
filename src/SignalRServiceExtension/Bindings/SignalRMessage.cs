@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.SignalR;
 using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -32,6 +33,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public object[] Arguments { get; set; }
 
         [JsonProperty("endpoints")]
-        public LiteServiceEndpoint[] Endpoints { get; set; }
+        public ServiceEndpoint[] Endpoints { get; set; }
     }
 }

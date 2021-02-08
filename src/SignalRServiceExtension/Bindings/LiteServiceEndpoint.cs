@@ -11,10 +11,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// Represents a Azure SignalR Service endpoint, a lite version of <see cref="ServiceEndpoint"/> for endpoints routing.
     /// </summary>
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
-    public class LiteServiceEndpoint
+    internal class LiteServiceEndpoint
     {
-        private string _connectionString;
-
         public EndpointType EndpointType { get; set; }
 
         public string Name { get; set; }
@@ -22,22 +20,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public string Endpoint { get; set; }
 
         public bool Online { get; set; }
-
-        internal static LiteServiceEndpoint FromServiceEndpoint(ServiceEndpoint e)
-        {
-            return new LiteServiceEndpoint
-            {
-                _connectionString = e.ConnectionString,
-                EndpointType = e.EndpointType,
-                Name = e.Name,
-                Endpoint = e.Endpoint,
-                Online = e.Online
-            };
-        }
-
-        internal ServiceEndpoint ToServiceEndpoint()
-        {
-            return new ServiceEndpoint(_connectionString, EndpointType, Name);
-        }
     }
 }

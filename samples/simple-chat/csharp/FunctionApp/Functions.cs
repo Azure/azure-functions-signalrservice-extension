@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.EventGrid.Models;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.EventGrid;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -51,7 +52,7 @@ namespace FunctionApp
         [FunctionName("selectiveBroadcast")]
         public static async Task SelectiveBroadcast(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
-            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages, [SignalREndpoints(HubName = "simplechat")] LiteServiceEndpoint[] endpoints)
+            [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages, [SignalREndpoints(HubName = "simplechat")] ServiceEndpoint[] endpoints)
         {
              var content =await new StreamReader(req.Body).ReadToEndAsync();
             await signalRMessages.AddAsync(new SignalRMessage

@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
@@ -195,10 +196,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
 
-        private async Task InvokeAsync(LiteServiceEndpoint[] endpoints, Func<IInternalServiceHubContext, Task> func)
+        private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<IInternalServiceHubContext, Task> func)
         {
             var serviceHubContext = await GetHubContext();
-            var targetHubContext = endpoints == null ? serviceHubContext : serviceHubContext.WithEndpoints(endpoints.Select(e => e.ToServiceEndpoint()));
+            var targetHubContext = endpoints == null ? serviceHubContext : serviceHubContext.WithEndpoints(endpoints);
             await func.Invoke(targetHubContext);
             await targetHubContext.DisposeAsync();
         }

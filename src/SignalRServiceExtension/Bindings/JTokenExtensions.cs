@@ -1,23 +1,23 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    public class JObjectToTypeConverter<TOutput> where TOutput : class
+    internal static class JTokenExtensions
     {
-        public bool TryConvert(JObject input, out TOutput output)
+        public static bool TryToObject<TOutput>(this JToken input, out TOutput output)
         {
             try
             {
-                output = JsonConvert.DeserializeObject<TOutput>(input.ToString());
+                output = input.ToObject<TOutput>();
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                output = null;
+                Console.WriteLine(e.Message);
+                output = default;
                 return false;
             }
 
