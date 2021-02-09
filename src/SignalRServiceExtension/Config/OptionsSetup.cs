@@ -46,6 +46,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 options.ServiceTransportType = transport;
             }
+            else if (string.IsNullOrWhiteSpace(serviceTransportTypeStr)
+            {
+                options.ServiceTransportType = ServiceTransportType.Transient;
+                logger.LogWarning($"{Constants.ServiceTransportTypeName} not set, using default {ServiceTransportType.Transient} instead.");
+            }
             else
             {
                 options.ServiceTransportType = ServiceTransportType.Transient;
