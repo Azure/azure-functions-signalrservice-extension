@@ -12,6 +12,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+#if NETCOREAPP3_1
+using Microsoft.AspNetCore.SignalR.Protocol;
+#endif
+
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceManagerStore : IServiceManagerStore
@@ -62,6 +66,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 services.AddSingleton(router);
             }
+#if NETCOREAPP3_1
+            var jsonProtocols = services.Where(s => s.ServiceType == typeof(IHubProtocol) && s.ImplementationType == typeof(JsonHubProtocol)).ToArray();
+            foreach (var protocol in jsonProtocols)
+            {
+                services.Remove(protocol);
+            }
+            services.AddSingleton<IHubProtocol, NewtonsoftJsonHubProtocol>();
+#endif
             services.AddSingleton(services.ToList() as IReadOnlyCollection<ServiceDescriptor>);
             return services.BuildServiceProvider()
                .GetRequiredService<IInternalServiceHubContextStore>();
