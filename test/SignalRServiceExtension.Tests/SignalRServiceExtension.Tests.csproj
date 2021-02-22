@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,5 +16,4 @@
     <ProjectReference Include="..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />
     <ProjectReference Include="..\Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common\Microsoft.Azure.WebJobs.Extensions.SignalRService.Tests.Common.csproj" />
   </ItemGroup>
-
 </Project>

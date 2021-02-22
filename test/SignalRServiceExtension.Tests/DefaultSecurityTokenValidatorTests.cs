@@ -3,9 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
@@ -40,7 +38,7 @@ namespace SignalRServiceExtension.Tests
         public void ValidateSecurityTokenFacts(string tokenString, SecurityTokenStatus expectedStatus)
         {
             var ctx = new DefaultHttpContext();
-            var req = new DefaultHttpRequest(ctx);
+            var req = ctx.Request;
             req.Headers.Add("Authorization", new StringValues(tokenString));
 
             var issuerToken = "bXlmdW5jdGlvbmF1dGh0ZXN0"; // base64 encoded for "myfunctionauthtest";
