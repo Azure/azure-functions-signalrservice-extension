@@ -2,12 +2,16 @@ name: build
 
 on:
   push:
-    branches: [ dev ]
+    branches: 
+      - dev
+      - master
   pull_request:
-    branches: [ dev ]
+    branches: 
+      - dev
+      - master
 
 jobs:
-  build:
+  build_osx:
 
     runs-on: macOS-latest
 
@@ -19,7 +23,7 @@ jobs:
         dotnet-version: 2.1.301
     - name: Restore dependencies
       run: dotnet restore
-    - name: Apt Prereqs
+    - name: Apt Prerequisites
       run: sudo apt -y install libunwind8 maven
     - name: Build
       run: |
