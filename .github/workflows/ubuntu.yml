@@ -1,13 +1,17 @@
-name: build
+name: Gated-Ubuntu
 
 on:
   push:
-    branches: [ dev ]
+    branches: 
+      - dev
+      - master
   pull_request:
-    branches: [ dev ]
+    branches: 
+      - dev
+      - master
 
 jobs:
-  build:
+  build_ubuntu:
 
     runs-on: ubuntu-latest
 
@@ -19,7 +23,7 @@ jobs:
         dotnet-version: 5.0.103
     - name: Restore dependencies
       run: dotnet restore
-    - name: Apt Prereqs
+    - name: Install packages
       run: sudo apt -y install libunwind8 maven
     - name: Build
       run: |
