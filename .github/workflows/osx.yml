@@ -1,4 +1,4 @@
-name: build
+name: Gated-OSX
 
 on:
   push:
@@ -20,11 +20,11 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 2.1.301
+        dotnet-version: 5.0.103
     - name: Restore dependencies
       run: dotnet restore
     - name: Install packages
-      run: brew install libunwind8 maven
+      run: brew install maven
     - name: Build
       run: |
         ./build.sh --ci
