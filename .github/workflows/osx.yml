@@ -23,7 +23,7 @@ jobs:
         dotnet-version: 2.1.301
     - name: Restore dependencies
       run: dotnet restore
-    - name: Apt Prerequisites
+    - name: Install packages
       run: sudo apt -y install libunwind8 maven
     - name: Build
       run: |
