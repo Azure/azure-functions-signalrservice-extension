@@ -24,7 +24,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Install packages
-      run: sudo apt -y install libunwind8 maven
+      run: brew install libunwind8 maven
     - name: Build
       run: |
         ./build.sh --ci
