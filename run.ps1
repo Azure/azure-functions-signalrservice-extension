@@ -122,6 +122,11 @@ function Get-KoreBuild {
                 Add-Type -AssemblyName System.IO.Compression.FileSystem
                 [System.IO.Compression.ZipFile]::ExtractToDirectory($tmpfile, $korebuildPath)
             }
+            # Hack to use Core version
+            Write-Host "!!! Hack to use .NET Core SDK 5.0.100"
+            $sdkversion = Get-ChildItem -Path $korebuildPath -Include sdk.version -Recurse
+            $sdkpath = Join-Path $sdkversion.DirectoryName $sdkversion.Name
+            Set-Content -Path $sdkpath -Value "5.0.100" -Force
         }
         catch {
             Remove-Item -Recurse -Force $korebuildPath -ErrorAction Ignore
