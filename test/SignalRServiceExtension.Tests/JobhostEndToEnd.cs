@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Common; 
+using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
@@ -163,7 +163,7 @@ namespace SignalRServiceExtension.Tests
         public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts)
         {
             if (classType.Length != configDicts.Length)
-        {
+            {
                 throw new ArgumentException($"Length of {nameof(classType)} and {nameof(configDicts)}  are not the same.");
             }
             for (var i = 0; i < classType.Length; i++)
@@ -204,11 +204,11 @@ namespace SignalRServiceExtension.Tests
             {
                 // ignore, since we don't really connect to Azure SignalR Service
             }
-            catch (Exception e)
+            catch
             {
-                throw e;
+                throw;
             }
-            }
+        }
 
         private Task CreateTestTask(Type classType, Dictionary<string, string> configuration)
         {
@@ -218,6 +218,7 @@ namespace SignalRServiceExtension.Tests
         }
 
         #region SignalRAttributeTests
+
         public class SignalRFunctionsWithCustomizedKey
         {
             public async Task Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
@@ -250,9 +251,11 @@ namespace SignalRServiceExtension.Tests
                 Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
-        #endregion
+
+        #endregion SignalRAttributeTests
 
         #region SignalRConnectionInfoAttributeTests
+
         public class SignalRConnectionInfoFunctionsWithCustomizedKey
         {
             public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] SignalRConnectionInfo connectionInfo)
@@ -281,6 +284,7 @@ namespace SignalRServiceExtension.Tests
                 UpdateFunctionOutConnectionString(connectionInfo, AttrConnStrConfigKey);
             }
         }
-        #endregion
+
+        #endregion SignalRConnectionInfoAttributeTests
     }
 }
