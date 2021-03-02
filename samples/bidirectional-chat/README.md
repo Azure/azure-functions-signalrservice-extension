@@ -103,14 +103,7 @@ It's a quick try of this sample. You will create an Azure SignalR Service and an
     5. Click **Save** to persist the CORS settings.
     ![CORS](cors.png)
 
-2. Install [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) for your VS Code, that can serve web pages locally
-3. Open `bidirectional-chat/content/index.html` and edit base url
+2. `<function-app-url>/api/index` hosts the web page for the demo
 
-    ```js
-    window.apiBaseUrl = '<function-app-url>';
-    ```
-
-4. With **index.html** open, start Live Server by opening the VS Code command palette (**F1**) and selecting **Live Server: Open with Live Server**. Live Server will open the application in a browser.
-
-5. Try send messages by entering them into the main chat box.
+3. Try send messages by entering them into the main chat box.
     ![Chatroom](chatroom.png)
