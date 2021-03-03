@@ -49,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims)
         {
             var serviceHubContext = await GetHubContextAsync();
-            var negotiateResponse = await serviceHubContext.NegotiateAsync(null, userId, BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList());
+            var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions() { UserId = userId, Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList() });
             return new SignalRConnectionInfo
             {
                 Url = negotiateResponse.Url,
@@ -197,10 +197,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<IInternalServiceHubContext, Task> func)
         {
             var serviceHubContext = await GetHubContextAsync();
-            var targetHubContext = endpoints == null ? serviceHubContext : serviceHubContext.WithEndpoints(endpoints);
+            var targetHubContext = endpoints == null ? (serviceHubContext as IInternalServiceHubContext) : (serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints);
             await func.Invoke(targetHubContext);
         }
 
-        private async ValueTask<IInternalServiceHubContext> GetHubContextAsync() => (await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName)) as IInternalServiceHubContext;
+        private async ValueTask<ServiceHubContext> GetHubContextAsync() => (await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName)) as ServiceHubContext;
     }
 }

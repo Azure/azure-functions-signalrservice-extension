@@ -29,7 +29,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private static readonly Lazy<JwtSecurityTokenHandler> JwtSecurityTokenHandler = new Lazy<JwtSecurityTokenHandler>(() => new JwtSecurityTokenHandler());
         private bool _disposed;
-        private readonly IInternalServiceHubContext _hubContext;
+        private readonly ServiceHubContext _hubContext;
         private readonly IServiceManager _serviceManager;
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
-            _hubContext = hubContext as IInternalServiceHubContext;
+            _hubContext = hubContext as ServiceHubContext;
         }
 
         /// <summary>
@@ -73,17 +73,23 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         [Obsolete("Please use async version instead.")]
         protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null, HttpContext httpContext = null)
         {
-            return NegotiateAsync(userId, claims, lifetime, httpContext).Result;
+            return NegotiateAsync(userId, claims, lifetime.GetValueOrDefault(), httpContext).Result;
         }
 
         /// <summary>
         /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
         /// </summary>
-        protected async Task<SignalRConnectionInfo> NegotiateAsync(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null, HttpContext httpContext = null)
+        protected async Task<SignalRConnectionInfo> NegotiateAsync(string userId = null, IList<Claim> claims = null, TimeSpan lifetime = default, HttpContext httpContext = null)
         {
             if (_hubContext != null)
             {
-                var negotiateResponse = await _hubContext.NegotiateAsync(httpContext, userId, claims, lifetime);
+                var negotiateResponse = await _hubContext.NegotiateAsync(new NegotiationOptions()
+                {
+                    HttpContext = httpContext,
+                    UserId = userId,
+                    Claims = claims,
+                    TokenLifetime = lifetime
+                });
                 return new SignalRConnectionInfo
                 {
                     Url = negotiateResponse.Url,
