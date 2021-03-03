@@ -56,7 +56,7 @@ namespace SignalRServiceExtension.Tests
                 .ConfigureAppConfiguration(b => b.AddInMemoryCollection(new Dictionary<string, string> { {"key", FakeEndpointUtils.GetFakeConnectionString(1).Single()
         } }))
                 .ConfigureWebJobs(b => b.AddSignalR()).Build();
-            var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as IInternalServiceHubContext;
+            var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as ServiceHubContext;
             await Assert.ThrowsAsync<AzureSignalRNotConnectedException>(() => hubContext.NegotiateAsync());
         }
     }
