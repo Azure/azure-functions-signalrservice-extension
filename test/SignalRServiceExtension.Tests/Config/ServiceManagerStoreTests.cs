@@ -53,10 +53,13 @@ namespace SignalRServiceExtension.Tests
         {
             var builder = new HostBuilder();
             var host = builder
-                .ConfigureAppConfiguration(b => b.AddInMemoryCollection(new Dictionary<string, string> { {"key", FakeEndpointUtils.GetFakeConnectionString(1).Single()
-        } }))
+                .ConfigureAppConfiguration(b => b.AddInMemoryCollection(
+                    new Dictionary<string, string> {
+                                { "key", FakeEndpointUtils.GetFakeConnectionString(1).Single() },
+                                { Constants.ServiceTransportTypeName, ServiceTransportType.Persistent.ToString() }
+                            }))
                 .ConfigureWebJobs(b => b.AddSignalR()).Build();
-            var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as IInternalServiceHubContext;
+            var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as ServiceHubContext;
             await Assert.ThrowsAsync<AzureSignalRNotConnectedException>(() => hubContext.NegotiateAsync());
         }
     }
