@@ -83,7 +83,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (_hubContext != null)
             {
-                var negotiateResponse = await _hubContext.NegotiateAsync(new NegotiationOptions()
+                var negotiateResponse = await _hubContext.NegotiateAsync(new NegotiationOptions
                 {
                     HttpContext = httpContext,
                     UserId = userId,

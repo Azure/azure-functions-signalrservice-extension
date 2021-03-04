@@ -194,13 +194,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
 
-        private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<IInternalServiceHubContext, Task> func)
+        private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<ServiceHubContext, Task> func)
         {
             var serviceHubContext = await GetHubContextAsync();
-            var targetHubContext = endpoints == null ? (serviceHubContext as IInternalServiceHubContext) : (serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints);
+            var targetHubContext = endpoints == null ? serviceHubContext : (serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints) as ServiceHubContext;
             await func.Invoke(targetHubContext);
         }
 
-        private async ValueTask<ServiceHubContext> GetHubContextAsync() => (await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName)) as ServiceHubContext;
+        private async ValueTask<ServiceHubContext> GetHubContextAsync()
+        {
+            var hubContext = await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName);
+            return hubContext as ServiceHubContext;
+        }
     }
 }
