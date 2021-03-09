@@ -9,8 +9,8 @@
     <MicrosoftAzureFunctionsExtensionsVersion>1.0.0</MicrosoftAzureFunctionsExtensionsVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
-    <XunitPackageVersion>2.4.0</XunitPackageVersion>
-    <XunitRunnerVisualstudioPackageVersion>2.4.0</XunitRunnerVisualstudioPackageVersion>
+    <XunitPackageVersion>2.4.1</XunitPackageVersion>
+    <XunitRunnerVisualstudioPackageVersion>2.4.3</XunitRunnerVisualstudioPackageVersion>
     <MessagePackPackageVersion>1.9.11</MessagePackPackageVersion>
     <NewtonsoftJsonPackageVersion>12.0.1</NewtonsoftJsonPackageVersion>
     <SystemMemoryPackageVersion>4.5.3</SystemMemoryPackageVersion>
@@ -19,6 +19,8 @@
     <MicrosoftAspNetCoreSignalRPackageVersion>1.0.0</MicrosoftAspNetCoreSignalRPackageVersion>
     <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>
     <MicrosoftAspNetCoreSignalRClient>5.0.3</MicrosoftAspNetCoreSignalRClient>
+    <MicrosoftExtensionsConfiguration>5.0.0</MicrosoftExtensionsConfiguration>
+    <MicrosoftAspNetCoreTesting>2.4.0</MicrosoftAspNetCoreTesting>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>

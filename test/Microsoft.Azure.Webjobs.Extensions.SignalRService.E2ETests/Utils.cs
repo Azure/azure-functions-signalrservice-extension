@@ -6,27 +6,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Configuration;
-using Xunit;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 {
     public static class Utils
     {
+        public const string UrlSectionKey = "FunctionBaseUrl";
         public static readonly IConfiguration Configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
-        public static readonly Dictionary<string, IServiceManager> ServiceManagerStores;
-
-        static Utils()
-        {
-            ServiceManagerStores = new();
-            var section = Configuration.GetSection("AzureSignalRConnectionString");
-            foreach (var child in section.GetChildren())
-            {
-                ServiceManagerStores.Add(child.Key, new ServiceManagerBuilder().WithOptions(o => o.ConnectionString = child.Value)
-                    .Build());
-            };
-        }
+        public static readonly IConfiguration UrlConfiguration = Configuration.GetSection(UrlSectionKey);
 
         /// <summary>
         /// Generate 4-bit numbers as user names.

@@ -13,7 +13,7 @@
   
   <ItemGroup>
       <Compile Include="..\csharpv3\Functions.cs"/>
-      <ProjectReference Include="..\..\..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />
+      <ProjectReference Include="..\..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />
   </ItemGroup>
   
   <ItemGroup>

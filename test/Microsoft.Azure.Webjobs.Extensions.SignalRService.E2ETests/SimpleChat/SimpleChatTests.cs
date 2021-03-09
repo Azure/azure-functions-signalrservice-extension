@@ -8,20 +8,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.Testing.xunit;
+using Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests.SimpleChat;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Xunit;
 using static Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests.Utils;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 {
+    // To enable tests run in parallel, split them into different class.
     public class SimpleChatTests
     {
-        private const string Section = "FunctionBaseUrl:SimpleChat";
+        private const string Section = "SimpleChat";
         public static readonly SimpleChatClient Client = new();
-
         public class BaseUrls : IEnumerable<object[]>
         {
-            public static readonly IEnumerable<object[]> Data = from section in Configuration.GetSection(Section).GetChildren()
+            public static readonly IEnumerable<object[]> Data = from section in UrlConfiguration.GetSection(Section).GetChildren()
                                                                 select new object[] { section.Key, section.Value };
 
             public IEnumerator<object[]> GetEnumerator() => Data.GetEnumerator();
@@ -31,8 +33,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class NegotiationTests
         {
-            [Theory]
+            [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
+            [SkipIfSimpleChatFunctionAbsent]
             public async Task Negotiation(string key, string url)
             {
                 const string target = nameof(NegotiationTests);
@@ -73,8 +76,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class ConnectionGroupManagementTest
         {
-            [Theory]
+            [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
+            [SkipIfSimpleChatFunctionAbsent]
             public async Task ConnectionGroupManagement(string key, string url)
             {
                 const string target = nameof(ConnectionGroupManagementTest);
@@ -153,8 +157,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class UserGroupManagementTest
         {
-            [Theory]
+            [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
+            [SkipIfSimpleChatFunctionAbsent]
             public async Task UserGroupManagement(string key, string url)
             {
                 const string target = nameof(UserGroupManagementTest);
