@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CS0414: The field 'Functions.json' is assigned but its value is never used
+dotnet_diagnostic.CS0414.severity = none
