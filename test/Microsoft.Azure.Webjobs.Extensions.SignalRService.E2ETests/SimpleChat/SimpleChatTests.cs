@@ -33,6 +33,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class NegotiationTests
         {
+            /// <summary>
+            /// Set up two connections, broadcast a message, wait until message received by two connections.
+            /// </summary>
             [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
             [SkipIfSimpleChatFunctionAbsent]
@@ -76,6 +79,11 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class ConnectionGroupManagementTest
         {
+            /// <summary>
+            /// Set up two connections.
+            /// Add connections[0] to the group. Send message to the group. connections[0] should receive message while conections[1] not.
+            /// Remove connections[0] from group and add connections[1] to group. Send message to the group. connections[1] should receive message while conections[0] not.
+            /// </summary>
             [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
             [SkipIfSimpleChatFunctionAbsent]
@@ -157,6 +165,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public class UserGroupManagementTest
         {
+            /// <summary>
+            /// Almost the same like <see cref="ConnectionGroupManagementTest"/>, except that upon users instead of connections.
+            /// </summary>
             [ConditionalTheory]
             [ClassData(typeof(BaseUrls))]
             [SkipIfSimpleChatFunctionAbsent]
