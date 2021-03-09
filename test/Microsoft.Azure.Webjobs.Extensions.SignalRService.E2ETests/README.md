@@ -20,6 +20,3 @@ After deploying the function projects or running it locally, set the base URLs i
   }
 }
 ```
-
-# Reminder
-You might get failure when you try to run functions on V2 runtime via CLI. You'd better start the functions from Visual Studio instead.
