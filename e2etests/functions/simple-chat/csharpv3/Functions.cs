@@ -9,7 +9,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json;
 
-namespace SimpleChatV3
+namespace SimpleChat
 {
     public static class Functions
     {
@@ -26,9 +26,11 @@ namespace SimpleChatV3
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRMessage> signalRMessages)
         {
-            using var rd = new StreamReader(req.Body);
-            var message = JsonConvert.DeserializeObject<SignalRMessage>(await rd.ReadToEndAsync());
-            await signalRMessages.AddAsync(message);
+            using (var rd = new StreamReader(req.Body))
+            {
+                var message = JsonConvert.DeserializeObject<SignalRMessage>(await rd.ReadToEndAsync());
+                await signalRMessages.AddAsync(message);
+            }
         }
 
         [FunctionName("group")]
@@ -36,9 +38,11 @@ namespace SimpleChatV3
             [HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req,
             [SignalR(HubName = "simplechat")] IAsyncCollector<SignalRGroupAction> signalRGroupActions)
         {
-            using var rd = new StreamReader(req.Body);
-            var message = JsonConvert.DeserializeObject<SignalRGroupAction>(await rd.ReadToEndAsync());
-            await signalRGroupActions.AddAsync(message);
+            using (var rd = new StreamReader(req.Body))
+            {
+                var message = JsonConvert.DeserializeObject<SignalRGroupAction>(await rd.ReadToEndAsync());
+                await signalRGroupActions.AddAsync(message);
+            }
         }
     }
 }
