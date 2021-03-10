@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 
         public static async Task OrTimeout(this Task task, TimeSpan timeout = default)
         {
-            if (timeout == default) timeout = TimeSpan.FromSeconds(5);
+            if (timeout == default) timeout = TimeSpan.FromSeconds(10);
             var timeoutTask = Task.Delay(timeout);
             await Task.WhenAny(task, timeoutTask);
 

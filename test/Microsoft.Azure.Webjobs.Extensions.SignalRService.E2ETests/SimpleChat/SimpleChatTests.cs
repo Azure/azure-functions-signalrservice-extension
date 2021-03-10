@@ -70,7 +70,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
                     Arguments = new object[] { messageToSend }
                 });
 
-                await Task.WhenAll(completionSources.Select(s => s.Task)).OrTimeout(TimeSpan.FromSeconds(10));
+                await Task.WhenAll(completionSources.Select(s => s.Task)).OrTimeout();
 
                 //clean
                 await Task.WhenAll(connections.Select(c => c.DisposeAsync().AsTask()));

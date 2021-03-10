@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SimpleChatV3": {
+      "commandName": "Project",
+      "commandLineArgs": "host start --pause-on-error"
+    }
+  }
+}
