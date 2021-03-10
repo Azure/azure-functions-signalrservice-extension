@@ -20,7 +20,7 @@
     <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>
     <MicrosoftAspNetCoreSignalRClient>5.0.3</MicrosoftAspNetCoreSignalRClient>
     <MicrosoftExtensionsConfiguration>5.0.0</MicrosoftExtensionsConfiguration>
-    <MicrosoftAspNetCoreTesting>2.4.0</MicrosoftAspNetCoreTesting>
+    <MicrosoftAspNetCoreTesting>2.2.0</MicrosoftAspNetCoreTesting>
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
 </Project>
