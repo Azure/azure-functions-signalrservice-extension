@@ -71,25 +71,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
         /// </summary>
         [Obsolete("Please use async version instead.")]
-        protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null, HttpContext httpContext = null)
+        protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null)
         {
-            return NegotiateAsync(userId, claims, lifetime.GetValueOrDefault(), httpContext).Result;
+            return NegotiateAsync(new NegotiationOptions
+            {
+                UserId = userId,
+                Claims = claims,
+                TokenLifetime = lifetime.GetValueOrDefault()
+            }).Result;
         }
 
         /// <summary>
         /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
         /// </summary>
-        protected async Task<SignalRConnectionInfo> NegotiateAsync(string userId = null, IList<Claim> claims = null, TimeSpan lifetime = default, HttpContext httpContext = null)
+        protected async Task<SignalRConnectionInfo> NegotiateAsync(NegotiationOptions options)
         {
             if (_hubContext != null)
             {
-                var negotiateResponse = await _hubContext.NegotiateAsync(new NegotiationOptions
-                {
-                    HttpContext = httpContext,
-                    UserId = userId,
-                    Claims = claims,
-                    TokenLifetime = lifetime
-                });
+                var negotiateResponse = await _hubContext.NegotiateAsync(options);
                 return new SignalRConnectionInfo
                 {
                     Url = negotiateResponse.Url,
@@ -102,7 +101,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return new SignalRConnectionInfo
                 {
                     Url = _serviceManager.GetClientEndpoint(HubName),
-                    AccessToken = _serviceManager.GenerateClientAccessToken(HubName, userId, claims, lifetime)
+                    AccessToken = _serviceManager.GenerateClientAccessToken(HubName, options.UserId, options.Claims, options.TokenLifetime)
                 };
             }
         }
