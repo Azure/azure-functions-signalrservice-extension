@@ -1,0 +1,31 @@
+name: Gated-Ubuntu
+
+on:
+  push:
+    branches: 
+      - dev
+      - master
+  pull_request:
+    branches: 
+      - dev
+      - master
+
+jobs:
+  build_ubuntu:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.103
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Install packages
+      run: sudo apt -y install libunwind8 maven
+    - name: Build
+      run: |
+        ./build.sh --ci
+        mvn clean package -f ./binding-library/java/pom.xml

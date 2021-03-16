@@ -2,12 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
+ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -30,7 +26,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         protected Task<FunctionResult> ExecuteWithAuthAsync(HttpRequestMessage request, ExecutionContext executor,
             InvocationContext context, TaskCompletionSource<object> tcs = null)
         {
-            if (!Resolver.ValidateSignature(request, executor.AccessKey))
+            if (!Resolver.ValidateSignature(request, executor.AccessKeys))
             {
                 throw new SignalRTriggerAuthorizeFailedException();
             }

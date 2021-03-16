@@ -2,13 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Executors;
 using Microsoft.Azure.WebJobs.Host.Listeners;
@@ -21,6 +18,8 @@ namespace SignalRServiceExtension.Tests
 {
     public class SignalRTriggerTests
     {
+        private const string ConnectionString = "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
+        private static readonly AccessKey[] AccessKeys = new AccessKey[] { new ServiceEndpoint(ConnectionString).AccessKey };
         [Fact]
         public async Task BindAsyncTest()
         {
@@ -44,7 +43,7 @@ namespace SignalRServiceExtension.Tests
             var hub = Guid.NewGuid().ToString();
             var method = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();
-            var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(hub, category, method), dispatcher);
+            var binding = new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(hub, category, method), dispatcher, AccessKeys);
             await binding.CreateListenerAsync(listenerFactoryContext);
             Assert.Equal(executor, dispatcher.Executors[(hub, category, method)].Executor);
         }
@@ -106,7 +105,7 @@ namespace SignalRServiceExtension.Tests
         {
             var parameterInfo = this.GetType().GetMethod(functionName, BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             var dispatcher = new TestTriggerDispatcher();
-            return new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(string.Empty, string.Empty, string.Empty, parameterNames), dispatcher);
+            return new SignalRTriggerBinding(parameterInfo, new SignalRTriggerAttribute(string.Empty, string.Empty, string.Empty, parameterNames), dispatcher, AccessKeys);
         }
 
         internal void TestFunction(InvocationContext context)

@@ -1,0 +1,31 @@
+name: Gated-OSX
+
+on:
+  push:
+    branches: 
+      - dev
+      - master
+  pull_request:
+    branches: 
+      - dev
+      - master
+
+jobs:
+  build_osx:
+
+    runs-on: macOS-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.103
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Install packages
+      run: brew install maven
+    - name: Build
+      run: |
+        ./build.sh --ci
+        mvn clean package -f ./binding-library/java/pom.xml

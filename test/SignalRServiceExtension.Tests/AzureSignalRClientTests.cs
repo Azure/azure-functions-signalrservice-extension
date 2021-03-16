@@ -5,16 +5,25 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
+using Microsoft.Azure.SignalR.Tests.Common;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using SignalRServiceExtension.Tests.Utils;
 using Xunit;
+using Constants = Microsoft.Azure.WebJobs.Extensions.SignalRService.Constants;
 
 namespace SignalRServiceExtension.Tests
 {
     public class AzureSignalRClientTests
     {
         [Fact]
-        public void GetClientConnectionInfo()
+        public async Task GetClientConnectionInfo()
         {
             var hubName = "TestHub";
             var hubUrl = "http://localhost";
@@ -25,15 +34,58 @@ namespace SignalRServiceExtension.Tests
             var expectedName = "John Doe";
             var expectedIat = "1516239022";
             var claimTypeList = new string[] { "name", "iat" };
-            var serviceManagerStore = new ServiceManagerStore(ServiceTransportType.Transient, null, null);
-            var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionString, hubName);
-            var connectionInfo = azureSignalRClient.GetClientConnectionInfo(userId, idToken, claimTypeList);
+            var connectionStringKey = Constants.AzureSignalRConnectionStringName;
+            var configDict = new Dictionary<string, string>() { { Constants.ServiceTransportTypeName, "Transient" }, { connectionStringKey, connectionString } };
+            var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
+            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, new TestRouter());
+            var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionStringKey, hubName);
+            var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(userId, idToken, claimTypeList);
 
             Assert.Equal(connectionInfo.Url, $"{hubUrl}/client/?hub={hubName.ToLower()}");
 
             var claims = new JwtSecurityTokenHandler().ReadJwtToken(connectionInfo.AccessToken).Claims;
             Assert.Equal(expectedName, GetClaimValue(claims, "name"));
             Assert.Equal(expectedIat, GetClaimValue(claims, $"{AzureSignalRClient.AzureSignalRUserPrefix}iat"));
+        }
+
+        [Fact]
+        public async Task ServiceEndpointsNotSet()
+        {
+            var rootHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            var childHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            rootHubContextMock.Setup(c => c.WithEndpoints(It.IsAny<ServiceEndpoint[]>())).Returns(childHubContextMock.Object);
+            rootHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
+            var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, "key", "hub");
+            var data = new SignalRData
+            {
+                Target = "target",
+                Arguments = new object[] { "arg1" }
+            };
+            await azureSignalRClient.SendToAll(data);
+            rootHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(data.Target, data.Arguments, default), Times.Once);
+            childHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task ServiceEndpointsSet()
+        {
+            var rootHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            var childHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            rootHubContextMock.Setup(c => c.WithEndpoints(It.IsAny<ServiceEndpoint[]>())).Returns(childHubContextMock.Object);
+            childHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
+            var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, "key", "hub");
+            var data = new SignalRData
+            {
+                Target = "target",
+                Arguments = new object[] { "arg1" },
+                Endpoints = FakeEndpointUtils.GetFakeEndpoint(2).ToArray()
+            };
+            await azureSignalRClient.SendToAll(data);
+            rootHubContextMock.Verify(c => c.WithEndpoints(data.Endpoints), Times.Once);
+            rootHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()), Times.Never);
+            childHubContextMock.Verify(c => c.Clients.All.SendCoreAsync(data.Target, data.Arguments, default), Times.Once);
         }
 
         private string GetClaimValue(IEnumerable<Claim> claims, string type) =>

@@ -29,16 +29,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.userType = context.Parameter.ParameterType;
         }
 
-        protected override Task<IValueProvider> BuildAsync(SignalRConnectionInfoAttribute attrResolved,
+        protected async override Task<IValueProvider> BuildAsync(SignalRConnectionInfoAttribute attrResolved,
             IReadOnlyDictionary<string, object> bindingData)
         {
             var azureSignalRClient = Utils.GetAzureSignalRClient(attrResolved.ConnectionStringSetting, attrResolved.HubName);
 
             if (!bindingData.ContainsKey(HttpRequestName) || securityTokenValidator == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
+                var info = await azureSignalRClient.GetClientConnectionInfoAsync(attrResolved.UserId, attrResolved.IdToken,
                     attrResolved.ClaimTypeList);
-                return Task.FromResult<IValueProvider>(new SignalRConnectionInfoValueProvider(info, userType, ""));
+                return new SignalRConnectionInfoValueProvider(info, userType, "");
             }
 
             var request = bindingData[HttpRequestName] as HttpRequest;
@@ -47,14 +47,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (tokenResult.Status != SecurityTokenStatus.Valid)
             {
-                return Task.FromResult<IValueProvider>(new SignalRConnectionInfoValueProvider(null, userType, ""));
+                return new SignalRConnectionInfoValueProvider(null, userType, "");
             }
 
             if (signalRConnectionInfoConfigurer == null)
             {
-                var info = azureSignalRClient.GetClientConnectionInfo(attrResolved.UserId, attrResolved.IdToken,
+                var info = await azureSignalRClient.GetClientConnectionInfoAsync(attrResolved.UserId, attrResolved.IdToken,
                     attrResolved.ClaimTypeList);
-                return Task.FromResult<IValueProvider>(new SignalRConnectionInfoValueProvider(info, userType, ""));
+                return new SignalRConnectionInfoValueProvider(info, userType, "");
             }
 
             var signalRConnectionDetail = new SignalRConnectionDetail
@@ -63,9 +63,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 Claims = azureSignalRClient.GetCustomClaims(attrResolved.IdToken, attrResolved.ClaimTypeList),
             };
             signalRConnectionInfoConfigurer.Configure(tokenResult, request, signalRConnectionDetail);
-            var customizedInfo = azureSignalRClient.GetClientConnectionInfo(signalRConnectionDetail.UserId,
+            var customizedInfo = await azureSignalRClient.GetClientConnectionInfoAsync(signalRConnectionDetail.UserId,
                 signalRConnectionDetail.Claims);
-            return Task.FromResult<IValueProvider>(new SignalRConnectionInfoValueProvider(customizedInfo, userType, ""));
+            return new SignalRConnectionInfoValueProvider(customizedInfo, userType, "");
         }
     }
 }

@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Config;
@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Constants = Microsoft.Azure.WebJobs.Extensions.SignalRService.Constants;
 
 namespace SignalRServiceExtension.Tests.Utils
 {
@@ -35,6 +36,7 @@ namespace SignalRServiceExtension.Tests.Utils
                 {
                     webJobsBuilder.AddSignalR();
                     webJobsBuilder.UseHostId(Guid.NewGuid().ToString("n"));
+                    webJobsBuilder.Services.AddSingleton<IEndpointRouter>(new TestRouter());
                 })
                 .ConfigureLogging(logging =>
                 {
@@ -91,7 +93,7 @@ namespace SignalRServiceExtension.Tests.Utils
 
             // This allows us to pass the message through APIs defined in legacy code and then
             // operate on the HttpContext inside.
-            message.Properties[nameof(HttpContext)] = httpContext;
+            message.Options.Set(new HttpRequestOptionsKey<HttpContext>(nameof(HttpContext)), httpContext);
 
             message.Content = new StreamContent(httpRequest.Body);
 

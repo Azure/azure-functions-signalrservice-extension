@@ -6,12 +6,13 @@ using Microsoft.Azure.WebJobs.Description;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    [AttributeUsage(AttributeTargets.ReturnValue | AttributeTargets.Parameter)]
+    [AttributeUsage(AttributeTargets.Parameter)]
     [Binding]
-    public class SignalRAttribute : Attribute
+    public class SignalREndpointsAttribute : Attribute
     {
         public string ConnectionStringSetting { get; set; } = Constants.AzureSignalRConnectionStringName;
 
+        //todo resolve hub name from SignalRAttribute
         [AutoResolve]
         public string HubName { get; set; }
     }

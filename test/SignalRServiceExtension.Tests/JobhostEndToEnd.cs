@@ -8,12 +8,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.SignalR.Management;
+using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Config;
-using Microsoft.Azure.WebJobs.Host.Indexers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,7 +22,6 @@ using SignalRServiceExtension.Tests.Utils;
 using SignalRServiceExtension.Tests.Utils.Loggings;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace SignalRServiceExtension.Tests
 {
@@ -63,38 +61,45 @@ namespace SignalRServiceExtension.Tests
             [Constants.AzureSignalRConnectionStringName] = DefaultConnectionString
         };
 
+        public static Dictionary<string, string> MultiConnStrOutsideOfAttrConfigDict = new Dictionary<string, string>
+        {
+            [AttrConnStrConfigKey] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey + ":a"] = DefaultAttributeConnectionString,
+            [AttrConnStrConfigKey + ":b:primary"] = DefaultAttributeConnectionString
+        };
+
         public static Dictionary<string, string>[] TestConfigDicts = {
             ConnStrInsideOfAttrConfigDict,
             ConnStrOutsideOfAttrConfigDict,
             DiffConfigKeySameConnStrConfigDict,
             DiffConfigKeyDiffConnStrConfigDict,
-            null,
             DiffConfigKeyDiffConnStrConfigDict,
+            MultiConnStrOutsideOfAttrConfigDict
         };
 
         public static Type[] TestClassTypesForSignalRAttribute =
         {
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithoutConnectionString),
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithConnectionString),
-            typeof(SignalRFunctionsWithoutConnectionString),
-            typeof(SignalRFunctionsWithMultipleConnectionStrings),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctions),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctionsWithCustomizedKey),
+            typeof(SignalRFunctionsWithMultiKeys),
+            typeof(SignalRFunctionsWithCustomizedKey),
         };
 
         public static Type[] TestClassTypesForSignalRConnectionInfoAttribute =
         {
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithoutConnectionString),
-            typeof(SignalRConnectionInfoFunctionsWithMultipleConnectionStrings),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctions),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
+            typeof(SignalRConnectionInfoFunctionsWithMultiKeys),
+            typeof(SignalRConnectionInfoFunctionsWithCustomizedKey),
         };
 
-        public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRAttribute)}.{nameof(SignalRAttribute.ConnectionStringSetting)}"));
+        public static IEnumerable<object[]> SignalRAttributeTestData => GenerateTestData(TestClassTypesForSignalRAttribute, TestConfigDicts);
 
-        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => GenerateTestData(TestClassTypesForSignalRConnectionInfoAttribute, TestConfigDicts, GenerateTestExpectedErrorMessages($"{nameof(SignalRConnectionInfoAttribute)}.{nameof(SignalRConnectionInfoAttribute.ConnectionStringSetting)}"));
+        public static IEnumerable<object[]> SignalRConnectionInfoAttributeTestData => GenerateTestData(TestClassTypesForSignalRConnectionInfoAttribute, TestConfigDicts);
 
         public JobhostEndToEnd(ITestOutputHelper output)
         {
@@ -104,24 +109,26 @@ namespace SignalRServiceExtension.Tests
         [Theory]
         [MemberData(nameof(SignalRAttributeTestData))]
         [MemberData(nameof(SignalRConnectionInfoAttributeTestData))]
-        public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict, string expectedErrorMessage)
+        public async Task ConnectionStringSettingFacts(Type classType, Dictionary<string, string> configDict)
         {
-            if (configDict != null)
-            {
-                configDict[Constants.ServiceTransportTypeName] = nameof(ServiceTransportType.Transient);
-            }
             _curConfigDict = configDict;
-            var host = TestHelpers.NewHost(classType, configuration: configDict, loggerProvider: new XunitLoggerProvider(_output));
-            if (expectedErrorMessage == null)
-            {
-                await Task.WhenAll(from method in classType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
-                                   select host.GetJobHost().CallAsync($"{classType.Name}.{method.Name}"));
-            }
-            else
-            {
-                var indexException = await Assert.ThrowsAsync<FunctionIndexingException>(() => host.StartAsync());
-                Assert.Equal(expectedErrorMessage, indexException.InnerException.Message);
-            }
+            await CreateTestTask(classType, configDict);
+        }
+
+        [Fact]
+        public async Task SignalRAttribute_MissingConnectionStringSettingFacts()
+        {
+            var task = CreateTestTask(typeof(SignalRFunctions), null);
+            var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.Message);
+        }
+
+        [Fact]
+        public async Task SignalRConnectionInfoAttribute_MissingConnectionStringSettingFacts()
+        {
+            var task = CreateTestTask(typeof(SignalRConnectionInfoFunctions), null);
+            var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.InnerException.Message);
         }
 
         [Fact]
@@ -153,25 +160,15 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public static string[] GenerateTestExpectedErrorMessages(string attributePropertyName) => new string[]
+        public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts)
         {
-            null,
-            null,
-            null,
-            null,
-            string.Format(ErrorMessages.EmptyConnectionStringErrorMessageFormat, attributePropertyName),
-            null,
-        };
-
-        public static IEnumerable<object[]> GenerateTestData(Type[] classType, Dictionary<string, string>[] configDicts, string[] expectedErrorMessages)
-        {
-            if (classType.Length != expectedErrorMessages.Length || classType.Length != configDicts.Length)
+            if (classType.Length != configDicts.Length)
             {
-                throw  new ArgumentException($"Length of {nameof(classType)}, {nameof(configDicts)} and {nameof(expectedErrorMessages)} are not the same.");
+                throw new ArgumentException($"Length of {nameof(classType)} and {nameof(configDicts)}  are not the same.");
             }
-            for (var i = 0; i < expectedErrorMessages.Length; i++)
+            for (var i = 0; i < classType.Length; i++)
             {
-                yield return new object[] { classType[i], configDicts[i], expectedErrorMessages[i] };
+                yield return new object[] { classType[i], configDicts[i] };
             }
         }
 
@@ -203,14 +200,26 @@ namespace SignalRServiceExtension.Tests
                         Arguments = new[] { "message" }
                     });
             }
+            catch (AzureSignalRInaccessibleEndpointException)
+            {
+                // ignore, since we don't really connect to Azure SignalR Service
+            }
             catch
             {
-                // ignore all the exception, since we only want to test whether the service manager for specific is added in the service manager store
+                throw;
             }
         }
 
+        private Task CreateTestTask(Type classType, Dictionary<string, string> configuration)
+        {
+            var host = TestHelpers.NewHost(classType, configuration: configuration, loggerProvider: new XunitLoggerProvider(_output));
+            return Task.WhenAll(from method in classType.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
+                                select host.GetJobHost().CallAsync($"{classType.Name}.{method.Name}"));
+        }
+
         #region SignalRAttributeTests
-        public class SignalRFunctionsWithConnectionString
+
+        public class SignalRFunctionsWithCustomizedKey
         {
             public async Task Func([SignalR(HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -219,7 +228,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRFunctionsWithoutConnectionString
+        public class SignalRFunctions
         {
             public async Task Func([SignalR(HubName = DefaultHubName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -228,7 +237,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRFunctionsWithMultipleConnectionStrings
+        public class SignalRFunctionsWithMultiKeys
         {
             public async Task Func1([SignalR(HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] IAsyncCollector<SignalRMessage> signalRMessages)
             {
@@ -242,10 +251,12 @@ namespace SignalRServiceExtension.Tests
                 Assert.NotNull(((ServiceManagerStore)StaticServiceHubContextStore.ServiceManagerStore).GetByConfigurationKey(AttrConnStrConfigKey));
             }
         }
-        #endregion
+
+        #endregion SignalRAttributeTests
 
         #region SignalRConnectionInfoAttributeTests
-        public class SignalRConnectionInfoFunctionsWithConnectionString
+
+        public class SignalRConnectionInfoFunctionsWithCustomizedKey
         {
             public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = AttrConnStrConfigKey)] SignalRConnectionInfo connectionInfo)
             {
@@ -253,7 +264,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRConnectionInfoFunctionsWithoutConnectionString
+        public class SignalRConnectionInfoFunctions
         {
             public void Func([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName)] SignalRConnectionInfo connectionInfo)
             {
@@ -261,7 +272,7 @@ namespace SignalRServiceExtension.Tests
             }
         }
 
-        public class SignalRConnectionInfoFunctionsWithMultipleConnectionStrings
+        public class SignalRConnectionInfoFunctionsWithMultiKeys
         {
             public void Func1([SignalRConnectionInfo(UserId = DefaultUserId, HubName = DefaultHubName, ConnectionStringSetting = Constants.AzureSignalRConnectionStringName)] SignalRConnectionInfo connectionInfo)
             {
@@ -273,6 +284,7 @@ namespace SignalRServiceExtension.Tests
                 UpdateFunctionOutConnectionString(connectionInfo, AttrConnStrConfigKey);
             }
         }
-        #endregion
+
+        #endregion SignalRConnectionInfoAttributeTests
     }
 }

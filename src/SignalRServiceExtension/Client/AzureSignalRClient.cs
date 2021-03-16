@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
+using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -17,6 +19,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class AzureSignalRClient : IAzureSignalRSender
     {
         public const string AzureSignalRUserPrefix = "asrs.u.";
+
         private static readonly string[] SystemClaims =
         {
             "aud", // Audience claim, used by service to make sure token is matched with target resource.
@@ -24,39 +27,33 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             "iat", // Issued At claim. Added by default. It is not validated by service.
             "nbf"  // Not Before claim. Added by default. It is not validated by service.
         };
+
         private readonly IServiceManagerStore serviceManagerStore;
-        private readonly string connectionString;
+        private readonly string connectionStringKey;
 
         public string HubName { get; }
 
-        internal AzureSignalRClient(IServiceManagerStore serviceManagerStore, string connectionString, string hubName)
+        internal AzureSignalRClient(IServiceManagerStore serviceManagerStore, string connectionStringKey, string hubName)
         {
             this.serviceManagerStore = serviceManagerStore;
             this.HubName = hubName;
-            this.connectionString = connectionString;
+            this.connectionStringKey = connectionStringKey;
         }
 
-        public SignalRConnectionInfo GetClientConnectionInfo(string userId, string idToken, string[] claimTypeList)
+        public Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, string idToken, string[] claimTypeList)
         {
             var customerClaims = GetCustomClaims(idToken, claimTypeList);
-            var serviceManager = serviceManagerStore.GetOrAddByConnectionString(connectionString).ServiceManager;
-
-            return new SignalRConnectionInfo
-            {
-                Url = serviceManager.GetClientEndpoint(HubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(
-                    HubName, userId, BuildJwtClaims(customerClaims, AzureSignalRUserPrefix).ToList())
-            };
+            return GetClientConnectionInfoAsync(userId, customerClaims);
         }
 
-        public SignalRConnectionInfo GetClientConnectionInfo(string userId, IList<Claim> claims)
+        public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims)
         {
-            var serviceManager = serviceManagerStore.GetOrAddByConnectionString(connectionString).ServiceManager;
+            var serviceHubContext = await GetHubContextAsync();
+            var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions() { UserId = userId, Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList() });
             return new SignalRConnectionInfo
             {
-                Url = serviceManager.GetClientEndpoint(HubName),
-                AccessToken = serviceManager.GenerateClientAccessToken(
-                    HubName, userId, BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList())
+                Url = negotiateResponse.Url,
+                AccessToken = negotiateResponse.AccessToken
             };
         }
 
@@ -79,54 +76,38 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return customClaims;
         }
 
-        public async Task SendToAll(SignalRData data)
+        public Task SendToAll(SignalRData data)
         {
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Clients.All.SendCoreAsync(data.Target, data.Arguments);
+            return InvokeAsync(data.Endpoints, hubContext => hubContext.Clients.All.SendCoreAsync(data.Target, data.Arguments));
         }
 
-        public async Task SendToConnection(string connectionId, SignalRData data)
+        public Task SendToConnection(string connectionId, SignalRData data)
         {
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Clients.Client(connectionId).SendCoreAsync(data.Target, data.Arguments);
+            return InvokeAsync(data.Endpoints, hubContext => hubContext.Clients.Client(connectionId).SendCoreAsync(data.Target, data.Arguments));
         }
 
-        public async Task SendToUser(string userId, SignalRData data)
+        public Task SendToUser(string userId, SignalRData data)
         {
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Clients.User(userId).SendCoreAsync(data.Target, data.Arguments);
+            return InvokeAsync(data.Endpoints, hubContext => hubContext.Clients.User(userId).SendCoreAsync(data.Target, data.Arguments));
         }
 
-        public async Task SendToGroup(string groupName, SignalRData data)
+        public Task SendToGroup(string groupName, SignalRData data)
         {
             if (string.IsNullOrEmpty(groupName))
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Clients.Group(groupName).SendCoreAsync(data.Target, data.Arguments);
+            return InvokeAsync(data.Endpoints, hubContext => hubContext.Clients.Group(groupName).SendCoreAsync(data.Target, data.Arguments));
         }
 
-        public async Task AddUserToGroup(string userId, string groupName)
+        public Task AddUserToGroup(SignalRGroupAction action)
         {
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
-            }
-            if (string.IsNullOrEmpty(groupName))
-            {
-                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
-            }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.UserGroups.AddToGroupAsync(userId, groupName);
-        }
-
-        public async Task RemoveUserFromGroup(string userId, string groupName)
-        {
+            var userId = action.UserId;
+            var groupName = action.GroupName;
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
@@ -135,22 +116,38 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.UserGroups.RemoveFromGroupAsync(userId, groupName);
+            return InvokeAsync(action.Endpoints, hubContext => hubContext.UserGroups.AddToGroupAsync(userId, groupName));
         }
 
-        public async Task RemoveUserFromAllGroups(string userId)
+        public Task RemoveUserFromGroup(SignalRGroupAction action)
         {
+            var userId = action.UserId;
+            var groupName = action.GroupName;
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.UserGroups.RemoveFromAllGroupsAsync(userId);
+            if (string.IsNullOrEmpty(groupName))
+            {
+                throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
+            }
+            return InvokeAsync(action.Endpoints, hubContext => hubContext.UserGroups.RemoveFromGroupAsync(userId, groupName));
         }
 
-        public async Task AddConnectionToGroup(string connectionId, string groupName)
+        public Task RemoveUserFromAllGroups(SignalRGroupAction action)
         {
+            var userId = action.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentException($"{nameof(userId)} cannot be null or empty");
+            }
+            return InvokeAsync(action.Endpoints, hubContext => hubContext.UserGroups.RemoveFromAllGroupsAsync(userId));
+        }
+
+        public Task AddConnectionToGroup(SignalRGroupAction action)
+        {
+            var connectionId = action.ConnectionId;
+            var groupName = action.GroupName;
             if (string.IsNullOrEmpty(connectionId))
             {
                 throw new ArgumentException($"{nameof(connectionId)} cannot be null or empty");
@@ -159,12 +156,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Groups.AddToGroupAsync(connectionId, groupName);
+            return InvokeAsync(action.Endpoints, hubContext => hubContext.Groups.AddToGroupAsync(connectionId, groupName));
         }
 
-        public async Task RemoveConnectionFromGroup(string connectionId, string groupName)
+        public Task RemoveConnectionFromGroup(SignalRGroupAction action)
         {
+            var connectionId = action.ConnectionId;
+            var groupName = action.GroupName;
             if (string.IsNullOrEmpty(connectionId))
             {
                 throw new ArgumentException($"{nameof(connectionId)} cannot be null or empty");
@@ -173,8 +171,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new ArgumentException($"{nameof(groupName)} cannot be null or empty");
             }
-            var serviceHubContext = await serviceManagerStore.GetOrAddByConnectionString(connectionString).GetAsync(HubName);
-            await serviceHubContext.Groups.RemoveFromGroupAsync(connectionId, groupName);
+            return InvokeAsync(action.Endpoints, hubContext => hubContext.Groups.RemoveFromGroupAsync(connectionId, groupName));
         }
 
         private static IEnumerable<Claim> BuildJwtClaims(IEnumerable<Claim> customerClaims, string prefix)
@@ -195,6 +192,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                     }
                 }
             }
+        }
+
+        private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<ServiceHubContext, Task> func)
+        {
+            var serviceHubContext = await GetHubContextAsync();
+            var targetHubContext = endpoints == null ? serviceHubContext : (serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints) as ServiceHubContext;
+            await func.Invoke(targetHubContext);
+        }
+
+        private async ValueTask<ServiceHubContext> GetHubContextAsync()
+        {
+            var hubContext = await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName);
+            return hubContext as ServiceHubContext;
         }
     }
 }

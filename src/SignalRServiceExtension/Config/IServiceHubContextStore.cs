@@ -12,7 +12,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public interface IServiceHubContextStore
     {
         /// <summary>
-        /// Gets <see cref="IServiceHubContext"/>. 
+        /// Gets <see cref="IServiceHubContext"/>.
         /// If the <see cref="IServiceHubContext"/> for a specific hub name exists, returns the <see cref="IServiceHubContext"/>,
         /// otherwise creates one and then returns it.
         /// </summary>

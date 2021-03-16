@@ -1,20 +1,29 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Azure.SignalR;
+using Microsoft.Azure.SignalR.Tests.Common;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Moq;
-using System;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace SignalRServiceExtension.Tests
 {
     public class SignalRAsyncCollectorTests
     {
-        private const string DefaultHubName = "chathub";
+        public static IEnumerable<object[]> GetEndpoints()
+        {
+            yield return new object[] { FakeEndpointUtils.GetFakeEndpoint(2).ToArray() };
+            yield return new object[] { null };
+        }
 
-        [Fact]
-        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll()
+        [Theory]
+        [MemberData(nameof(GetEndpoints))]
+        public async Task AddAsync_WithBroadcastMessage_CallsSendToAll(ServiceEndpoint[] endpoints)
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRMessage>(signalRSenderMock.Object);
@@ -22,7 +31,8 @@ namespace SignalRServiceExtension.Tests
             await collector.AddAsync(new SignalRMessage
             {
                 Target = "newMessage",
-                Arguments = new object[] { "arg1", "arg2" }
+                Arguments = new object[] { "arg1", "arg2" },
+                Endpoints = endpoints
             });
 
             signalRSenderMock.Verify(c => c.SendToAll(It.IsAny<SignalRData>()), Times.Once);
@@ -31,6 +41,7 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("newMessage", actualData.Target);
             Assert.Equal("arg1", actualData.Arguments[0]);
             Assert.Equal("arg2", actualData.Arguments[1]);
+            Assert.Equal(endpoints, actualData.Endpoints);
         }
 
         [Fact]
@@ -79,26 +90,28 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal("arg2", actualData.Arguments[1]);
         }
 
-        [Fact]
-        public async Task AddAsync_WithUserId_CallsAddUserToGroup()
+        [Theory]
+        [MemberData(nameof(GetEndpoints))]
+        public async Task AddAsync_WithUserId_CallsAddUserToGroup(ServiceEndpoint[] endpoints)
         {
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-            await collector.AddAsync(new SignalRGroupAction
+            var action = new SignalRGroupAction
             {
                 UserId = "userId1",
                 GroupName = "group1",
-                Action = GroupAction.Add
-            });
+                Action = GroupAction.Add,
+                Endpoints = endpoints
+            };
+            await collector.AddAsync(action);
 
             signalRSenderMock.Verify(
-                c => c.AddUserToGroup("userId1", "group1"),
+                c => c.AddUserToGroup(action),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualData = signalRSenderMock.Invocations[0];
-            Assert.Equal("userId1", actualData.Arguments[0]);
-            Assert.Equal("group1", actualData.Arguments[1]);
+            var actualData = signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal(action, actualData);
         }
 
         [Fact]
@@ -107,20 +120,20 @@ namespace SignalRServiceExtension.Tests
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-            await collector.AddAsync(new SignalRGroupAction
+            var action = new SignalRGroupAction
             {
                 UserId = "userId1",
                 GroupName = "group1",
                 Action = GroupAction.Remove
-            });
+            };
+            await collector.AddAsync(action);
 
             signalRSenderMock.Verify(
-                c => c.RemoveUserFromGroup("userId1", "group1"),
+                c => c.RemoveUserFromGroup(action),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualData = signalRSenderMock.Invocations[0];
-            Assert.Equal("userId1", actualData.Arguments[0]);
-            Assert.Equal("group1", actualData.Arguments[1]);
+            var actualData = signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal(action, actualData);
         }
 
         [Fact]
@@ -129,18 +142,19 @@ namespace SignalRServiceExtension.Tests
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-            await collector.AddAsync(new SignalRGroupAction
+            var action = new SignalRGroupAction
             {
                 UserId = "userId1",
                 Action = GroupAction.RemoveAll
-            });
+            };
+            await collector.AddAsync(action);
 
             signalRSenderMock.Verify(
-                c => c.RemoveUserFromAllGroups("userId1"),
+                c => c.RemoveUserFromAllGroups(action),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualData = signalRSenderMock.Invocations[0];
-            Assert.Equal("userId1", actualData.Arguments[0]);
+            var actualData = signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal(action, actualData);
         }
 
         [Fact]
@@ -207,20 +221,20 @@ namespace SignalRServiceExtension.Tests
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-            await collector.AddAsync(new SignalRGroupAction
+            var action = new SignalRGroupAction
             {
                 ConnectionId = "connection1",
                 GroupName = "group1",
                 Action = GroupAction.Add
-            });
+            };
+            await collector.AddAsync(action);
 
             signalRSenderMock.Verify(
-                c => c.AddConnectionToGroup("connection1", "group1"),
+                c => c.AddConnectionToGroup(It.IsAny<SignalRGroupAction>()),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualData = signalRSenderMock.Invocations[0];
-            Assert.Equal("connection1", actualData.Arguments[0]);
-            Assert.Equal("group1", actualData.Arguments[1]);
+            var actualData = signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal(action, actualData);
         }
 
         [Fact]
@@ -229,20 +243,20 @@ namespace SignalRServiceExtension.Tests
             var signalRSenderMock = new Mock<IAzureSignalRSender>();
             var collector = new SignalRAsyncCollector<SignalRGroupAction>(signalRSenderMock.Object);
 
-            await collector.AddAsync(new SignalRGroupAction
+            var action = new SignalRGroupAction
             {
                 ConnectionId = "connection1",
                 GroupName = "group1",
                 Action = GroupAction.Remove
-            });
+            };
+            await collector.AddAsync(action);
 
             signalRSenderMock.Verify(
-                c => c.RemoveConnectionFromGroup("connection1", "group1"),
+                c => c.RemoveConnectionFromGroup(action),
                 Times.Once);
             signalRSenderMock.VerifyNoOtherCalls();
-            var actualData = signalRSenderMock.Invocations[0];
-            Assert.Equal("connection1", actualData.Arguments[0]);
-            Assert.Equal("group1", actualData.Arguments[1]);
+            var actualData = signalRSenderMock.Invocations[0].Arguments[0];
+            Assert.Equal(action, actualData);
         }
 
         [Fact]

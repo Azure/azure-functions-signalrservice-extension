@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using SignalRServiceExtension.Tests.Utils;
 using Xunit;
@@ -13,11 +14,12 @@ namespace SignalRServiceExtension.Tests.Trigger
         public static IEnumerable<object[]> SignatureTestData()
         {
             var connectionId = "0f9c97a2f0bf4706afe87a14e0797b11";
-            var accessKeys = new string[]
+            var accessKeys = new AccessKey[]
             {
-                "7aab239577fd4f24bc919802fb629f5f",
-                "a5f2815d0d0c4b00bd27e832432f91ab"
+                new AccessKey("7aab239577fd4f24bc919802fb629f5f","http://endpoint1",1),
+                new AccessKey("a5f2815d0d0c4b00bd27e832432f91ab","http://endpont2",1)
             };
+            var wrongAccessKeys = new AccessKey[] { new AccessKey(Guid.NewGuid().ToString(), "http://wrong", 1) };
             var signatures = new string[]
             {
                 "sha256=7767effcb3946f3e1de039df4b986ef02c110b1469d02c0a06f41b3b727ab561",
@@ -26,26 +28,24 @@ namespace SignalRServiceExtension.Tests.Trigger
 
             var req = TestHelpers.CreateHttpRequestMessage(String.Empty, String.Empty, String.Empty, connectionId,
                 signatures: signatures);
-            yield return new object[] { req, accessKeys[0], true };
-            yield return new object[] { req, accessKeys[1], true };
-            yield return new object[] { req, Guid.NewGuid().ToString(), false };
-            yield return new object[] { req, null, false };
-            yield return new object[] { req, string.Empty, false };
+            yield return new object[] { req, accessKeys, true };
+            yield return new object[] { req, accessKeys, true };
+            yield return new object[] { req, wrongAccessKeys, false };
 
             req = TestHelpers.CreateHttpRequestMessage(String.Empty, String.Empty, String.Empty, connectionId);
-            yield return new object[] { req, accessKeys[0], false };
+            yield return new object[] { req, accessKeys, false };
 
             req = TestHelpers.CreateHttpRequestMessage(String.Empty, String.Empty, String.Empty, connectionId, signatures: new string[0]);
-            yield return new object[] { req, accessKeys[0], false };
+            yield return new object[] { req, accessKeys, false };
         }
 
 
         [Theory]
         [MemberData(nameof(SignatureTestData))]
-        public void SignatureTest(HttpRequestMessage request, string accessKey, bool validate)
+        internal void SignatureTest(HttpRequestMessage request, AccessKey[] accessKeys, bool validate)
         {
             var resolver = new SignalRRequestResolver();
-            Assert.Equal(validate, resolver.ValidateSignature(request, accessKey));
+            Assert.Equal(validate, resolver.ValidateSignature(request, accessKeys));
         }
     }
 }
