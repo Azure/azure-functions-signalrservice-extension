@@ -11,26 +11,24 @@ To enable multiple endpoints support, you should:
 }
 ```
 
-2. Set multiple SignalR connection string entries in your configuration. The keys are in the following format : 
+2. Set multiple SignalR endpoints entries in your configuration. The keys are in the following format : 
 ```
-AzureSignalRConnectionString: <name> : <role>
+Azure:SignalR:Endpoints: <name> : <role>
 ```
-You can customize the key prefix `AzureSignalRConnectionString` with `ConnectionStringSetting`. `<name>` is the name of the endpoint and `<role>` is its role (`primary` or `secondary`). Name is optional but it will be useful if you want to further customize the routing behavior among multiple endpoints. If `<role>` is not specified, it will default to `primary`.
 
-The followings are some connection string entries samples.
+The followings are some service endpoint entry samples.
 ```json
 {
-    "AzureSignalRConnectionString":"<value>",
     
-    "AzureSignalRConnectionString:EastUs":"<value>",
+    "Azure:SignalR:Endpoints:EastUs":"<value>",
     
-    "AzureSignalRConnectionString:EastUs2:Secondary":"<value>",
+    "Azure:SignalR:Endpoints:EastUs2:Secondary":"<value>",
     
-    "AzureSignalRConnectionString:WestUs:Primary":"<value>"
+    "Azure:SignalR:Endpoints:WestUs:Primary":"<value>"
 }
 ```
 
-**When you configure connection strings in the App Service on Azure portal,  don't forget to replace `":"` with `"__"`, the double underscore**. For reasons, see [Environment variables](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#environment-variables).
+**When you configure Azure SignalR endpoints in the App Service on Azure portal,  don't forget to replace `":"` with `"__"`, the double underscore in the keys.** For reasons, see [Environment variables](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#environment-variables).
 
 
 ## Configuration in cross-geo scenarios
