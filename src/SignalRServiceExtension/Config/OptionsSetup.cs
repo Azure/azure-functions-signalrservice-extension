@@ -40,7 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public void Configure(ServiceManagerOptions options)
         {
             options.ConnectionString = configuration[connectionStringKey];
-            options.ServiceEndpoints = configuration.GetEndpoints(connectionStringKey).ToArray();
+            options.ServiceEndpoints = configuration.GetEndpoints(Constants.AzureSignalREndpoints).ToArray();
             var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             else if (string.IsNullOrWhiteSpace(serviceTransportTypeStr))
             {
                 options.ServiceTransportType = ServiceTransportType.Transient;
-                logger.LogWarning($"{Constants.ServiceTransportTypeName} not set, using default {ServiceTransportType.Transient} instead.");
+                logger.LogInformation($"{Constants.ServiceTransportTypeName} not set, using default {ServiceTransportType.Transient} instead.");
             }
             else
             {

@@ -6,6 +6,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal static class Constants
     {
         public const string AzureSignalRConnectionStringName = "AzureSignalRConnectionString";
+        public const string AzureSignalREndpoints = "Azure:SignalR:Endpoints";
         public const string ServiceTransportTypeName = "AzureSignalRServiceTransportType";
         public const string AsrsHeaderPrefix = "X-ASRS-";
         public const string AsrsConnectionIdHeader = AsrsHeaderPrefix + "Connection-Id";
