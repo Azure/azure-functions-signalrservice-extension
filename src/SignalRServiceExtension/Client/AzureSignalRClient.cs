@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
 
@@ -40,16 +41,21 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             this.connectionStringKey = connectionStringKey;
         }
 
-        public Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, string idToken, string[] claimTypeList)
+        public Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, string idToken, string[] claimTypeList, HttpContext httpContext)
         {
             var customerClaims = GetCustomClaims(idToken, claimTypeList);
-            return GetClientConnectionInfoAsync(userId, customerClaims);
+            return GetClientConnectionInfoAsync(userId, customerClaims, httpContext);
         }
 
-        public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims)
+        public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims, HttpContext httpContext)
         {
             var serviceHubContext = await GetHubContextAsync();
-            var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions() { UserId = userId, Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList() });
+            var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions()
+            { 
+                UserId = userId, 
+                Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList(), 
+                HttpContext = httpContext 
+            });
             return new SignalRConnectionInfo
             {
                 Url = negotiateResponse.Url,
