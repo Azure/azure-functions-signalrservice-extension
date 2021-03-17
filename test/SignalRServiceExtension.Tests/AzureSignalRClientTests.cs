@@ -39,7 +39,7 @@ namespace SignalRServiceExtension.Tests
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
             var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, new TestRouter());
             var azureSignalRClient = new AzureSignalRClient(serviceManagerStore, connectionStringKey, hubName);
-            var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(userId, idToken, claimTypeList);
+            var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(userId, idToken, claimTypeList,null);
 
             Assert.Equal(connectionInfo.Url, $"{hubUrl}/client/?hub={hubName.ToLower()}");
 
