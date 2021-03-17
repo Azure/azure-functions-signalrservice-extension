@@ -357,3 +357,6 @@ ASALocalRun/
 .project
 .settings/
 .checkstyle
+
+# Azure Function local settings
+local.settings.json
