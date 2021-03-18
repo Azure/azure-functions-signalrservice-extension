@@ -9,6 +9,7 @@ Currently we add support for configuring multiple SignalR Service instances **un
   - [Route algorithm](#route-algorithm)
     - [Default behavior](#default-behavior)
     - [Customization](#customization)
+    - [Implicitly pass HttpContext to endpoint router](#implicitly-pass-httpcontext-to-endpoint-router)
 
 <!-- /TOC -->
 
@@ -63,7 +64,6 @@ By default, the SDK uses the [DefaultEndpointRouter](https://github.com/Azure/az
 
 * Server message routing: All service endpoints are returned.
 
-
 ### Customization
 We support cutomization of route algoritm in C# language. 
 
@@ -88,6 +88,20 @@ namespace SimpleChatV3
     }
 }
 ```
+
 For other languages such as Javascript, we will support route algorithm customization in the future.
 
+### Implicitly pass HttpContext to endpoint router
+If your endpoint router needs `HttpContext` to make decision, you should use an [Http trigger](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=csharp) along with `SignalRConnectionInfo` input binding, so that the `HttpContext` inside the `HttpRequest` will be passed to the router.
+
+For examle:
+```cs
+[FunctionName("negotiate")]
+public static SignalRConnectionInfo GetSignalRInfo(
+    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
+    [SignalRConnectionInfo(HubName = "simplechat", UserId = "{query.userid}")] SignalRConnectionInfo connectionInfo)
+{
+    return connectionInfo;
+}
+```
 <!--Todo New methods for class-based mode-->
