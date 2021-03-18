@@ -16,7 +16,7 @@ Currently we add support for configuring multiple SignalR Service instances unde
 ## Usage Scenarios
 Routing logic is the way to decide to which SignalR Service instance among multiple instances your clients connect and your messages send. By applying different routing logic, this feature can be used in different scenarios. 
 * Scaling. Randomly route each client to one SignalR Service instance, send messages to all the SignalR Service instances so that you can scale the concurrent connections.
-* Cross-geo scenario. Cross-gen networks can be comparatively unstable. Route your clients to a SignalR Service instance in the same region can reduce cross-gen connections.
+* Cross-geo scenario. Cross-geo networks can be comparatively unstable. Route your clients to a SignalR Service instance in the same region can reduce cross-geo connections.
 * High availability and disaster recovery scenarios. Set up multiple service instances in different regions, so when one region is down, the others can be used as backup. Configure service instances as two roles, **primary** and **secondary**. By default, clients will be routed to a primary online instance. When SDK detects all the primary instances are down, it will route clients to secondary instances.
 
 ## Configuration method
