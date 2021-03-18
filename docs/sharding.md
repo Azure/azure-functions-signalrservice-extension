@@ -1,5 +1,5 @@
 # Multiple Azure SignalR Service instances Support
-Currently we add support for configuring multiple SignalR Service instances **under Persistent mode**. You can distrubute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
+Currently we add support for configuring multiple SignalR Service instances under **persistent** mode. You can distribute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
 
 <!-- TOC -->
 
@@ -25,7 +25,7 @@ To enable multiple SignalR Service instances, you should:
 
 1. Use `Persistent` transport type.
 
-    Currently multiple-endpoint feature is only support on `Persistent` mode. Add the followicng entry to your `local.settings.json` file locally or the application setting on Azure.
+    Currently multiple-endpoint feature is only supported on `Persistent` mode. Add the following entry to your `local.settings.json` file locally or the application setting on Azure.
 
     ```json
     {
@@ -35,13 +35,13 @@ To enable multiple SignalR Service instances, you should:
 
 2. Configure multiple SignalR Service endpoints entries in your configuration.
 
-    We use [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) object to represent a SignalR Service instance. You can define an service endpoint with its `<Name>` and `<EndpointType>` in the entry key, and the connection string in the entry value. The keys are in the following format : 
+    We use a [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) object to represent a SignalR Service instance. You can define an service endpoint with its `<Name>` and `<EndpointType>` in the entry key, and the connection string in the entry value. The keys are in the following format : 
 
     ```
     Azure:SignalR:Endpoints:<Name>:<EndpointType>
     ```
 
-    `<EndpointType>` is optional and is `primary` by default. The followings are some service endpoint entry samples.
+    `<EndpointType>` is optional and is `primary` by default. See samples below:
         
     ```json
     {

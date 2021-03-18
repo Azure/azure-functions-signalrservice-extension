@@ -21,7 +21,7 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 - Use Azure Functions (any language supported by V2) to send messages to a single user, or all the users in a group.
 - Use Azure Functions (any language supported by V2) to manage group users like add/remove a single user in a group.
 - Example scenarios include: broadcast messages to a SignalR Service hub on HTTP requests and events from Cosmos DB change feed, Event Hub, Event Grid, etc
-- Use multiple Azure SignalR Service instances for Resiliency and disaster recovery in Azure Functions. See details in [Multiple SignalR service endpoint support](./docs/sharding.md).
+- Use multiple Azure SignalR Service instances for resiliency and disaster recovery in Azure Functions. See details in [Multiple SignalR service endpoint support](./docs/sharding.md).
 
 ### Bindings
 
