@@ -7,8 +7,7 @@
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.11" />
   </ItemGroup>
   <ItemGroup>
-    <!--<ProjectReference Include="..\..\..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />-->
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.SignalRService" Version="1.3.0" />
+    <ProjectReference Include="..\..\..\..\src\SignalRServiceExtension\Microsoft.Azure.WebJobs.Extensions.SignalRService.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
