@@ -24,12 +24,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly IConfiguration configuration;
         private readonly IEndpointRouter router;
         private readonly ConcurrentDictionary<string, IInternalServiceHubContextStore> store = new ConcurrentDictionary<string, IInternalServiceHubContextStore>();
+        private readonly ILogger<ServiceManagerStore> logger;
+        private const string hubProtocolWarning = "It's invalid to configure hub protocol on Azure Functions runtime V2. Newtonsoft.Json protocol will be used.";
 
         public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory, IEndpointRouter router = null)
         {
             this.loggerFactory = loggerFactory;
             this.configuration = configuration;
             this.router = router;
+            logger = this.loggerFactory.CreateLogger<ServiceManagerStore>();
         }
 
         public IInternalServiceHubContextStore GetOrAddByConnectionStringKey(string connectionStringKey)
@@ -66,10 +69,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 services.AddSingleton(router);
             }
-
+#if NETSTANDARD2_0
+            if (configuration[Constants.AzureSignalRHubProtocol] != null)
+            {
+                logger.LogWarning(hubProtocolWarning);
+            }
+#endif
 #if NETCOREAPP3_1
             var protocolStr = configuration.GetValue(Constants.AzureSignalRHubProtocol, HubProtocol.SystemTextJson);
-            if (protocolStr != HubProtocol.SystemTextJson)
+            if (protocolStr == HubProtocol.NewtonsoftJson)
             {
                 var jsonProtocols = services.Where(s => s.ServiceType == typeof(IHubProtocol) && s.ImplementationType == typeof(JsonHubProtocol)).ToArray();
                 foreach (var protocol in jsonProtocols)
