@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 
@@ -16,7 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// User identity for a SignalR connection
         /// </summary>
         public string UserId { get; set; }
-        
+
         /// <summary>
         /// Custom claims that added to SignalR access token.
         /// </summary>

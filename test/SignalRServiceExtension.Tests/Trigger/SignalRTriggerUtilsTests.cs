@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Newtonsoft.Json;
@@ -13,17 +15,17 @@ namespace SignalRServiceExtension.Tests
     {
         public static IEnumerable<object[]> QueryStringTestData()
         {
-            yield return new object[] {"?k=v", new Dictionary<string, string> {["k"] = "v"}};
+            yield return new object[] { "?k=v", new Dictionary<string, string> { ["k"] = "v" } };
             yield return new object[] { "?k1=v1&k2=v2", new Dictionary<string, string> { ["k1"] = "v1", ["k2"] = "v2" } };
-            yield return new object[] { "?k1=v1&k1=v2", new Dictionary<string, string> { ["k1"] = "v1,v2" }};
-            yield return new object[] { "?k1=v1&k1=v2&k2=v3", new Dictionary<string, string> { ["k1"] = "v1,v2", ["k2"] = "v3"} };
+            yield return new object[] { "?k1=v1&k1=v2", new Dictionary<string, string> { ["k1"] = "v1,v2" } };
+            yield return new object[] { "?k1=v1&k1=v2&k2=v3", new Dictionary<string, string> { ["k1"] = "v1,v2", ["k2"] = "v3" } };
         }
 
         public static IEnumerable<object[]> HeaderTestData()
         {
             var request1 = new HttpRequestMessage();
             request1.Headers.Add("k", "v");
-            yield return new object[] {request1.Headers, new Dictionary<string, string> {["k"] = "v"}};
+            yield return new object[] { request1.Headers, new Dictionary<string, string> { ["k"] = "v" } };
 
             var request2 = new HttpRequestMessage();
             request2.Headers.Add("k1", "v1");
@@ -46,7 +48,7 @@ namespace SignalRServiceExtension.Tests
         {
             yield return new object[] { "k: v", new Dictionary<string, string> { ["k"] = "v" } };
             yield return new object[] { "k1: v1, k2: v2", new Dictionary<string, string> { ["k1"] = "v1", ["k2"] = "v2" } };
-            yield return new object[] { "k1: v1, k1: v2", new Dictionary<string, string> { ["k1"] = "v1" }};
+            yield return new object[] { "k1: v1, k1: v2", new Dictionary<string, string> { ["k1"] = "v1" } };
             yield return new object[] { "k1: v1, k1: v2, k2: v3", new Dictionary<string, string> { ["k1"] = "v1", ["k2"] = "v3" } };
         }
 

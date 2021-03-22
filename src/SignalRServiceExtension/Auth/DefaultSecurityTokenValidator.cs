@@ -30,7 +30,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 if (request?.Headers.TryGetValue(AuthHeaderName, out var authHeader) == true)
                 {
-                    var authHeaderValue =  authHeader.ToString();
+                    var authHeaderValue = authHeader.ToString();
                     if (authHeaderValue.StartsWith(BearerPrefix, StringComparison.OrdinalIgnoreCase))
                     {
                         var token = authHeaderValue.Substring(BearerPrefix.Length);
@@ -59,7 +59,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 // 'nbf' claim is greater than 'exp' claim
                 ex is SecurityTokenInvalidLifetimeException ||
 
-                // Signature is not properly formatted.
+                    // Signature is not properly formatted.
                     ex is SecurityTokenInvalidSignatureException ||
 
                 // 1. 'exp' claim is missing and TokenValidationParameters.RequireExpirationTime is true.

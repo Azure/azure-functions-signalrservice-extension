@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +12,7 @@ using ExecutionContext = Microsoft.Azure.WebJobs.Extensions.SignalRService.Execu
 
 namespace SignalRServiceExtension.Tests.Utils
 {
-    class TestTriggerDispatcher : ISignalRTriggerDispatcher
+    internal class TestTriggerDispatcher : ISignalRTriggerDispatcher
     {
         public Dictionary<(string, string, string), ExecutionContext> Executors { get; } =
             new Dictionary<(string, string, string), ExecutionContext>();

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -11,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    // Helper class for implementing IBinding with the attribute resolver pattern. 
+    // Helper class for implementing IBinding with the attribute resolver pattern.
     internal abstract class BindingBase<TAttribute> : IBinding
         where TAttribute : Attribute
     {
@@ -51,7 +50,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public Task<IValueProvider> BindAsync(object value, ValueBindingContext context)
         {
-                throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public ParameterDescriptor ToParameterDescriptor()
@@ -60,4 +59,3 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
     }
 }
-

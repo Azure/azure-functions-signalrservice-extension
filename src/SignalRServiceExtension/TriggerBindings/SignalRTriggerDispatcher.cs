@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,6 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly Dictionary<(string hub, string category, string @event), SignalRMethodExecutor> _executors =
             new Dictionary<(string, string, string), SignalRMethodExecutor>(TupleStringIgnoreCasesComparer.Instance);
+
         private readonly IRequestResolver _resolver;
 
         public SignalRTriggerDispatcher(IRequestResolver resolver = null)
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (!_executors.ContainsKey(key))
             {
-                if (string.Equals(key.category,Category.Connections, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(key.category, Category.Connections, StringComparison.OrdinalIgnoreCase))
                 {
                     if (string.Equals(key.@event, Event.Connected, StringComparison.OrdinalIgnoreCase))
                     {
@@ -65,7 +65,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
-            
+
             if (_executors.TryGetValue(key, out var executor))
             {
                 try

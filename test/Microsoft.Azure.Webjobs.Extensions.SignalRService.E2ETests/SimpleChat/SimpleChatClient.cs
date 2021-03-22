@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
             return HttpClient.PostAsync($"{url}/api/{SendPath}", content);
         }
 
-        public static Task Group(string url,SignalRGroupAction action)
+        public static Task Group(string url, SignalRGroupAction action)
         {
             const string GroupPath = "group";
             var content = JsonContent.Create(action);

@@ -21,6 +21,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
     {
         private const string Section = "SimpleChat";
         public static readonly SimpleChatClient Client = new();
+
         public class BaseUrls : IEnumerable<object[]>
         {
             public static readonly IEnumerable<object[]> Data = from section in UrlConfiguration.GetSection(Section).GetChildren()

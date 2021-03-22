@@ -36,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return contentType == Constants.JsonContentType || contentType == Constants.MessagePackContentType;
         }
 
-         // The algorithm is defined in spec: Hex_encoded(HMAC_SHA256(access-key, connection-id))
+        // The algorithm is defined in spec: Hex_encoded(HMAC_SHA256(access-key, connection-id))
         public bool ValidateSignature(HttpRequestMessage request, AccessKey[] accessKeys)
         {
             if (!_validateSignature)
