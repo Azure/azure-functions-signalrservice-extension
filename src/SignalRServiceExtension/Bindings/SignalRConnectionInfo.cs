@@ -9,6 +9,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         [JsonProperty("url")]
         public string Url { get; set; }
+
         [JsonProperty("accessToken")]
         public string AccessToken { get; set; }
     }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host;
@@ -31,5 +30,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         public abstract Task FilterAsync(InvocationContext invocationContext, CancellationToken cancellationToken);
     }
+
 #pragma warning restore CS0618 // Type or member is obsolete
 }

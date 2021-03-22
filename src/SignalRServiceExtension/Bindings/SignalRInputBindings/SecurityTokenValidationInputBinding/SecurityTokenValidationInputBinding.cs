@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Protocols;
-using System;
-using System.Threading.Tasks;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return Task.FromResult<IValueProvider>(new SecurityTokenValidationValueProvider(null, ""));
             }
 
-            return Task.FromResult<IValueProvider>(new SecurityTokenValidationValueProvider(securityTokenValidator.ValidateToken(request),  ""));
+            return Task.FromResult<IValueProvider>(new SecurityTokenValidationValueProvider(securityTokenValidator.ValidateToken(request), ""));
         }
 
         public Task<IValueProvider> BindAsync(BindingContext context)

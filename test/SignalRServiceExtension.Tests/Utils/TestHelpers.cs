@@ -60,7 +60,7 @@ namespace SignalRServiceExtension.Tests.Utils
             return host.Services.GetService<IJobHost>() as JobHost;
         }
 
-        public static HttpRequestMessage CreateHttpRequestMessage(string hub, string category, string @event, string connectionId, 
+        public static HttpRequestMessage CreateHttpRequestMessage(string hub, string category, string @event, string connectionId,
             string contentType = Constants.JsonContentType, byte[] content = null, string[] signatures = null)
         {
             var context = new DefaultHttpContext();

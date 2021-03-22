@@ -39,6 +39,7 @@ namespace Microsoft.AspNetCore.Internal
         public override bool CanRead => false;
         public override bool CanSeek => false;
         public override bool CanWrite => true;
+
         public override long Position
         {
             get => throw new NotSupportedException();
@@ -258,10 +259,16 @@ namespace Microsoft.AspNetCore.Internal
             Debug.Assert(_bytesWritten == totalWritten + _position);
         }
 
-        public override void Flush() { }
+        public override void Flush()
+        {
+        }
+
         public override Task FlushAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
         public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
         public override void SetLength(long value) => throw new NotSupportedException();
 
         public override void WriteByte(byte value)

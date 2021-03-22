@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
@@ -13,7 +16,7 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
     {
         public static IEnumerable<object[]> GetParameters()
         {
-            var protocols = new string[] {"json", "messagepack"};
+            var protocols = new string[] { "json", "messagepack" };
             foreach (var protocol in protocols)
             {
                 yield return new object[] { protocol, null, Guid.NewGuid().ToString(), new object[0] };
@@ -46,7 +49,6 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
                     new object[] {new object[] { null, Guid.NewGuid().ToString() }}
                 };
             }
-            
         }
 
         [Theory]
@@ -67,7 +69,7 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
             }
             var serverlessProtocol = protocolName == "json" ? (IServerlessProtocol)new JsonServerlessProtocol() : new MessagePackServerlessProtocol();
             Assert.True(serverlessProtocol.TryParseMessage(ref payload, out var parsedMessage));
-            var invocationMessage = (InvocationMessage) parsedMessage;
+            var invocationMessage = (InvocationMessage)parsedMessage;
             Assert.Equal(1, invocationMessage.Type);
             Assert.Equal(invocationId, invocationMessage.InvocationId);
             Assert.Equal(target, invocationMessage.Target);
@@ -91,7 +93,7 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols.Tests
         [InlineData(null)]
         public void CloseConnectionMessageParseTest(string error)
         {
-            var openConnectionPayload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new CloseConnectionMessage() { Type = 11, Error = error})));
+            var openConnectionPayload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new CloseConnectionMessage() { Type = 11, Error = error })));
             var serverlessProtocol = new JsonServerlessProtocol();
             Assert.True(serverlessProtocol.TryParseMessage(ref openConnectionPayload, out var message));
             Assert.Equal(error, ((CloseConnectionMessage)message).Error);

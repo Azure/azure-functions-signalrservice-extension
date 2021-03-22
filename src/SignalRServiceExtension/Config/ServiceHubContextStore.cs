@@ -27,7 +27,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public ValueTask<IServiceHubContext> GetAsync(string hubName)
         {
-            var pair = store.GetOrAdd(hubName, 
+            var pair = store.GetOrAdd(hubName,
                 (new Lazy<Task<IServiceHubContext>>(
                     () => ServiceManager.CreateHubContextAsync(hubName)), default));
             return GetAsyncCore(hubName, pair);

@@ -1,7 +1,9 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using SignalRServiceExtension.Tests.Utils;
@@ -38,7 +40,6 @@ namespace SignalRServiceExtension.Tests.Trigger
             req = TestHelpers.CreateHttpRequestMessage(String.Empty, String.Empty, String.Empty, connectionId, signatures: new string[0]);
             yield return new object[] { req, accessKeys, false };
         }
-
 
         [Theory]
         [MemberData(nameof(SignatureTestData))]

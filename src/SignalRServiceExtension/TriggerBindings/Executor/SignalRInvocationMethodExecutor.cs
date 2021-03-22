@@ -2,12 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Protocol;
@@ -15,9 +11,9 @@ using InvocationMessage = Microsoft.Azure.SignalR.Serverless.Protocols.Invocatio
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class SignalRInvocationMethodExecutor: SignalRMethodExecutor
+    internal class SignalRInvocationMethodExecutor : SignalRMethodExecutor
     {
-        public SignalRInvocationMethodExecutor(IRequestResolver resolver, ExecutionContext executionContext): base(resolver, executionContext)
+        public SignalRInvocationMethodExecutor(IRequestResolver resolver, ExecutionContext executionContext) : base(resolver, executionContext)
         {
         }
 
@@ -48,7 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 if (!functionResult.Succeeded)
                 {
                     var errorMessage = functionResult.Exception?.InnerException?.Message ??
-                                       functionResult.Exception?.Message ?? 
+                                       functionResult.Exception?.Message ??
                                        "Method execution failed.";
                     completionMessage = CompletionMessage.WithError(message.InvocationId, errorMessage);
                     response = new HttpResponseMessage(HttpStatusCode.OK);

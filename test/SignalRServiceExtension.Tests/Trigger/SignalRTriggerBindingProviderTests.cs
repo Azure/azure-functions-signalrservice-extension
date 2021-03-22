@@ -1,5 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Reflection;
 using System.Threading;
 using Microsoft.Azure.WebJobs;
@@ -25,7 +27,7 @@ namespace SignalRServiceExtension.Tests
             Assert.Equal(nameof(TestServerlessHub), resolvedAttribute.HubName);
             Assert.Equal(Category.Messages, resolvedAttribute.Category);
             Assert.Equal(nameof(TestServerlessHub.TestFunction), resolvedAttribute.Event);
-            Assert.Equal(new string[] {"arg0", "arg1"}, resolvedAttribute.ParameterNames);
+            Assert.Equal(new string[] { "arg0", "arg1" }, resolvedAttribute.ParameterNames);
 
             // With SignalRIgoreAttribute
             parameter = typeof(TestServerlessHub).GetMethod(nameof(TestServerlessHub.TestFunctionWithIgnore), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
@@ -91,7 +93,7 @@ namespace SignalRServiceExtension.Tests
         public void ResolveAttributeParameterConflictTest()
         {
             var bindingProvider = CreateBindingProvider();
-            var attribute = new SignalRTriggerAttribute(string.Empty, string.Empty, String.Empty, new string[] {"arg0"});
+            var attribute = new SignalRTriggerAttribute(string.Empty, string.Empty, String.Empty, new string[] { "arg0" });
             var parameter = typeof(TestServerlessHub).GetMethod(nameof(TestServerlessHub.TestFunction), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
             Assert.ThrowsAny<Exception>(() => bindingProvider.GetParameterResolvedAttribute(attribute, parameter));
         }
@@ -108,7 +110,7 @@ namespace SignalRServiceExtension.Tests
         private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null)
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
-            configuration[Constants.AzureSignalRConnectionStringName]= "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
+            configuration[Constants.AzureSignalRConnectionStringName] = "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
             configuration["Serverless_ExpressionBindings_HubName"] = "test_hub";
             configuration["Serverless_ExpressionBindings_HubCategory"] = "connections";
             configuration["Serverless_ExpressionBindings_HubEvent"] = "connected";
@@ -118,35 +120,35 @@ namespace SignalRServiceExtension.Tests
 
         public class TestServerlessHub : ServerlessHub
         {
-            internal void TestFunction([SignalRTrigger]InvocationContext context, string arg0, int arg1)
+            internal void TestFunction([SignalRTrigger] InvocationContext context, string arg0, int arg1)
             {
             }
 
-            internal void TestFunctionWithIgnore([SignalRTrigger]InvocationContext context, string arg0, int arg1, [SignalRIgnore]int arg2)
+            internal void TestFunctionWithIgnore([SignalRTrigger] InvocationContext context, string arg0, int arg1, [SignalRIgnore] int arg2)
             {
             }
 
-            internal void TestFunctionWithSpecificType([SignalRTrigger]InvocationContext context, string arg0, int arg1, ILogger logger, CancellationToken token)
+            internal void TestFunctionWithSpecificType([SignalRTrigger] InvocationContext context, string arg0, int arg1, ILogger logger, CancellationToken token)
             {
             }
         }
 
         public class TestNonServerlessHub
         {
-            internal void TestFunction([SignalRTrigger]InvocationContext context, 
-                [SignalRParameter]string arg0, 
-                [SignalRParameter]int arg1)
+            internal void TestFunction([SignalRTrigger] InvocationContext context,
+                [SignalRParameter] string arg0,
+                [SignalRParameter] int arg1)
             {
             }
         }
 
         public class TestConnectedServerlessHub : ServerlessHub
         {
-            internal void OnConnected([SignalRTrigger]InvocationContext context, string arg0, int arg1)
+            internal void OnConnected([SignalRTrigger] InvocationContext context, string arg0, int arg1)
             {
             }
 
-            internal void OnDisconnected([SignalRTrigger]InvocationContext context, string arg0, int arg1)
+            internal void OnDisconnected([SignalRTrigger] InvocationContext context, string arg0, int arg1)
             {
             }
         }

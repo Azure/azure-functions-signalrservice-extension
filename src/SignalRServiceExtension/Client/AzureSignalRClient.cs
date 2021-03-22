@@ -51,10 +51,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             var serviceHubContext = await GetHubContextAsync();
             var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions()
-            { 
-                UserId = userId, 
-                Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList(), 
-                HttpContext = httpContext 
+            {
+                UserId = userId,
+                Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList(),
+                HttpContext = httpContext
             });
             return new SignalRConnectionInfo
             {

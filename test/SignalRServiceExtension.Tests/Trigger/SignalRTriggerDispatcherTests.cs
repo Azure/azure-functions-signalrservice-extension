@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -41,11 +44,11 @@ namespace SignalRServiceExtension.Tests
             var executor = executorMoc.Object;
             if (throwException)
             {
-                Assert.ThrowsAny<Exception>(() => dispatcher.Map(key, new ExecutionContext {Executor = executor, AccessKeys = null}));
+                Assert.ThrowsAny<Exception>(() => dispatcher.Map(key, new ExecutionContext { Executor = executor, AccessKeys = null }));
                 return;
             }
 
-            dispatcher.Map(key, new ExecutionContext {Executor = executor, AccessKeys = null});
+            dispatcher.Map(key, new ExecutionContext { Executor = executor, AccessKeys = null });
             var request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
             await dispatcher.ExecuteAsync(request);
             executorMoc.Verify(e => e.TryExecuteAsync(It.IsAny<TriggeredFunctionData>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -73,7 +76,7 @@ namespace SignalRServiceExtension.Tests
                 .Returns(Task.FromResult(new FunctionResult(true)));
             var executor = executorMoc.Object;
             dispatcher.Map(key, new ExecutionContext { Executor = executor, AccessKeys = null });
-            
+
             // Test content type
             resolver.ValidateContentTypeResult = false;
             var request = TestHelpers.CreateHttpRequestMessage(key.hub, key.category, key.@event, Guid.NewGuid().ToString());
