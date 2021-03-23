@@ -1,15 +1,15 @@
-# Multiple Azure SignalR Service instances Support
+# Multiple Azure SignalR Service Instances Support
 Currently we add support for configuring multiple SignalR Service instances under **persistent** mode. You can distribute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
 
 <!-- TOC -->
 
-- [Multiple Azure SignalR Service instances Support](#multiple-azure-signalr-service-instances-support)
+- [Multiple Azure SignalR Service Instances Support](#multiple-azure-signalr-service-instances-support)
   - [Usage Scenarios](#usage-scenarios)
-  - [Configuration method](#configuration-method)
-  - [Route algorithm](#route-algorithm)
+  - [Configuration Method](#configuration-method)
+  - [Routing](#routing)
     - [Default behavior](#default-behavior)
     - [Customization](#customization)
-    - [Implicitly pass HttpContext to endpoint router](#implicitly-pass-httpcontext-to-endpoint-router)
+    - [Uses SignalRConnectionInfo Input Binding Together with HttpTrigger](#uses-signalrconnectioninfo-input-binding-together-with-httptrigger)
 
 <!-- /TOC -->
 
@@ -19,7 +19,7 @@ Routing logic is the way to decide to which SignalR Service instance among multi
 * Cross-geo scenario. Cross-geo networks can be comparatively unstable. Route your clients to a SignalR Service instance in the same region can reduce cross-geo connections.
 * High availability and disaster recovery scenarios. Set up multiple service instances in different regions, so when one region is down, the others can be used as backup. Configure service instances as two roles, **primary** and **secondary**. By default, clients will be routed to a primary online instance. When SDK detects all the primary instances are down, it will route clients to secondary instances.
 
-## Configuration method
+## Configuration Method
 
 To enable multiple SignalR Service instances, you should: 
 
@@ -55,7 +55,7 @@ To enable multiple SignalR Service instances, you should:
 
     > When you configure Azure SignalR endpoints in the App Service on Azure portal, don't forget to replace `":"` with `"__"`, the double underscore in the keys. For reasons, see [Environment variables](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#environment-variables).
 
-## Route algorithm
+## Routing
 
 ### Default behavior
 By default, the SDK uses the [DefaultEndpointRouter](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/DefaultEndpointRouter.cs) to pick up endpoints.
@@ -65,10 +65,10 @@ By default, the SDK uses the [DefaultEndpointRouter](https://github.com/Azure/az
 * Server message routing: All service endpoints are returned.
 
 ### Customization
-We support cutomization of route algoritm in C# language. 
+We support customization of route algorithm in C# language. 
 
 Here are the steps:
-* Implement a cutomized router. You can leverage information provided from [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) to make routing decision. See guide here: [customize-route-algorithm](https://github.com/Azure/azure-signalr/blob/dev/docs/sharding.md#customize-route-algorithm).
+* Implement a customized router. You can leverage information provided from [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) to make routing decision. See guide here: [customize-route-algorithm](https://github.com/Azure/azure-signalr/blob/dev/docs/sharding.md#customize-route-algorithm).
 
 * Register the router to DI container.
 ```cs
@@ -89,19 +89,9 @@ namespace SimpleChatV3
 }
 ```
 
-For other languages such as Javascript, we will support route algorithm customization in the future.
+For other languages such as JavaScript, we will support route algorithm customization in the future.
 
-### Implicitly pass HttpContext to endpoint router
-If your endpoint router needs `HttpContext` to make decision, you should use an [Http trigger](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=csharp) along with `SignalRConnectionInfo` input binding, so that the `HttpContext` inside the `HttpRequest` will be passed to the router.
+### Uses SignalRConnectionInfo Input Binding Together with HttpTrigger
+If you already override the default `GetNegotiateEndpoint` method and requires the parameter `HttpContext` in the method not to be null, you should use an HTTP trigger to trigger your negotiation function.
 
-For examle:
-```cs
-[FunctionName("negotiate")]
-public static SignalRConnectionInfo GetSignalRInfo(
-    [HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req,
-    [SignalRConnectionInfo(HubName = "simplechat", UserId = "{query.userid}")] SignalRConnectionInfo connectionInfo)
-{
-    return connectionInfo;
-}
-```
 <!--Todo New methods for class-based mode-->
