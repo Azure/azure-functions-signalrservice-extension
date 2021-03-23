@@ -9,7 +9,7 @@ Currently we add support for configuring multiple SignalR Service instances unde
   - [Routing](#routing)
     - [Default behavior](#default-behavior)
     - [Customization](#customization)
-    - [Uses SignalRConnectionInfo Input Binding Together with HttpTrigger](#uses-signalrconnectioninfo-input-binding-together-with-httptrigger)
+    - [The dependency of customized negotiation router](#the-dependency-of-customized-negotiation-router)
 
 <!-- /TOC -->
 
@@ -91,7 +91,7 @@ namespace SimpleChatV3
 
 For other languages such as JavaScript, we will support route algorithm customization in the future.
 
-### Uses SignalRConnectionInfo Input Binding Together with HttpTrigger
+### The dependency of customized negotiation router
 If you already override the default `GetNegotiateEndpoint` method and requires the parameter `HttpContext` in the method not to be null, you should use an HTTP trigger to trigger your negotiation function.
 
 <!--Todo New methods for class-based mode-->
