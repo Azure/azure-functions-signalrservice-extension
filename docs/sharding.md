@@ -92,6 +92,6 @@ namespace SimpleChatV3
 For other languages such as JavaScript, we will support route algorithm customization in the future.
 
 ### The dependency of customized negotiation router
-If you already override the default `GetNegotiateEndpoint` method and requires the parameter `HttpContext` in the method not to be null, you should use an HTTP trigger to trigger your negotiation function.
+If you need to override the default `GetNegotiateEndpoint` method and rely on the parameter `HttpContext` in the method, for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you should use an HTTP trigger to enable your router to get it correctly.
 
 <!--Todo New methods for class-based mode-->
