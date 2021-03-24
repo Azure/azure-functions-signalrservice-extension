@@ -93,5 +93,3 @@ For other languages such as JavaScript, we will support route algorithm customiz
 
 ### The dependency of customized negotiation router
 If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext` , for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you should use an HTTP trigger to enable your router to get it correctly.
-
-<!--Todo New methods for class-based mode-->
