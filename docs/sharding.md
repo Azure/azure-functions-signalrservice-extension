@@ -1,10 +1,11 @@
 # Multiple Azure SignalR Service Instances Support
-Currently we add support for configuring multiple SignalR Service instances under **persistent** mode. You can distribute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
+Currently we add support for configuring multiple SignalR Service instances. You can distribute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
 
 <!-- TOC -->
 
 - [Multiple Azure SignalR Service Instances Support](#multiple-azure-signalr-service-instances-support)
   - [Usage Scenarios](#usage-scenarios)
+  - [Limitations](#limitations)
   - [Configuration Method](#configuration-method)
   - [Routing](#routing)
     - [Default behavior](#default-behavior)
@@ -17,7 +18,11 @@ Currently we add support for configuring multiple SignalR Service instances unde
 Routing logic is the way to decide to which SignalR Service instance among multiple instances your clients connect and your messages send. By applying different routing logic, this feature can be used in different scenarios. 
 * Scaling. Randomly route each client to one SignalR Service instance, send messages to all the SignalR Service instances so that you can scale the concurrent connections.
 * Cross-geo scenario. Cross-geo networks can be comparatively unstable. Route your clients to a SignalR Service instance in the same region can reduce cross-geo connections.
-* High availability and disaster recovery scenarios. Set up multiple service instances in different regions, so when one region is down, the others can be used as backup. Configure service instances as two roles, **primary** and **secondary**. By default, clients will be routed to a primary online instance. When SDK detects all the primary instances are down, it will route clients to secondary instances.
+* High availability and disaster recovery scenarios. Set up multiple service instances in different regions, so when one region is down, the others can be used as backup. Configure service instances as two roles, **primary** and **secondary**. By default, clients will be routed to a primary online instance. When SDK detects all the primary instances are down, it will route clients to secondary instances. Clients connected before will experience connection drops when there is a disaster and failover take place. You'll need to handle such cases at client side to make it transparent to your end customers. For example, do reconnect after a connection is closed.
+
+## Limitations
+1. Currently multiple-endpoint feature is only supported on `Persistent` transport type.
+2. Customization of routing is only supported in C# language. The support for other languages is under active development.
 
 ## Configuration Method
 
@@ -25,13 +30,19 @@ To enable multiple SignalR Service instances, you should:
 
 1. Use `Persistent` transport type.
 
-    Currently multiple-endpoint feature is only supported on `Persistent` mode. Add the following entry to your `local.settings.json` file locally or the application setting on Azure.
+    The default transport type is `Transient` mode. You should add the following entry to your `local.settings.json` file or the application setting on Azure.
 
     ```json
     {
         "AzureSignalRServiceTransportType":"Persistent"
     }
     ```
+    >Notes for switching from `Transient` mode to `Persistent` mode on **Azure Functions runtime V3** : 
+    > 
+    > Under `Transient` mode, `Newtonsoft.Json` library is used to serialize arguments of hub methods, however, under `Persistent` mode, `System.Text.Json` library is used as default on Azure Functions runtime V3. `System.Text.Json` has some key differences in default behavior with `Newtonsoft.Json`. If you want to use `Newtonsoft.Json` under `Persistent` mode, you can add a configuration item: `"Azure:SignalR:HubProtocol":"NewtonsoftJson"` in `local.settings.json` file or `Azure__SignalR__HubProtocol=NewtonsoftJson` on Azure portal.
+    > 
+    > We **strongly** recommend functions in languages other than C# to use this configuration.
+    
 
 2. Configure multiple SignalR Service endpoints entries in your configuration.
 
