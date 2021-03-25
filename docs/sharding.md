@@ -1,9 +1,9 @@
-# Multiple Azure SignalR Service Instances Support
+# Multiple Azure SignalR Service Instances Support in Azure Functions
 Currently we add support for configuring multiple SignalR Service instances. You can distribute your clients to multiple SignalR service instances and send messages to multiple instances as if to one instance. 
 
 <!-- TOC -->
 
-- [Multiple Azure SignalR Service Instances Support](#multiple-azure-signalr-service-instances-support)
+- [Multiple Azure SignalR Service Instances Support in Azure Functions](#multiple-azure-signalr-service-instances-support-in-azure-functions)
   - [Usage Scenarios](#usage-scenarios)
   - [Limitations](#limitations)
   - [Configuration Method](#configuration-method)
@@ -66,6 +66,7 @@ To enable multiple SignalR Service instances, you should:
 
     > When you configure Azure SignalR endpoints in the App Service on Azure portal, don't forget to replace `":"` with `"__"`, the double underscore in the keys. For reasons, see [Environment variables](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#environment-variables).
 
+    > Connection string configured with the key `{ConnectionStringSetting}` (defaults to "AzureSignalRConnectionString") is also recognized as a primary service endpoint with empty name. But this configuration style is not recommended.
 ## Routing
 
 ### Default behavior
@@ -103,4 +104,4 @@ namespace SimpleChatV3
 For other languages such as JavaScript, we will support route algorithm customization in the future.
 
 ### The dependency of customized negotiation router
-If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext` , for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you should use an HTTP trigger to enable your router to get it correctly.
+If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext`, for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you can only use the HTTP trigger to trigger your negotiation functions, so that your router can get the `HttpContext` object correctly.
