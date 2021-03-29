@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -53,7 +56,7 @@ namespace SignalRServiceExtension.Tests
         public async Task ServiceEndpointsNotSet()
         {
             var rootHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
-            var childHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            var childHubContextMock = new Mock<ServiceHubContext>();
             rootHubContextMock.Setup(c => c.WithEndpoints(It.IsAny<ServiceEndpoint[]>())).Returns(childHubContextMock.Object);
             rootHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
@@ -73,7 +76,7 @@ namespace SignalRServiceExtension.Tests
         public async Task ServiceEndpointsSet()
         {
             var rootHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
-            var childHubContextMock = new Mock<ServiceHubContext>().As<IInternalServiceHubContext>();
+            var childHubContextMock = new Mock<ServiceHubContext>();
             rootHubContextMock.Setup(c => c.WithEndpoints(It.IsAny<ServiceEndpoint[]>())).Returns(childHubContextMock.Object);
             childHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
