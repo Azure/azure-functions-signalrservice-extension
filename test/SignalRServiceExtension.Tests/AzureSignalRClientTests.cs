@@ -18,6 +18,7 @@ using SignalRServiceExtension.Tests.Utils;
 using Xunit;
 using Constants = Microsoft.Azure.WebJobs.Extensions.SignalRService.Constants;
 using SignalRUtils = Microsoft.Azure.WebJobs.Extensions.SignalRService.Utils;
+
 namespace SignalRServiceExtension.Tests
 {
     public class AzureSignalRClientTests
