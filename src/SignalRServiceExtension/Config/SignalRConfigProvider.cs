@@ -91,7 +91,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                    .BindToInput(new SignalREndpointsAsyncConverter());
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
-            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRCollectorBuilder<>));
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRAsyncCollectorBuilder<>));
 
             logger.LogInformation("SignalRService binding initialized");
         }
