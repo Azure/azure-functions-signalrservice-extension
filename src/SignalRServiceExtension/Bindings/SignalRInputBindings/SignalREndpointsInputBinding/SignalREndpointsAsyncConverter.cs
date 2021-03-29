@@ -13,9 +13,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private readonly IServiceManagerStore _serviceManagerStore;
 
-        public SignalREndpointsAsyncConverter()
+        public SignalREndpointsAsyncConverter(IServiceManagerStore serviceManagerStore)
         {
-            _serviceManagerStore = StaticServiceHubContextStore.ServiceManagerStore;
+            _serviceManagerStore = serviceManagerStore;
         }
 
         public async Task<ServiceEndpoint[]> ConvertAsync(SignalREndpointsAttribute input, CancellationToken cancellationToken)

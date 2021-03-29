@@ -15,6 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private const string HttpRequestName = "$request";
         private readonly ISecurityTokenValidator securityTokenValidator;
         private readonly ISignalRConnectionInfoConfigurer signalRConnectionInfoConfigurer;
+        private readonly IServiceManagerStore managerStore;
         private readonly Type userType;
 
         public SignalRConnectionInputBinding(
@@ -26,13 +27,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             this.securityTokenValidator = securityTokenValidator;
             this.signalRConnectionInfoConfigurer = signalRConnectionInfoConfigurer;
+            this.managerStore = StaticServiceHubContextStore.ServiceManagerStore;
             this.userType = context.Parameter.ParameterType;
         }
 
         protected async override Task<IValueProvider> BuildAsync(SignalRConnectionInfoAttribute attrResolved,
             IReadOnlyDictionary<string, object> bindingData)
         {
-            var azureSignalRClient = await Utils.GetAzureSignalRClientAsync(attrResolved.ConnectionStringSetting, attrResolved.HubName);
+            var azureSignalRClient = await Utils.GetAzureSignalRClientAsync(attrResolved.ConnectionStringSetting, attrResolved.HubName, managerStore);
             bindingData.TryGetValue(HttpRequestName, out var requestObj);
             var request = requestObj as HttpRequest;
             var httpContext = request?.HttpContext;

@@ -12,7 +12,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         public string ConnectionStringSetting { get; set; } = Constants.AzureSignalRConnectionStringName;
 
-        //todo resolve hub name from SignalRAttribute
         [AutoResolve]
         public string HubName { get; set; }
     }
