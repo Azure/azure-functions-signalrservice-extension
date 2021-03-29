@@ -32,7 +32,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         protected async override Task<IValueProvider> BuildAsync(SignalRConnectionInfoAttribute attrResolved,
             IReadOnlyDictionary<string, object> bindingData)
         {
-            var azureSignalRClient = await Utils.GetAzureSignalRClient(attrResolved.ConnectionStringSetting, attrResolved.HubName);
+            var azureSignalRClient = await Utils.GetAzureSignalRClientAsync(attrResolved.ConnectionStringSetting, attrResolved.HubName);
             bindingData.TryGetValue(HttpRequestName, out var requestObj);
             var request = requestObj as HttpRequest;
             var httpContext = request?.HttpContext;
