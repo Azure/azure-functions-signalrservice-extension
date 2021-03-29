@@ -88,10 +88,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             _ = context.AddBindingRule<SignalREndpointsAttribute>()
                    .AddConverter<ServiceEndpoint[], JArray>(JArray.FromObject)
-                   .BindToInput(new SignalREndpointsAsyncConverter());
+                   .BindToInput(new SignalREndpointsAsyncConverter(serviceManagerStore));
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();
-            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRAsyncCollectorBuilder<>));
+            signalRAttributeRule.BindToCollector<SignalROpenType>(typeof(SignalRAsyncCollectorBuilder<>), serviceManagerStore);
 
             logger.LogInformation("SignalRService binding initialized");
         }
