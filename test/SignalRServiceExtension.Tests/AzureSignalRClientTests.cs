@@ -17,7 +17,7 @@ using Moq;
 using SignalRServiceExtension.Tests.Utils;
 using Xunit;
 using Constants = Microsoft.Azure.WebJobs.Extensions.SignalRService.Constants;
-
+using SignalRUtils = Microsoft.Azure.WebJobs.Extensions.SignalRService.Utils;
 namespace SignalRServiceExtension.Tests
 {
     public class AzureSignalRClientTests
@@ -39,7 +39,7 @@ namespace SignalRServiceExtension.Tests
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
             var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, new TestRouter());
             StaticServiceHubContextStore.ServiceManagerStore = serviceManagerStore;
-            var azureSignalRClient = await Microsoft.Azure.WebJobs.Extensions.SignalRService.Utils.GetAzureSignalRClientAsync(connectionStringKey, hubName);
+            var azureSignalRClient = await SignalRUtils.GetAzureSignalRClientAsync(connectionStringKey, hubName);
             var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(userId, idToken, claimTypeList, null);
 
             Assert.Equal(connectionInfo.Url, $"{hubUrl}/client/?hub={hubName.ToLower()}");
@@ -58,7 +58,7 @@ namespace SignalRServiceExtension.Tests
             rootHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
             StaticServiceHubContextStore.ServiceManagerStore = serviceManagerStore;
-            var azureSignalRClient = await Microsoft.Azure.WebJobs.Extensions.SignalRService.Utils.GetAzureSignalRClientAsync("key", "hub");
+            var azureSignalRClient = await SignalRUtils.GetAzureSignalRClientAsync("key", "hub");
             var data = new SignalRData
             {
                 Target = "target",
@@ -78,7 +78,7 @@ namespace SignalRServiceExtension.Tests
             childHubContextMock.Setup(c => c.Clients.All.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             var serviceManagerStore = Mock.Of<IServiceManagerStore>(s => s.GetOrAddByConnectionStringKey(It.IsAny<string>()).GetAsync(It.IsAny<string>()) == new ValueTask<IServiceHubContext>(rootHubContextMock.Object));
             StaticServiceHubContextStore.ServiceManagerStore = serviceManagerStore;
-            var azureSignalRClient = await Microsoft.Azure.WebJobs.Extensions.SignalRService.Utils.GetAzureSignalRClientAsync("key", "hub");
+            var azureSignalRClient = await SignalRUtils.GetAzureSignalRClientAsync("key", "hub");
             var data = new SignalRData
             {
                 Target = "target",
