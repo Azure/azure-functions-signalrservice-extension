@@ -9,17 +9,17 @@ using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class MultiConnectionInfoAsyncConverter : IAsyncConverter<SignalRMultiConnectionInfoAttribute, EndpointConnectionInfo[]>
+    internal class ConnectionInfoListAsyncConverter : IAsyncConverter<SignalRConnectionInfoListAttribute, EndpointConnectionInfo[]>
     {
         private readonly IServiceManagerStore _serviceManagerStore;
 
-        public MultiConnectionInfoAsyncConverter(IServiceManagerStore serviceManagerStore)
+        public ConnectionInfoListAsyncConverter(IServiceManagerStore serviceManagerStore)
         {
             _serviceManagerStore = serviceManagerStore;
         }
 
         public async Task<EndpointConnectionInfo[]> ConvertAsync(
-            SignalRMultiConnectionInfoAttribute input, CancellationToken cancellationToken)
+            SignalRConnectionInfoListAttribute input, CancellationToken cancellationToken)
         {
             var serviceHubContext = await _serviceManagerStore
                 .GetOrAddByConnectionStringKey(input.ConnectionStringSetting)
