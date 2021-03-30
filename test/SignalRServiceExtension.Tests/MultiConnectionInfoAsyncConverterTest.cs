@@ -21,7 +21,7 @@ namespace SignalRServiceExtension.Tests
         private const string HubName = "hub1";
         private static int count = 3;
 
-        private static readonly IEnumerable<ServiceEndpoint> PrimaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(count).Zip(Enumerable.Range(0,count))
+        private static readonly IEnumerable<ServiceEndpoint> PrimaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(count).Zip(Enumerable.Range(0, count))
             .Select(pair => new ServiceEndpoint(pair.First, EndpointType.Primary, $"p{pair.Second}"));
 
         private static readonly IEnumerable<ServiceEndpoint> SecondaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(count).Zip(Enumerable.Range(0, count))
@@ -38,36 +38,10 @@ namespace SignalRServiceExtension.Tests
             var attribute = new SignalRMultiConnectionInfoAttribute { HubName = HubName };
 
             var dict = await converter.ConvertAsync(attribute, default);
-            foreach(var expectedEndpoint in Endpoints)
+            foreach (var expectedEndpoint in Endpoints)
             {
                 Assert.Contains(expectedEndpoint, dict.Keys);
             }
-        }
-
-        [Fact]
-        public async Task ConnectionInfoValidFact()
-        {
-            var configuration = CreateTestConfiguration();
-            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
-            var converter = new MultiConnectionInfoAsyncConverter(serviceManagerStore);
-
-            var userId = "User";
-            var idToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-            var expectedName = "John Doe";
-            var expectedIat = "1516239022";
-            var claimTypeList = new string[] { "name", "iat" };
-            var attribute = new SignalRMultiConnectionInfoAttribute 
-            { HubName = HubName, 
-              UserId = userId, 
-              IdToken = idToken,
-              ClaimTypeList = claimTypeList
-            };
-            var dict = await converter.ConvertAsync(attribute, default);
-            var (endpoint, connectionInfo) = dict.First();
-            Assert.Equal(connectionInfo.Url, $"{endpoint.Endpoint}/client/?hub={HubName.ToLower()}");
-            var claims = new JwtSecurityTokenHandler().ReadJwtToken(connectionInfo.AccessToken).Claims;
-            Assert.Equal(expectedName, claims.First(c => c.Type.Equals("name")).Value);
-            Assert.Equal(expectedIat, claims.First(c => c.Type.Equals($"{AzureSignalRClient.AzureSignalRUserPrefix}iat")).Value);
         }
 
         private static IConfiguration CreateTestConfiguration()
