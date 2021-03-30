@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
@@ -34,13 +33,13 @@ namespace SignalRServiceExtension.Tests
         {
             var configuration = CreateTestConfiguration();
             var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
-            var converter = new MultiConnectionInfoAsyncConverter(serviceManagerStore);
-            var attribute = new SignalRMultiConnectionInfoAttribute { HubName = HubName };
+            var converter = new ConnectionInfoListAsyncConverter(serviceManagerStore);
+            var attribute = new SignalRConnectionInfoListAttribute { HubName = HubName };
 
-            var dict = await converter.ConvertAsync(attribute, default);
+            var endpointList = (await converter.ConvertAsync(attribute, default)).Select(item => item.Endpoint);
             foreach (var expectedEndpoint in Endpoints)
             {
-                Assert.Contains(expectedEndpoint, dict.Keys);
+                Assert.Contains(expectedEndpoint, endpointList);
             }
         }
 
