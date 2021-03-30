@@ -87,6 +87,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             _ = context.AddBindingRule<SignalRMultiConnectionInfoAttribute>()
+                .AddConverter<EndpointConnectionInfo[], JArray>(JArray.FromObject)
                 .BindToInput(new MultiConnectionInfoAsyncConverter(serviceManagerStore));
 
             _ = context.AddBindingRule<SignalREndpointsAttribute>()
