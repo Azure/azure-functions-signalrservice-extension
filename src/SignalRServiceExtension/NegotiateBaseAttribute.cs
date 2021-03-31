@@ -6,13 +6,9 @@ using Microsoft.Azure.WebJobs.Description;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    /// <summary>
-    /// An input binding attribute to bind a list of <see cref="EndpointConnectionInfo"/> to the function parameter.
-    /// </summary>
-    /// <remarks>Designed for function languages except C# to customize negotiation routing.</remarks>
-    [AttributeUsage(AttributeTargets.Parameter)]
+    [AttributeUsage(AttributeTargets.ReturnValue | AttributeTargets.Parameter)]
     [Binding]
-    public class SignalRConnectionInfoListAttribute : Attribute
+    public class NegotiateBaseAttribute : Attribute
     {
         public string ConnectionStringSetting { get; set; } = Constants.AzureSignalRConnectionStringName;
 

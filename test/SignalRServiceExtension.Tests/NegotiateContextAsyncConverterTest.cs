@@ -15,7 +15,7 @@ using Constants = Microsoft.Azure.WebJobs.Extensions.SignalRService.Constants;
 
 namespace SignalRServiceExtension.Tests
 {
-    public class MultiConnectionInfoAsyncConverterTest
+    public class NegotiateContextAsyncConverterTest
     {
         private const string HubName = "hub1";
         private static int count = 3;
@@ -33,10 +33,10 @@ namespace SignalRServiceExtension.Tests
         {
             var configuration = CreateTestConfiguration();
             var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
-            var converter = new ConnectionInfoListAsyncConverter(serviceManagerStore);
-            var attribute = new SignalRConnectionInfoListAttribute { HubName = HubName };
+            var converter = new NegotiateContextAsyncConverter(serviceManagerStore);
+            var attribute = new NegotiateContextAttribute { HubName = HubName };
 
-            var endpointList = (await converter.ConvertAsync(attribute, default)).Select(item => item.Endpoint);
+            var endpointList = (await converter.ConvertAsync(attribute, default)).ClientEndpoints.Select(item => item.ServiceEndpoint);
             foreach (var expectedEndpoint in Endpoints)
             {
                 Assert.Contains(expectedEndpoint, endpointList);

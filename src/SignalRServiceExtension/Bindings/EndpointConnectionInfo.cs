@@ -10,7 +10,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     internal class EndpointConnectionInfo
     {
-        public ServiceEndpoint Endpoint { get; set; }
-        public SignalRConnectionInfo ConnectionInfo { get; set; }
+        public ServiceEndpoint ServiceEndpoint { get; set; }
+        public string Url { get; set; }
+        public string AccessToken { get; set; }
     }
 }
