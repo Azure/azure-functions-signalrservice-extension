@@ -18,12 +18,12 @@ namespace SignalRServiceExtension.Tests
     public class NegotiateContextAsyncConverterTest
     {
         private const string HubName = "hub1";
-        private static int count = 3;
+        private const int Count = 3;
 
-        private static readonly IEnumerable<ServiceEndpoint> PrimaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(count).Zip(Enumerable.Range(0, count))
+        private static readonly IEnumerable<ServiceEndpoint> PrimaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(Count).Zip(Enumerable.Range(0, Count))
             .Select(pair => new ServiceEndpoint(pair.First, EndpointType.Primary, $"p{pair.Second}"));
 
-        private static readonly IEnumerable<ServiceEndpoint> SecondaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(count).Zip(Enumerable.Range(0, count))
+        private static readonly IEnumerable<ServiceEndpoint> SecondaryEndpoints = FakeEndpointUtils.GetFakeConnectionString(Count).Zip(Enumerable.Range(0, Count))
             .Select(pair => new ServiceEndpoint(pair.First, EndpointType.Secondary, $"s{pair.Second}"));
 
         private static readonly IEnumerable<ServiceEndpoint> Endpoints = PrimaryEndpoints.Concat(SecondaryEndpoints);
