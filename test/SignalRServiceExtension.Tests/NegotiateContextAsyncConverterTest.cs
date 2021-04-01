@@ -36,10 +36,10 @@ namespace SignalRServiceExtension.Tests
             var converter = new NegotiationContextAsyncConverter(serviceManagerStore);
             var attribute = new SignalRNegotiationAttribute { HubName = HubName };
 
-            var endpointList = (await converter.ConvertAsync(attribute, default)).Endpoints;
+            var endpointList = (await converter.ConvertAsync(attribute, default)).Endpoints.Select(e => e.Name);
             foreach (var expectedEndpoint in Endpoints)
             {
-                Assert.Contains(expectedEndpoint, endpointList);
+                Assert.Contains(expectedEndpoint.Name, endpointList);
             }
         }
 
