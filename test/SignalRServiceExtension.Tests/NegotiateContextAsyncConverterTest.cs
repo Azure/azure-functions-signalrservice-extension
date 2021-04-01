@@ -33,10 +33,10 @@ namespace SignalRServiceExtension.Tests
         {
             var configuration = CreateTestConfiguration();
             var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
-            var converter = new NegotiateContextAsyncConverter(serviceManagerStore);
-            var attribute = new NegotiateContextAttribute { HubName = HubName };
+            var converter = new NegotiationContextAsyncConverter(serviceManagerStore);
+            var attribute = new SignalRNegotiationAttribute { HubName = HubName };
 
-            var endpointList = (await converter.ConvertAsync(attribute, default)).ClientEndpoints.Select(item => item.ServiceEndpoint);
+            var endpointList = (await converter.ConvertAsync(attribute, default)).Endpoints;
             foreach (var expectedEndpoint in Endpoints)
             {
                 Assert.Contains(expectedEndpoint, endpointList);

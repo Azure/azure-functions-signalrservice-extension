@@ -14,6 +14,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
         }
 
+        [JsonProperty]
         public SignalRConnectionInfo ConnectionInfo { get; set; }
     }
 }
