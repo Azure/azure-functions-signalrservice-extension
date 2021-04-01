@@ -3,7 +3,7 @@
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class NegotiateContext
+    internal class NegotiationContext
     {
         public EndpointConnectionInfo[] ClientEndpoints { get; set; }
     }

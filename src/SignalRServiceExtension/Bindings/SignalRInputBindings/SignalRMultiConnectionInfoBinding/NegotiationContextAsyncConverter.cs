@@ -9,16 +9,17 @@ using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class NegotiateContextAsyncConverter : IAsyncConverter<NegotiateContextAttribute, NegotiateContext>
+    internal class NegotiationContextAsyncConverter : IAsyncConverter<NegotiateContextAttribute, NegotiationContext>
     {
         private readonly IServiceManagerStore _serviceManagerStore;
 
-        public NegotiateContextAsyncConverter(IServiceManagerStore serviceManagerStore)
+        public NegotiationContextAsyncConverter
+            (IServiceManagerStore serviceManagerStore)
         {
             _serviceManagerStore = serviceManagerStore;
         }
 
-        public async Task<NegotiateContext> ConvertAsync(
+        public async Task<NegotiationContext> ConvertAsync(
             NegotiateContextAttribute input, CancellationToken cancellationToken)
         {
             var serviceHubContext = await _serviceManagerStore
@@ -32,7 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(input.UserId, input.IdToken, input.ClaimTypeList, null);
                 return new EndpointConnectionInfo(e) { ConnectionInfo = connectionInfo };
             }));
-            return new NegotiateContext { ClientEndpoints = endpointConnectionInfo };
+            return new NegotiationContext { ClientEndpoints = endpointConnectionInfo };
         }
     }
 }
