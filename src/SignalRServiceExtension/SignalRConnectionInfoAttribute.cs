@@ -8,7 +8,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     [AttributeUsage(AttributeTargets.ReturnValue | AttributeTargets.Parameter)]
     [Binding]
-    public class SignalRConnectionInfoAttribute : NegotiateBaseAttribute
+    public class SignalRConnectionInfoAttribute : NegotiationBaseAttribute
     {
     }
 }

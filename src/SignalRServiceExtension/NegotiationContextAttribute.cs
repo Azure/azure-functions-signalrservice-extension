@@ -12,7 +12,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// <remarks>Designed for function languages except C# to customize negotiation routing.</remarks>
     [AttributeUsage(AttributeTargets.Parameter)]
     [Binding]
-    public class NegotiateContextAttribute : NegotiateBaseAttribute
+    public class SignalRNegotiationAttribute : NegotiationBaseAttribute
     {
     }
-}
+}    
