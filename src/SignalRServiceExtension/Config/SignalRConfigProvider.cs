@@ -87,8 +87,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             securityTokenValidationAttributeRule.Bind(inputBindingProvider);
 
             _ = context.AddBindingRule<NegotiateContextAttribute>()
-                .AddConverter<NegotiateContext, JObject>(JObject.FromObject)
-                .BindToInput(new NegotiateContextAsyncConverter(serviceManagerStore));
+                .AddConverter<NegotiationContext, JObject>(JObject.FromObject)
+                .BindToInput(new NegotiationContextAsyncConverter(serviceManagerStore));
 
             _ = context.AddBindingRule<SignalREndpointsAttribute>()
                    .AddConverter<ServiceEndpoint[], JArray>(JArray.FromObject)

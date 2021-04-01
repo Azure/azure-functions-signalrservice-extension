@@ -7,7 +7,7 @@ using Microsoft.Azure.WebJobs.Description;
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
-    /// An input binding attribute to bind <see cref="NegotiateContext"/> to the function parameter.
+    /// An input binding attribute to bind <see cref="NegotiationContext"/> to the function parameter.
     /// </summary>
     /// <remarks>Designed for function languages except C# to customize negotiation routing.</remarks>
     [AttributeUsage(AttributeTargets.Parameter)]

@@ -33,7 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(input.UserId, input.IdToken, input.ClaimTypeList, null);
                 return new EndpointConnectionInfo(e) { ConnectionInfo = connectionInfo };
             }));
-            return new NegotiationContext { ClientEndpoints = endpointConnectionInfo };
+            return new NegotiationContext { Endpoints = endpointConnectionInfo };
         }
     }
 }
