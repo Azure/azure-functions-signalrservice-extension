@@ -8,10 +8,12 @@ using Newtonsoft.Json.Serialization;
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
-    internal class EndpointConnectionInfo
+    internal class EndpointConnectionInfo : ServiceEndpoint
     {
-        public ServiceEndpoint ServiceEndpoint { get; set; }
-        public string Url { get; set; }
-        public string AccessToken { get; set; }
+        public EndpointConnectionInfo(ServiceEndpoint endpoint) : base(endpoint)
+        {
+        }
+
+        public SignalRConnectionInfo ConnectionInfo { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     [AttributeUsage(AttributeTargets.ReturnValue | AttributeTargets.Parameter)]
     [Binding]
-    public class NegotiateBaseAttribute : Attribute
+    public abstract class NegotiateBaseAttribute : Attribute
     {
         public string ConnectionStringSetting { get; set; } = Constants.AzureSignalRConnectionStringName;
 
