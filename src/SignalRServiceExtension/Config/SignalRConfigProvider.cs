@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -66,7 +67,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
             {
-                Converters = new List<JsonConverter>() { new ServiceEndpointJsonConverter() }
+                Converters = new List<JsonConverter>() { new ServiceEndpointJsonConverter() },
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
             };
 
             context.AddConverter<string, JObject>(JObject.FromObject)
