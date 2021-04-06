@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="$(MicrosoftAzureFunctionsExtensionsVersion)" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="$(SystemIdentityModelTokensJwtVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="$(MicrosoftAspNetCoreSignalRPackageVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="$(MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,9 +20,5 @@
   
   <ItemGroup>
     <None Include="..\..\images\icon.png" Pack="true" PackagePath=""/>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1'">
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="$(MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson)" />
   </ItemGroup>
 </Project>
