@@ -22,6 +22,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public const string MessagePackContentType = "application/x-msgpack";
         public const string OnConnected = "OnConnected";
         public const string OnDisconnected = "OnDisconnected";
+
+        public const string FunctionsWorkerRuntime = "FUNCTIONS_WORKER_RUNTIME";
+        public const string DotnetWorker = "dotnet";
     }
 
     public static class Category
