@@ -20,18 +20,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 // Actually is .Net Core 2.x
                 throw new InvalidOperationException(HubProtocolError);
             }
+#if NETCOREAPP3_1 || NETCOREAPP3_0 || NETSTANDARD2_0 
             else if (!DotnetRuntime(configuration) || UserSpecifyNewtonsoft(configuration))
             {
                 // .Net Core 3.1, overwrite the System.Text.Json Protocol.
                 services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonHubProtocol>());
             }
+#endif
             return services;
         }
 
         private static bool DotnetRuntime(IConfiguration configuration)
         {
             var workerRuntime = configuration[Constants.FunctionsWorkerRuntime];
-                  //unit test environment 
+            //unit test environment
             return workerRuntime == null || workerRuntime == Constants.DotnetWorker;
         }
 
