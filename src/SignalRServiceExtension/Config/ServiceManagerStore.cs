@@ -46,7 +46,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private IInternalServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
             var services = new ServiceCollection()
-                .WithAssembly(Assembly.GetExecutingAssembly())
                 .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
                 .PostConfigure<ServiceManagerOptions>(o =>
                 {

@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.SignalR.Management;
@@ -33,19 +34,25 @@ namespace SignalRServiceExtension.Tests
         }
 
         [Fact]
-        public void ProductInfoExists()
+        public void ProductInfoValid()
         {
             var connectionString = FakeEndpointUtils.GetFakeConnectionString(1).Single();
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
             var connectionStringKey = "key";
             configuration[connectionStringKey] = connectionString;
-
+            configuration[Constants.FunctionsWorkerRuntime] = Constants.DotnetWorker;
+            
             var productInfo = new ServiceCollection()
                 .AddSignalRServiceManager(new OptionsSetup(configuration, NullLoggerFactory.Instance, connectionStringKey))
                 .BuildServiceProvider()
                 .GetRequiredService<IOptions<ServiceManagerOptions>>()
                 .Value.ProductInfo;
+            
             Assert.NotNull(productInfo);
+            var reg = new Regex(@"\[(\w*)=(\w*)\]");
+            var match = reg.Match(productInfo);
+            Assert.Equal(Constants.FunctionsWorkerProductInfoKey, match.Groups[1].Value);
+            Assert.Equal(Constants.DotnetWorker, match.Groups[2].Value);
         }
 
         [Fact]
