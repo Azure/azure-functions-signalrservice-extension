@@ -82,7 +82,7 @@ It's a quick try of this sample. You will create an Azure SignalR Service and an
 
     Open the Azure Portal and nevigate to the Function App created before. Find `signalr_extension` key in the **App keys** blade.
 
-    ![Overview with auth](getkeys.png)
+    ![Overview with auth](content/getkeys.png)
 
     Copy the `signalr_extensions` value and use `az resource` command to set the upstream setting.
 
@@ -98,12 +98,12 @@ It's a quick try of this sample. You will create an Azure SignalR Service and an
 
     1. Open the function app in the Azure Portal.
     2. In the left blade, select **CORS** blade.
-    3. In the **Allowed Origins** section, add `http://127.0.0.1:5500` (It is the local web server's url).
+    3. In the **Allowed Origins** section, add `http://127.0.0.1:8080` (It is the local web server's url).
     4. In order for the SignalR JavaScript SDK call your function app from a browser, support for credentials in CORS must be enabled. Select the **Enable Access-Control-Allow-Credentials** checkbox.
     5. Click **Save** to persist the CORS settings.
-    ![CORS](cors.png)
+    ![CORS](content/cors.png)
 
-2. `<function-app-url>/api/index` hosts the web page for the demo
+2. use a HTTP server to serve the `content/index.html` web page and enter the function app URL after the page opens. You can find it on Azure portal: your function App resource - Overview - URL. If you have [Node](https://nodejs.org/) installed, you can use the scripts `start-web-server.ps1` or `start-web-server.sh` to quickly install a [http server](https://www.npmjs.com/package/live-server) and open the page.
 
 3. Try send messages by entering them into the main chat box.
-    ![Chatroom](chatroom.png)
+    ![Chatroom](content/chatroom.png)

@@ -1,13 +1,14 @@
-using System;
-using System.IO;
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Mvc;
 
 namespace FunctionApp
 {
@@ -16,20 +17,10 @@ namespace FunctionApp
         private const string NewMessageTarget = "newMessage";
         private const string NewConnectionTarget = "newConnection";
 
-        [FunctionName("index")]
-        public IActionResult GetHomePage([HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req)
-        {
-            return new ContentResult
-            {
-                Content = File.ReadAllText("content/index.html"),
-                ContentType = "text/html",
-            };
-        }
-
         [FunctionName("negotiate")]
-        public SignalRConnectionInfo Negotiate([HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req)
+        public Task<SignalRConnectionInfo> NegotiateAsync([HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
         {
-            return Negotiate(req.Headers["x-ms-signalr-user-id"], GetClaims(req.Headers["Authorization"]));
+            return NegotiateAsync(new NegotiationOptions { UserId = req.Headers["x-ms-signalr-user-id"], Claims = GetClaims(req.Headers["Authorization"]) });
         }
 
         [FunctionName(nameof(OnConnected))]
