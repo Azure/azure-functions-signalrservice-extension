@@ -58,11 +58,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
             //make connection more stable
             options.ConnectionCount = 3;
+            options.ProductInfo = GetProductInfo();
         }
 
         public IChangeToken GetChangeToken()
         {
             return configuration.GetReloadToken();
+        }
+
+        private string GetProductInfo()
+        {
+            var workerRuntime = configuration[Constants.FunctionsWorkerRuntime];
+            var sdkProductInfo = ProductInfo.GetProductInfo();
+            return $"{sdkProductInfo} [{Constants.FunctionsWorkerProductInfoKey}={workerRuntime}]";
         }
     }
 }
