@@ -29,5 +29,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             Endpoint = e.Endpoint;
             Online = e.Online;
         }
+
+        //Used when deserializing
+        public LiteServiceEndpoint()
+        {
+        }
     }
 }
