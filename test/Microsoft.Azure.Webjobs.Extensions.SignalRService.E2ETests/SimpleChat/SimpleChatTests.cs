@@ -78,6 +78,11 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
             }
         }
 
+        public class Message
+        {
+            public string Value { get; set; }
+        }
+
         public class ConnectionGroupManagementTest
         {
             /// <summary>
@@ -103,9 +108,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
                     var connection = CreateHubConnection(connectionInfo.Url, connectionInfo.AccessToken);
                     var taskCompleSource = new TaskCompletionSource();
                     completionSources[user] = taskCompleSource;
-                    connection.On(target, (string message) =>
+                    connection.On(target, (Message message) =>
                     {
-                        if (message.Equals(messageToSend))
+                        if (message.Value.Equals(messageToSend))
                         {
                             completionSources[user].SetResult();
                         }
@@ -126,7 +131,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
                 await SimpleChatClient.Send(url, new SignalRMessage
                 {
                     Target = target,
-                    Arguments = new object[] { messageToSend },
+                    Arguments = new object[] { new Message { Value = messageToSend } },
                     GroupName = groupName
                 });
                 await completionSources[users[0]].Task.OrTimeout();
@@ -154,7 +159,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
                 await SimpleChatClient.Send(url, new SignalRMessage
                 {
                     Target = target,
-                    Arguments = new object[] { messageToSend },
+                    Arguments = new object[] { new Message { Value = messageToSend } },
                     GroupName = groupName
                 });
                 await completionSources[users[1]].Task.OrTimeout();
