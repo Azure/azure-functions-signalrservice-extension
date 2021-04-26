@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.Testing.xunit;
 using Microsoft.Extensions.Configuration;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
@@ -15,6 +16,10 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
         public const string UrlSectionKey = "FunctionBaseUrl";
         public static readonly IConfiguration Configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
         public static readonly IConfiguration UrlConfiguration = Configuration.GetSection(UrlSectionKey);
+
+        public static IEnumerable<object[]> GetFunctionUrls(string sectionName) => 
+            from section in UrlConfiguration.GetSection(sectionName).GetChildren()
+            select new object[] { section.Key, section.Value };
 
         /// <summary>
         /// Generate 4-bit numbers as user names.
@@ -45,6 +50,20 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
             {
                 throw new Exception("Task is not completed in time.");
             }
+        }
+
+        public class SkipIfFunctionAbsentAttribute : Attribute, ITestCondition
+        {
+            private readonly string _section;
+
+            public SkipIfFunctionAbsentAttribute(string section)
+            {
+                _section = section;
+            }
+
+            public bool IsMet => !UrlConfiguration.GetSection(_section).GetChildren().Any();
+
+            public string SkipReason => $"Functions base urls are not configured in section: '{_section} '";
         }
     }
 }
