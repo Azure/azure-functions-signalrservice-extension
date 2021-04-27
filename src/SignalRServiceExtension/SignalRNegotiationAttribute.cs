@@ -15,4 +15,4 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     public class SignalRNegotiationAttribute : NegotiationBaseAttribute
     {
     }
-}    
+}
