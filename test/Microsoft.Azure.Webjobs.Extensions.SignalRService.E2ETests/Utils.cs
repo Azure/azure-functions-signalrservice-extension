@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.AspNetCore.Testing.xunit;
 using Microsoft.Extensions.Configuration;
+using Xunit;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 {
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
             }
         }
 
-        public class SkipIfFunctionAbsentAttribute : ConditionalTheoryAttribute
+        public class SkipIfFunctionAbsentAttribute : TheoryAttribute
         {
             private readonly string _section;
 
