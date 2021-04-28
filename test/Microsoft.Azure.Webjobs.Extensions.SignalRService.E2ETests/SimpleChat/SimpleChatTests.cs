@@ -7,14 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-using Microsoft.AspNetCore.Testing.xunit;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Xunit;
 using static Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests.Utils;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 {
-    // To enable tests run in parallel, split them into different class.
     public class SimpleChatTests
     {
         private const string Section = "SimpleChat";
@@ -24,7 +22,6 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
         /// <summary>
         /// Set up two connections, broadcast a message, wait until message received by two connections.
         /// </summary>
-        [ConditionalTheory]
         [MemberData(nameof(FunctionUrls))]
         [SkipIfFunctionAbsent(Section)]
         public async Task Negotiation(string key, string url)
@@ -74,7 +71,6 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
         /// Add connections[0] to the group. Send message to the group. connections[0] should receive message while conections[1] not.
         /// Remove connections[0] from group and add connections[1] to group. Send message to the group. connections[1] should receive message while conections[0] not.
         /// </summary>
-        [ConditionalTheory]
         [MemberData(nameof(FunctionUrls))]
         [SkipIfFunctionAbsent(Section)]
         public async Task ConnectionGroupManagement(string key, string url)
@@ -155,7 +151,6 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
         /// <summary>
         /// Almost the same like <see cref="ConnectionGroupManagementTest"/>, except that upon users instead of connections.
         /// </summary>
-        [ConditionalTheory]
         [MemberData(nameof(FunctionUrls))]
         [SkipIfFunctionAbsent(Section)]
         public async Task UserGroupManagement(string key, string url)
