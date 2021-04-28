@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using Xunit;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
 {
@@ -38,7 +39,9 @@ namespace Microsoft.Azure.Webjobs.Extensions.SignalRService.E2ETests
                     {
                         return Task.FromResult(accessToken);
                     };
-                }).Build();
+                })
+                .AddNewtonsoftJsonProtocol()
+                .Build();
 
         public static async Task OrTimeout(this Task task, TimeSpan timeout = default)
         {
