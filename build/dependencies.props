@@ -20,7 +20,6 @@
     <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>
     <MicrosoftAspNetCoreSignalRClient>5.0.3</MicrosoftAspNetCoreSignalRClient>
     <MicrosoftExtensionsConfiguration>5.0.0</MicrosoftExtensionsConfiguration>
-    <MicrosoftAspNetCoreTesting>2.2.0</MicrosoftAspNetCoreTesting>
     
     <!--E2E test functions-->
     <MicrosoftNETSdkFunctionsV2>1.0.30</MicrosoftNETSdkFunctionsV2>
