@@ -144,7 +144,7 @@ The return data of `SignalRNegotiation` binding is in the following format:
 }
 ```
 
-Here's a usage sample of `SignalRNegotiation` binding:
+Here's a Javascript usage sample of `SignalRNegotiation` binding:
 ```js
 module.exports = async function (context, req, negotiationContext) {
     var userId = req.query.userId;
@@ -184,7 +184,7 @@ The return data of `SignalREndpoints` is an array of endpoints each of which rep
 ```
 
 
-After you get the target endpoint array, add an `endpoints` attribute to the output binding object. This is an example:
+After you get the target endpoint array, add an `endpoints` attribute to the output binding object. This is an Javascript example:
 ```js
 module.exports = async function (context, req, endpoints) {
     var targetEndpoints = endpoints.filter(endpoint => endpoint.name.startsWith("east-"));
