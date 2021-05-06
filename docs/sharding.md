@@ -4,27 +4,29 @@ Currently we add support for configuring multiple SignalR Service instances. You
 <!-- TOC -->
 
 - [Multiple Azure SignalR Service Instances Support in Azure Functions](#multiple-azure-signalr-service-instances-support-in-azure-functions)
-  - [Usage Scenarios](#usage-scenarios)
+  - [Usage scenarios](#usage-scenarios)
   - [Limitations](#limitations)
-  - [Configuration Method](#configuration-method)
+  - [Configuration](#configuration)
   - [Routing](#routing)
     - [Default behavior](#default-behavior)
     - [Customization](#customization)
-    - [The dependency of customized negotiation router](#the-dependency-of-customized-negotiation-router)
+      - [CSharp](#csharp)
+      - [Other languages](#other-languages)
+        - [Client routing](#client-routing)
+        - [Messages routing](#messages-routing)
 
 <!-- /TOC -->
 
-## Usage Scenarios
+## Usage scenarios
 Routing logic is the way to decide to which SignalR Service instance among multiple instances your clients connect and your messages send. By applying different routing logic, this feature can be used in different scenarios. 
 * Scaling. Randomly route each client to one SignalR Service instance, send messages to all the SignalR Service instances so that you can scale the concurrent connections.
 * Cross-geo scenario. Cross-geo networks can be comparatively unstable. Route your clients to a SignalR Service instance in the same region can reduce cross-geo connections.
 * High availability and disaster recovery scenarios. Set up multiple service instances in different regions, so when one region is down, the others can be used as backup. Configure service instances as two roles, **primary** and **secondary**. By default, clients will be routed to a primary online instance. When SDK detects all the primary instances are down, it will route clients to secondary instances. Clients connected before will experience connection drops when there is a disaster and failover take place. You'll need to handle such cases at client side to make it transparent to your end customers. For example, do reconnect after a connection is closed.
 
 ## Limitations
-1. Currently multiple-endpoint feature is only supported on `Persistent` transport type.
-2. Customization of routing is only supported in C# language. The support for other languages is under active development.
+Currently multiple-endpoint feature is only supported on `Persistent` transport type.
 
-## Configuration Method
+## Configuration
 
 To enable multiple SignalR Service instances, you should: 
 
@@ -40,19 +42,17 @@ To enable multiple SignalR Service instances, you should:
     >Notes for switching from `Transient` mode to `Persistent` mode on **Azure Functions runtime V3** : 
     > 
     > Under `Transient` mode, `Newtonsoft.Json` library is used to serialize arguments of hub methods, however, under `Persistent` mode, `System.Text.Json` library is used as default on Azure Functions runtime V3. `System.Text.Json` has some key differences in default behavior with `Newtonsoft.Json`. If you want to use `Newtonsoft.Json` under `Persistent` mode, you can add a configuration item: `"Azure:SignalR:HubProtocol":"NewtonsoftJson"` in `local.settings.json` file or `Azure__SignalR__HubProtocol=NewtonsoftJson` on Azure portal.
-    > 
-    > We **strongly** recommend functions in languages other than C# to use this configuration.
     
 
 2. Configure multiple SignalR Service endpoints entries in your configuration.
 
-    We use a [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) object to represent a SignalR Service instance. You can define an service endpoint with its `<Name>` and `<EndpointType>` in the entry key, and the connection string in the entry value. The keys are in the following format : 
+    We use a [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) object to represent a SignalR Service instance. You can define an service endpoint with its `<EndpointName>` and `<EndpointType>` in the entry key, and the connection string in the entry value. The keys are in the following format : 
 
     ```
-    Azure:SignalR:Endpoints:<Name>:<EndpointType>
+    Azure:SignalR:Endpoints:<EndpointName>:<EndpointType>
     ```
 
-    `<EndpointType>` is optional and is `primary` by default. See samples below:
+    `<EndpointType>` is optional and defaults to `primary`. See samples below:
         
     ```json
     {
@@ -66,7 +66,7 @@ To enable multiple SignalR Service instances, you should:
 
     > * When you configure Azure SignalR endpoints in the App Service on Azure portal, don't forget to replace `":"` with `"__"`, the double underscore in the keys. For reasons, see [Environment variables](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/?view=aspnetcore-5.0#environment-variables).
     >
-    > * Connection string configured with the key `{ConnectionStringSetting}` (defaults to "AzureSignalRConnectionString") is also recognized as a primary service endpoint with empty name. But this configuration style is not recommended.
+    > * Connection string configured with the key `{ConnectionStringSetting}` (defaults to "AzureSignalRConnectionString") is also recognized as a primary service endpoint with empty name. But this configuration style is not recommended for multiple endpoints.
 ## Routing
 
 ### Default behavior
@@ -77,7 +77,7 @@ By default, the SDK uses the [DefaultEndpointRouter](https://github.com/Azure/az
 * Server message routing: All service endpoints are returned.
 
 ### Customization
-We support customization of route algorithm in C# language. 
+#### CSharp
 
 Here are the steps:
 * Implement a customized router. You can leverage information provided from [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) to make routing decision. See guide here: [customize-route-algorithm](https://github.com/Azure/azure-signalr/blob/dev/docs/sharding.md#customize-route-algorithm).
@@ -101,7 +101,98 @@ namespace SimpleChatV3
 }
 ```
 
-For other languages such as JavaScript, we will support route algorithm customization in the future.
+> The dependency of customized negotiation router: 
+> 
+> If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext`, for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you can only use the HTTP trigger in your negotiation functions, so that your router can get the `HttpContext` object correctly.
 
-### The dependency of customized negotiation router
-If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext`, for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you can only use the HTTP trigger in your negotiation functions, so that your router can get the `HttpContext` object correctly.
+#### Other languages
+
+For languages other than C#, we support specifying target endpoints in each request. You will use new binding types to get endpoint information.
+##### Client routing
+The `SignalRConnectionInfo` binding selects one endpoint according th the default routing rule. If you want to customize routing rule, you should use `SignalRNegotiation` binding instead of `SignalRConnectionInfo` binding. 
+
+`SignalRNegotiation` binding data is the same as `SignalRConnectionInfo`. Here's binding data in a `function.json` file sample:
+```json
+{
+    "type": "signalRNegotiation",
+    "name": "negotiationContext",
+    "hubName": "chat",
+    "direction": "in"
+}
+```
+
+You could also add other binding data such as `userId`, `idToken` and `claimTypeList` just like `SignalRConnectionInfo`.
+
+The return data of `SignalRNegotiation` binding is in the following format:
+```json
+{
+    "endpoints": [
+        {
+            "endpointType": "Primary",
+            "name": "<EndpointName>",
+            "endpoint": "https://****.service.signalr.net",
+            "online": true,
+            "connectionInfo": {
+                "url": "<client-access-url>",
+                "accessToken": "<client-access-token>"
+            }
+        },
+        {
+            "...": "..."
+        }
+    ]
+}
+```
+
+Here's a usage sample of `SignalRNegotiation` binding:
+```js
+module.exports = async function (context, req, negotiationContext) {
+    var userId = req.query.userId;
+    if (userId.startsWith("east-")) {
+        //return the first endpoint whose name starts with "east-" and status is online.
+        context.res.body = negotiationContext.endpoints.find(endpoint => endpoint.name.startsWith("east-") && endpoint.online).connectionInfo;
+    }
+    else {
+        //return the first online endpoint
+        context.res.body = negotiationContext.endpoints.filter(endpoint => endpoint.online)[0].connectionInfo;
+    }
+}
+```
+
+##### Messages routing
+Messages or actions routing needs two binding types to cooperate.In general, firstly you need a new input binding type `SignalREndpoints` to get all the available endpoint information. Then you filter the endpoints and get an array containing all the endpoints that you want to send to. Lastly you specify the target endpoints in the `SignalR` output binding.
+
+Here's the `SignalREndpoints` binding data in `functions.json` file:
+```json
+{
+      "type": "signalREndpoints",
+      "direction": "in",
+      "name": "endpoints",
+      "hubName": "<hub name>"
+}
+```
+
+The return data of `SignalREndpoints` is an array of endpoints each of which represented as a JSON object with the following schema:
+
+```json
+{
+    "endpointType": "<EndpointType>", 
+    "name": "<EndpointName>",
+    "endpoint": "https://****.service.signalr.net",
+    "online": true
+}
+```
+
+
+After you get the target endpoint array, add an `endpoints` attribute to the output binding object. This is an example:
+```js
+module.exports = async function (context, req, endpoints) {
+    var targetEndpoints = endpoints.filter(endpoint => endpoint.name.startsWith("east-"));
+    context.bindings.signalRMessages = [{
+        "target": "chat",
+        "arguments": ["hello-world"],
+        "endpoints": targetEndpoints,
+    }];
+    context.done();
+}
+```
