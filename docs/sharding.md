@@ -116,7 +116,7 @@ The `SignalRConnectionInfo` binding selects one endpoint according the default r
 ```json
 {
     "type": "signalRNegotiation",
-    "name": "negotiationContext",  // the name of the varaible representing the SignalR negotiation context in function code
+    "name": "negotiationContext",
     "hubName": "<HubName>", 
     "direction": "in"
 }
@@ -168,7 +168,7 @@ Here's the `SignalREndpoints` binding configuration properties in `functions.jso
 {
       "type": "signalREndpoints",
       "direction": "in",
-      "name": "endpoints", // the name of the varaible representing the SignalR endpoint array in function code
+      "name": "endpoints",
       "hubName": "<HubName>"
 }
 ```
