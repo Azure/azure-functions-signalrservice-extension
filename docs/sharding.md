@@ -108,22 +108,23 @@ namespace SimpleChatV3
 #### Other languages
 
 For languages other than C#, we support specifying target endpoints in each request. You will use new binding types to get endpoint information.
-##### Client routing
-The `SignalRConnectionInfo` binding selects one endpoint according th the default routing rule. If you want to customize routing rule, you should use `SignalRNegotiation` binding instead of `SignalRConnectionInfo` binding. 
 
-`SignalRNegotiation` binding data is the same as `SignalRConnectionInfo`. Here's binding data in a `function.json` file sample:
+##### Client routing
+The `SignalRConnectionInfo` binding selects one endpoint according the default routing rule. If you want to customize routing rule, you should use `SignalRNegotiation` binding instead of `SignalRConnectionInfo` binding. 
+
+`SignalRNegotiation` binding configuration properties are the same as `SignalRConnectionInfo`. Here's a `function.json` file sample:
 ```json
 {
     "type": "signalRNegotiation",
-    "name": "negotiationContext",
-    "hubName": "chat",
+    "name": "negotiationContext",  // the name of the varaible representing the SignalR negotiation context in function code
+    "hubName": "<HubName>", 
     "direction": "in"
 }
 ```
 
 You could also add other binding data such as `userId`, `idToken` and `claimTypeList` just like `SignalRConnectionInfo`.
 
-The return data of `SignalRNegotiation` binding is in the following format:
+The object you get from `SignalRNegotiation` binding is in the following format:
 ```json
 {
     "endpoints": [
@@ -146,7 +147,7 @@ The return data of `SignalRNegotiation` binding is in the following format:
 
 Here's a Javascript usage sample of `SignalRNegotiation` binding:
 ```js
-module.exports = async function (context, req, negotiationContext) {
+module.exports = function (context, req, negotiationContext) {
     var userId = req.query.userId;
     if (userId.startsWith("east-")) {
         //return the first endpoint whose name starts with "east-" and status is online.
@@ -160,19 +161,19 @@ module.exports = async function (context, req, negotiationContext) {
 ```
 
 ##### Messages routing
-Messages or actions routing needs two binding types to cooperate.In general, firstly you need a new input binding type `SignalREndpoints` to get all the available endpoint information. Then you filter the endpoints and get an array containing all the endpoints that you want to send to. Lastly you specify the target endpoints in the `SignalR` output binding.
+Messages or actions routing needs two binding types to cooperate. In general, firstly you need a new input binding type `SignalREndpoints` to get all the available endpoint information. Then you filter the endpoints and get an array containing all the endpoints that you want to send to. Lastly you specify the target endpoints in the `SignalR` output binding.
 
-Here's the `SignalREndpoints` binding data in `functions.json` file:
+Here's the `SignalREndpoints` binding configuration properties in `functions.json` file:
 ```json
 {
       "type": "signalREndpoints",
       "direction": "in",
-      "name": "endpoints",
-      "hubName": "<hub name>"
+      "name": "endpoints", // the name of the varaible representing the SignalR endpoint array in function code
+      "hubName": "<HubName>"
 }
 ```
 
-The return data of `SignalREndpoints` is an array of endpoints each of which represented as a JSON object with the following schema:
+The object you get from `SignalREndpoints` is an array of endpoints each of which is represented as a JSON object with the following schema:
 
 ```json
 {
@@ -184,9 +185,9 @@ The return data of `SignalREndpoints` is an array of endpoints each of which rep
 ```
 
 
-After you get the target endpoint array, add an `endpoints` attribute to the output binding object. This is an Javascript example:
+After you get the target endpoint array, add an `endpoints` property to the output binding object. This is a Javascript example:
 ```js
-module.exports = async function (context, req, endpoints) {
+module.exports = function (context, req, endpoints) {
     var targetEndpoints = endpoints.filter(endpoint => endpoint.name.startsWith("east-"));
     context.bindings.signalRMessages = [{
         "target": "chat",
