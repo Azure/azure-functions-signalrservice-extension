@@ -69,7 +69,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// <summary>
         /// Gets client endpoint access information object for SignalR hub connections to connect to Azure SignalR Service
         /// </summary>
-        [Obsolete("Please use async version instead.")]
         protected SignalRConnectionInfo Negotiate(string userId = null, IList<Claim> claims = null, TimeSpan? lifetime = null)
         {
             return NegotiateAsync(new NegotiationOptions
