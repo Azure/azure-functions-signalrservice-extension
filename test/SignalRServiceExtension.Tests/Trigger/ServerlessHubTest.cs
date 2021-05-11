@@ -19,7 +19,6 @@ namespace SignalRServiceExtension.Tests.Trigger
     public class ServerlessHubTest
     {
         [Fact]
-        [Obsolete]
         private async Task ServerlessHubUnitTest()
         {
             var clientProxyMoc = new Mock<IClientProxy>();
@@ -56,7 +55,6 @@ namespace SignalRServiceExtension.Tests.Trigger
         }
 
         [FunctionName("negotiate")]
-        [Obsolete]
         public SignalRConnectionInfo Negotiate(string userId)
         {
             return base.Negotiate(userId);
