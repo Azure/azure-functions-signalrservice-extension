@@ -80,7 +80,7 @@ By default, the SDK uses the [DefaultEndpointRouter](https://github.com/Azure/az
 #### CSharp
 
 Here are the steps:
-* Implement a customized router. You can leverage information provided from [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) to make routing decision. See guide here: [customize-route-algorithm](https://github.com/Azure/azure-signalr/blob/dev/docs/sharding.md#customize-route-algorithm).
+* Implement a customized router. You can leverage information provided from [`ServiceEndpoint`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR.Common/Endpoints/ServiceEndpoint.cs) to make routing decision. See guide here: [customize-route-algorithm](https://github.com/Azure/azure-signalr/blob/dev/docs/sharding.md#customize-route-algorithm). **Please note that Http trigger is required in the negotiation function when you need `HttpContext` in custom negotiation method.**
 
 * Register the router to DI container.
 ```cs
@@ -100,10 +100,6 @@ namespace SimpleChatV3
     }
 }
 ```
-
-> The dependency of customized negotiation router: 
-> 
-> If you need to implement [`GetNegotiateEndpoint(HttpContext context, IEnumerable<ServiceEndpoint> endpoints)`](https://github.com/Azure/azure-signalr/blob/dev/src/Microsoft.Azure.SignalR/EndpointRouters/IEndpointRouter.cs) method yourself and rely on the parameter `HttpContext`, for example, use `HttpContext.Request.Query["endpoint"]` to select a nearer endpoint for router, you can only use the HTTP trigger in your negotiation functions, so that your router can get the `HttpContext` object correctly.
 
 #### Other languages
 
