@@ -2,13 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    internal class TupleStringIgnoreCasesComparer: IEqualityComparer<(string, string, string)>
+    internal class TupleStringIgnoreCasesComparer : IEqualityComparer<(string, string, string)>
     {
         public static readonly TupleStringIgnoreCasesComparer Instance = new TupleStringIgnoreCasesComparer();
 

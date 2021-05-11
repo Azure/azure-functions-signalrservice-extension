@@ -15,7 +15,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         // todo: fix invoke string in another PR
         public SecurityTokenValidationValueProvider(SecurityTokenResult result, string invokeString)
         {
-            this.result= result;
+            this.result = result;
             this.invokeString = invokeString;
         }
 

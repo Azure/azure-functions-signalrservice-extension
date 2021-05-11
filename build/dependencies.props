@@ -5,14 +5,14 @@
   </PropertyGroup>
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
-    <MicrosoftAzureSignalRManagement>1.8.0</MicrosoftAzureSignalRManagement>
+    <MicrosoftAzureSignalRManagement>1.8.1</MicrosoftAzureSignalRManagement>
     <MicrosoftAzureFunctionsExtensionsVersion>1.0.0</MicrosoftAzureFunctionsExtensionsVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
     <XunitPackageVersion>2.4.1</XunitPackageVersion>
     <XunitRunnerVisualstudioPackageVersion>2.4.3</XunitRunnerVisualstudioPackageVersion>
     <MessagePackPackageVersion>1.9.11</MessagePackPackageVersion>
-    <NewtonsoftJsonPackageVersion>12.0.1</NewtonsoftJsonPackageVersion>
+    <NewtonsoftJsonPackageVersion>12.0.2</NewtonsoftJsonPackageVersion>
     <SystemMemoryPackageVersion>4.5.3</SystemMemoryPackageVersion>
     <MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>1.1.5</MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>
     <SystemIdentityModelTokensJwtVersion>5.5.0</SystemIdentityModelTokensJwtVersion>
@@ -20,7 +20,6 @@
     <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>
     <MicrosoftAspNetCoreSignalRClient>5.0.3</MicrosoftAspNetCoreSignalRClient>
     <MicrosoftExtensionsConfiguration>5.0.0</MicrosoftExtensionsConfiguration>
-    <MicrosoftAspNetCoreTesting>2.2.0</MicrosoftAspNetCoreTesting>
     
     <!--E2E test functions-->
     <MicrosoftNETSdkFunctionsV2>1.0.30</MicrosoftNETSdkFunctionsV2>

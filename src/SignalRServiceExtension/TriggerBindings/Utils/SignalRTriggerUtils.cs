@@ -1,25 +1,22 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
-{ 
+{
     internal static class SignalRTriggerUtils
     {
         private const string CommaSeparator = ",";
         private static readonly char[] HeaderSeparator = { ',' };
         private static readonly string[] ClaimsSeparator = { ": " };
-
 
         public static IDictionary<string, string> GetQueryDictionary(string queryString)
         {

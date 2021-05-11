@@ -20,13 +20,14 @@ namespace SignalRServiceExtension.Tests
     {
         private const string ConnectionString = "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
         private static readonly AccessKey[] AccessKeys = new AccessKey[] { new ServiceEndpoint(ConnectionString).AccessKey };
+
         [Fact]
         public async Task BindAsyncTest()
         {
             var binding = CreateBinding(nameof(TestFunction), new string[0]);
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             var context = new InvocationContext();
-            var triggerContext = new SignalRTriggerEvent {Context = context, TaskCompletionSource = tcs};
+            var triggerContext = new SignalRTriggerEvent { Context = context, TaskCompletionSource = tcs };
             var result = await binding.BindAsync(triggerContext, null);
             Assert.Equal(context, await result.ValueProvider.GetValueAsync());
         }
@@ -52,7 +53,7 @@ namespace SignalRServiceExtension.Tests
         public async Task BindingDataTestWithLessParameterNames()
         {
             var binding = CreateBinding(nameof(TestFunctionWithTwoStringArgument), "arg0");
-            var context = new InvocationContext{Arguments = new object[] {Guid.NewGuid().ToString()}};
+            var context = new InvocationContext { Arguments = new object[] { Guid.NewGuid().ToString() } };
             var triggerContext = new SignalRTriggerEvent { Context = context };
             var result = await binding.BindAsync(triggerContext, null);
             var bindingData = result.BindingData;

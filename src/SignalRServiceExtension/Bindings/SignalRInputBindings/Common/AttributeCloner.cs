@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using BindingData = System.Collections.Generic.IReadOnlyDictionary<string, object>;
 using BindingDataContract = System.Collections.Generic.IReadOnlyDictionary<string, System.Type>;
+
 // Func to transform Attribute,BindingData into value for cloned attribute property/constructor arg
 // Attribute is the new cloned attribute - null if constructor arg (new cloned attr not created yet)
 using BindingDataResolver = System.Func<System.Attribute, System.Collections.Generic.IReadOnlyDictionary<string, object>, object>;
@@ -21,6 +22,7 @@ using BindingDataResolver = System.Func<System.Attribute, System.Collections.Gen
 using Validator = System.Action<object>;
 
 #pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     // Clone an attribute and resolve it.
@@ -98,7 +100,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         // transforms binding data to appropriate resolver (appsetting, autoresolve, or originalValue)
         private BindingDataResolver GetResolver(PropertyInfo propInfo, INameResolver nameResolver, BindingDataContract contract)
         {
-            // Do the attribute lookups once upfront, and then cache them (via func closures) for subsequent runtime usage. 
+            // Do the attribute lookups once upfront, and then cache them (via func closures) for subsequent runtime usage.
             object originalValue = propInfo.GetValue(_source);
             ConnectionStringAttribute connStrAttr = propInfo.GetCustomAttribute<ConnectionStringAttribute>();
             AppSettingAttribute appSettingAttr = propInfo.GetCustomAttribute<AppSettingAttribute>();
@@ -109,7 +111,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 validator(originalValue);
 
-                // No special attributes, treat as literal. 
+                // No special attributes, treat as literal.
                 return (newAttr, bindingData) => originalValue;
             }
 
@@ -119,7 +121,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new InvalidOperationException($"Property '{propInfo.Name}' can only be annotated with one of the types {nameof(AppSettingAttribute)}, {nameof(AutoResolveAttribute)}, and {nameof(ConnectionStringAttribute)}.");
             }
 
-            // attributes only work on string properties. 
+            // attributes only work on string properties.
             if (propInfo.PropertyType != typeof(string))
             {
                 throw new InvalidOperationException($"{nameof(ConnectionStringAttribute)}, {nameof(AutoResolveAttribute)}, or {nameof(AppSettingAttribute)} property '{propInfo.Name}' must be of type string.");
@@ -144,7 +146,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             return GetAutoResolveResolver(str, autoResolveAttr, nameResolver, propInfo, contract, validator);
         }
 
-        // Apply AutoResolve attribute 
+        // Apply AutoResolve attribute
         internal BindingDataResolver GetAutoResolveResolver(string originalValue, AutoResolveAttribute autoResolveAttr, INameResolver nameResolver, PropertyInfo propInfo, BindingDataContract contract, Validator validator)
         {
             if (string.IsNullOrWhiteSpace(originalValue))
@@ -187,19 +189,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 throw new InvalidOperationException($"Unable to resolve the value for property '{propInfo.DeclaringType.Name}.{propInfo.Name}'. Make sure the setting exists and has a valid value.");
             }
 
-            // validate after the %% is substituted. 
+            // validate after the %% is substituted.
             validator(resolvedValue);
 
             return (newAttr, bindingData) => resolvedValue;
         }
 
-        // Run validition. This needs to be run at different stages. 
+        // Run validition. This needs to be run at different stages.
         // In general, run as early as possible. If there are { } tokens, then we can't run until runtime.
-        // But if there are no { }, we can run statically. 
+        // But if there are no { }, we can run statically.
         // If there's no [AutoResolve], [AppSettings], then we can run immediately.
         private static Validator GetValidatorFunc(PropertyInfo propInfo, bool dontLogValues)
         {
-            // This implicitly caches the attribute lookup once and then shares for each runtime invocation. 
+            // This implicitly caches the attribute lookup once and then shares for each runtime invocation.
             var attrs = propInfo.GetCustomAttributes<ValidationAttribute>();
 
             return (value) =>
@@ -225,8 +227,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             };
         }
 
-        // Resolve for AutoResolve.Default templates. 
-        // These only have access to the {sys} builtin variable and don't get access to trigger binding data. 
+        // Resolve for AutoResolve.Default templates.
+        // These only have access to the {sys} builtin variable and don't get access to trigger binding data.
         internal static BindingDataResolver GetBuiltinTemplateResolver(string originalValue, INameResolver nameResolver, Validator validator)
         {
             string resolvedValue = nameResolver.ResolveWholeString(originalValue);
@@ -234,13 +236,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var template = BindingTemplate.FromString(resolvedValue);
             if (!template.HasParameters)
             {
-                // No { } tokens, bind eagerly up front. 
+                // No { } tokens, bind eagerly up front.
                 validator(originalValue);
             }
 
             SystemBindingData.ValidateStaticContract(template);
 
-            // For static default contracts, we only have access to the built in binding data. 
+            // For static default contracts, we only have access to the built in binding data.
             return (newAttr, bindingData) =>
             {
                 var newValue = template.Bind(SystemBindingData.GetSystemBindingData(bindingData));
@@ -257,7 +259,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             if (!template.HasParameters)
             {
-                // No { } tokens, bind eagerly up front. 
+                // No { } tokens, bind eagerly up front.
                 validator(resolvedValue);
             }
 
@@ -334,7 +336,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             if (bindingData == null)
             {
-                // Skip validation if no binding data provided. We can't do the { } substitutions. 
+                // Skip validation if no binding data provided. We can't do the { } substitutions.
                 return template?.Pattern;
             }
 
@@ -363,7 +365,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }
             }
 
-            // return the default policy                        
+            // return the default policy
             return new DefaultResolutionPolicy();
         }
 
@@ -377,16 +379,16 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// Class providing support for built in system binding expressions
         /// </summary>
         /// <remarks>
-        /// It's expected this class is created and added to the binding data. 
+        /// It's expected this class is created and added to the binding data.
         /// </remarks>
         private class SystemBindingData
         {
-            // The public name for this binding in the binding expressions. 
+            // The public name for this binding in the binding expressions.
             public const string Name = "sys";
 
-            // An internal name for this binding that uses characters that gaurantee it can't be overwritten by a user. 
-            // This is never seen by the user. 
-            // This ensures that we can always unambiguously retrieve this later. 
+            // An internal name for this binding that uses characters that gaurantee it can't be overwritten by a user.
+            // This is never seen by the user.
+            // This ensures that we can always unambiguously retrieve this later.
             private const string InternalKeyName = "$sys";
 
             private static readonly IReadOnlyDictionary<string, Type> DefaultSystemContract = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
@@ -395,13 +397,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         };
 
             /// <summary>
-            /// The method name that the binding lives in. 
-            /// The method name can be override by the <see cref="FunctionNameAttribute"/> 
+            /// The method name that the binding lives in.
+            /// The method name can be override by the <see cref="FunctionNameAttribute"/>
             /// </summary>
             public string MethodName { get; set; }
 
             /// <summary>
-            /// Get the current UTC date. 
+            /// Get the current UTC date.
             /// </summary>
             public DateTime UtcNow => DateTime.UtcNow;
 
@@ -411,7 +413,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             public Guid RandGuid => Guid.NewGuid();
 
             // Given a full bindingData, create a binding data with just the system object .
-            // This can be used when resolving default contracts that shouldn't be using an instance binding data. 
+            // This can be used when resolving default contracts that shouldn't be using an instance binding data.
             internal static IReadOnlyDictionary<string, object> GetSystemBindingData(IReadOnlyDictionary<string, object> bindingData)
             {
                 var data = GetFromData(bindingData);
@@ -422,8 +424,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 return systemBindingData;
             }
 
-            // Validate that a template only uses static (non-instance) binding variables. 
-            // Enforces we're not referring to other data from the trigger. 
+            // Validate that a template only uses static (non-instance) binding variables.
+            // Enforces we're not referring to other data from the trigger.
             internal static void ValidateStaticContract(BindingTemplate template)
             {
                 try
@@ -438,12 +440,12 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             internal void AddToBindingData(Dictionary<string, object> bindingData)
             {
-                // User data takes precedence, so if 'sys' already exists, add via the internal name. 
+                // User data takes precedence, so if 'sys' already exists, add via the internal name.
                 string sysName = bindingData.ContainsKey(SystemBindingData.Name) ? SystemBindingData.InternalKeyName : SystemBindingData.Name;
                 bindingData[sysName] = this;
             }
 
-            // Given per-instance binding data, extract just the system binding data object from it. 
+            // Given per-instance binding data, extract just the system binding data object from it.
             private static SystemBindingData GetFromData(IReadOnlyDictionary<string, object> bindingData)
             {
                 object val;
@@ -459,10 +461,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
         }
 
-        // Helpers for providing default behavior for an IAttributeInvokeDescriptor that 
-        // convert between a TAttribute and a string representation (invoke string). 
-        // Properties with [AutoResolve] are the interesting ones to serialize and deserialize. 
-        // Assume any property without a [AutoResolve] attribute is read-only and so doesn't need to be included in the invoke string. 
+        // Helpers for providing default behavior for an IAttributeInvokeDescriptor that
+        // convert between a TAttribute and a string representation (invoke string).
+        // Properties with [AutoResolve] are the interesting ones to serialize and deserialize.
+        // Assume any property without a [AutoResolve] attribute is read-only and so doesn't need to be included in the invoke string.
         private static class DefaultAttributeInvokerDescriptor
         {
             public static TAttribute FromInvokeString(AttributeCloner<TAttribute> cloner, string invokeString)
@@ -473,8 +475,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 }
 
                 // Instantiating new attributes can be tricky since sometimes the arg is to the ctor and sometimes
-                // its a property setter. AttributeCloner already solves this, so use it here to do the actual attribute instantiation. 
-                // This has an instantiation problem similar to what Attribute Cloner has 
+                // its a property setter. AttributeCloner already solves this, so use it here to do the actual attribute instantiation.
+                // This has an instantiation problem similar to what Attribute Cloner has
                 if (invokeString[0] == '{')
                 {
                     var propertyValues = JsonConvert.DeserializeObject<IDictionary<string, string>>(invokeString);
@@ -516,9 +518,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
 
         /// <summary>
-        /// Resolution policy for { } in  binding templates. 
-        /// The default policy is just a direct substitution for the binding data. 
-        /// Derived policies can enforce formatting / escaping when they do injection. 
+        /// Resolution policy for { } in  binding templates.
+        /// The default policy is just a direct substitution for the binding data.
+        /// Derived policies can enforce formatting / escaping when they do injection.
         /// </summary>
         private class DefaultResolutionPolicy : IResolutionPolicy
         {
@@ -529,4 +531,5 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
     }
 }
+
 #pragma warning restore CS0618 // Type or member is obsolete

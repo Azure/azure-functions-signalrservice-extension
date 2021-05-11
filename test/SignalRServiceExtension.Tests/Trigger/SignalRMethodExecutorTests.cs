@@ -1,6 +1,8 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,28 +32,27 @@ namespace SignalRServiceExtension.Tests.Trigger
                 .Returns<TriggeredFunctionData, CancellationToken>((data, token) =>
                 {
                     _triggeredFunctionDataTcs.TrySetResult(data);
-                    ((SignalRTriggerEvent) data.TriggerValue).TaskCompletionSource?.TrySetResult(string.Empty);
+                    ((SignalRTriggerEvent)data.TriggerValue).TaskCompletionSource?.TrySetResult(string.Empty);
                     return Task.FromResult(new FunctionResult(true));
                 });
             _triggeredFunctionExecutor = executorMoc.Object;
         }
 
-
         [Fact]
         public async Task SignalRConnectMethodExecutorTest()
         {
             var resolver = new SignalRRequestResolver(false);
-            var methodExecutor = new SignalRConnectMethodExecutor(resolver, new ExecutionContext {Executor = _triggeredFunctionExecutor });
+            var methodExecutor = new SignalRConnectMethodExecutor(resolver, new ExecutionContext { Executor = _triggeredFunctionExecutor });
             var hub = Guid.NewGuid().ToString();
             var category = Guid.NewGuid().ToString();
             var @event = Guid.NewGuid().ToString();
             var connectionId = Guid.NewGuid().ToString();
-            var content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new OpenConnectionMessage {Type = 10}));
+            var content = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new OpenConnectionMessage { Type = 10 }));
             var request = TestHelpers.CreateHttpRequestMessage(hub, category, @event, connectionId, contentType: Constants.JsonContentType, content: content);
             await methodExecutor.ExecuteAsync(request);
 
             var result = await _triggeredFunctionDataTcs.Task;
-            var triggerData = (SignalRTriggerEvent) result.TriggerValue;
+            var triggerData = (SignalRTriggerEvent)result.TriggerValue;
             Assert.Null(triggerData.TaskCompletionSource);
             Assert.Equal(hub, triggerData.Context.Hub);
             Assert.Equal(category, triggerData.Context.Category);
@@ -96,7 +97,7 @@ namespace SignalRServiceExtension.Tests.Trigger
             var category = Guid.NewGuid().ToString();
             var @event = Guid.NewGuid().ToString();
             var connectionId = Guid.NewGuid().ToString();
-            var arguments = new object[] {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
+            var arguments = new object[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() };
 
             var message = new Microsoft.AspNetCore.SignalR.Protocol.InvocationMessage(Guid.NewGuid().ToString(), @event, arguments);
             IHubProtocol protocol = protocolName == "json" ? (IHubProtocol)new JsonHubProtocol() : new MessagePackHubProtocol();

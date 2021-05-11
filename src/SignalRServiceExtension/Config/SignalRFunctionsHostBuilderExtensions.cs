@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -43,13 +43,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 throw new NotSupportedException($"{nameof(ISecurityTokenValidator)} already injected.");
             }
-                
+
             builder.Services
                 .AddSingleton<ISecurityTokenValidator>(s =>
                     new DefaultSecurityTokenValidator(configureTokenValidationParameters));
 
             builder.Services.
-                TryAddSingleton<ISignalRConnectionInfoConfigurer>(s => 
+                TryAddSingleton<ISignalRConnectionInfoConfigurer>(s =>
                     internalSignalRConnectionInfoConfigurer);
 
             return builder;

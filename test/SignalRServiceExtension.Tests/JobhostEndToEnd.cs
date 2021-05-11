@@ -30,7 +30,7 @@ namespace SignalRServiceExtension.Tests
         private const string AttrConnStrConfigKey = "AttributeConnectionStringName";
         private const string DefaultUserId = "UserId";
         private const string DefaultHubName = "TestHub";
-        private const string DefaultEndpoint = "http://abc.com";
+        private const string DefaultEndpoint = "http://localhostMakeSureNotOneUsedXXXXX";
         private const string DefaultAccessKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
         private const string DefaultAttributeAccessKey = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
         private const string DefaultConnectionStringFormat = "Endpoint={0};AccessKey={1};Version=1.0;";
@@ -120,7 +120,7 @@ namespace SignalRServiceExtension.Tests
         {
             var task = CreateTestTask(typeof(SignalRFunctions), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
-            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.Message);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.GetBaseException().Message);
         }
 
         [Fact]
@@ -128,7 +128,7 @@ namespace SignalRServiceExtension.Tests
         {
             var task = CreateTestTask(typeof(SignalRConnectionInfoFunctions), null);
             var exception = await Assert.ThrowsAsync<FunctionInvocationException>(() => task);
-            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.InnerException.InnerException.Message);
+            Assert.Equal(ErrorMessages.EmptyConnectionStringErrorMessageFormat, exception.GetBaseException().Message);
         }
 
         [Fact]

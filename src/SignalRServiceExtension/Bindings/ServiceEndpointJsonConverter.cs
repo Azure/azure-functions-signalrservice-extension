@@ -18,18 +18,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public override void WriteJson(JsonWriter writer, ServiceEndpoint value, JsonSerializer serializer)
         {
-            serializer.Serialize(writer, ToLiteServiceEndpoint(value));
-        }
-
-        private LiteServiceEndpoint ToLiteServiceEndpoint(ServiceEndpoint e)
-        {
-            return new LiteServiceEndpoint
-            {
-                EndpointType = e.EndpointType,
-                Name = e.Name,
-                Endpoint = e.Endpoint,
-                Online = e.Online
-            };
+            serializer.Serialize(writer, new LiteServiceEndpoint(value));
         }
 
         private ServiceEndpoint ToEqualServiceEndpoint(LiteServiceEndpoint e)

@@ -29,16 +29,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             "nbf"  // Not Before claim. Added by default. It is not validated by service.
         };
 
-        private readonly IServiceManagerStore serviceManagerStore;
-        private readonly string connectionStringKey;
+        private readonly ServiceHubContext _serviceHubContext;
 
-        public string HubName { get; }
-
-        internal AzureSignalRClient(IServiceManagerStore serviceManagerStore, string connectionStringKey, string hubName)
+        public AzureSignalRClient(ServiceHubContext serviceHubContext)
         {
-            this.serviceManagerStore = serviceManagerStore;
-            this.HubName = hubName;
-            this.connectionStringKey = connectionStringKey;
+            _serviceHubContext = serviceHubContext;
         }
 
         public Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, string idToken, string[] claimTypeList, HttpContext httpContext)
@@ -49,12 +44,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public async Task<SignalRConnectionInfo> GetClientConnectionInfoAsync(string userId, IList<Claim> claims, HttpContext httpContext)
         {
-            var serviceHubContext = await GetHubContextAsync();
-            var negotiateResponse = await serviceHubContext.NegotiateAsync(new NegotiationOptions()
-            { 
-                UserId = userId, 
-                Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList(), 
-                HttpContext = httpContext 
+            var negotiateResponse = await _serviceHubContext.NegotiateAsync(new NegotiationOptions()
+            {
+                UserId = userId,
+                Claims = BuildJwtClaims(claims, AzureSignalRUserPrefix).ToList(),
+                HttpContext = httpContext
             });
             return new SignalRConnectionInfo
             {
@@ -202,15 +196,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private async Task InvokeAsync(ServiceEndpoint[] endpoints, Func<ServiceHubContext, Task> func)
         {
-            var serviceHubContext = await GetHubContextAsync();
-            var targetHubContext = endpoints == null ? serviceHubContext : (serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints) as ServiceHubContext;
+            var targetHubContext = endpoints == null ? _serviceHubContext : (_serviceHubContext as IInternalServiceHubContext).WithEndpoints(endpoints);
             await func.Invoke(targetHubContext);
-        }
-
-        private async ValueTask<ServiceHubContext> GetHubContextAsync()
-        {
-            var hubContext = await serviceManagerStore.GetOrAddByConnectionStringKey(connectionStringKey).GetAsync(HubName);
-            return hubContext as ServiceHubContext;
         }
     }
 }

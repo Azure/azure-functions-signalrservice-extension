@@ -24,7 +24,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         [JsonProperty("userId")]
         public string UserId { get; set; }
 
-        [JsonProperty("groupName"), JsonRequired]
+        [JsonProperty("groupName")]
         public string GroupName { get; set; }
 
         [JsonProperty("action"), JsonRequired]
