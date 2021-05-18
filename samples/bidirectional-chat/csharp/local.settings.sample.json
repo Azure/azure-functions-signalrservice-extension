@@ -8,6 +8,8 @@
     "AzureSignalRServiceTransportType": "Transient"
   },
   "Host": {
-    "LocalHttpPort": 7071
+    "LocalHttpPort": 7071,
+    "CORS": "http://127.0.0.1:8080",
+    "CORSCredentials": true
   }
 }
