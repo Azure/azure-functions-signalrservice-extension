@@ -23,6 +23,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private ServiceEndpoint ToEqualServiceEndpoint(LiteServiceEndpoint e)
         {
+            if (e == null)
+            {
+                return null;
+            }
+
             var connectionString = $"Endpoint={e.Endpoint};AccessKey={FakeAccessKey};Version=1.0;";
             return new ServiceEndpoint(connectionString, e.EndpointType, e.Name);
         }
