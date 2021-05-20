@@ -5,6 +5,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using Microsoft.Azure.SignalR.Management;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -63,5 +64,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// If you multiple claims have the same key, only the first one will be reserved.
         /// </summary>
         public IDictionary<string, string> Claims { get; set; }
+
+        internal IServiceHubContext HubContext { get; set; }
     }
 }
