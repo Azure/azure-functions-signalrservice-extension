@@ -170,15 +170,6 @@
           console.log('connected!');
         })
         .catch(console.error);
-      function getAxiosConfig() {
-        const config = {
-          headers: {
-            'x-ms-signalr-user-id':  data.username,
-            'Authorization': 'Bearer ' + generateAccessToken(data.username)
-          }
-        };
-        return config;
-      }
       let counter = 0;
       function onNewMessage(message) {
         message.id = counter++; // vue transitions need an id
