@@ -17,46 +17,26 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
 
         public bool TryParseMessage(ref ReadOnlySequence<byte> input, out ServerlessMessage message)
         {
-            using (var inputStream = new ReadOnlySequenceStream(input))
-            using (var streamReader = new StreamReader(inputStream))
+            message = null;
+            using var inputStream = new ReadOnlySequenceStream(input);
+            using var streamReader = new StreamReader(inputStream);
+            using var textReader = new JsonTextReader(streamReader);
+
+            try
             {
-                var textReader = new JsonTextReader(streamReader);
-
-                try
-                {
-                    var jObject = JObject.Load(textReader);
-
-                    if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token)
-                        && token.Type == JTokenType.Integer)
-                        switch (token.Value<int>())
-                        {
-                            case ServerlessProtocolConstants.InvocationMessageType:
-                                message = jObject.ToObject<InvocationMessage>();
-                                break;
-                            case ServerlessProtocolConstants.OpenConnectionMessageType:
-                                message = jObject.ToObject<OpenConnectionMessage>();
-                                break;
-                            case ServerlessProtocolConstants.CloseConnectionMessageType:
-                                message = jObject.ToObject<CloseConnectionMessage>();
-                                break;
-                            default:
-                                message = null;
-                                break;
-                        }
-                    else
-                        message = null;
-                }
-                catch
-                {
-                    message = null;
-                }
-                finally
-                {
-                    textReader.Close();
-                }
-
-                return message != null;   
+                var jObject = JObject.Load(textReader);
+                if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token)
+                    && token.Type == JTokenType.Integer)
+                    message = token.Value<int>() switch
+                    {
+                        ServerlessProtocolConstants.InvocationMessageType => jObject.ToObject<InvocationMessage>(),
+                        ServerlessProtocolConstants.OpenConnectionMessageType => jObject.ToObject<OpenConnectionMessage>(),
+                        ServerlessProtocolConstants.CloseConnectionMessageType => jObject.ToObject<CloseConnectionMessage>(),
+                        _ => null,
+                    };
             }
+            catch { }
+            return message != null;
         }
     }
 }
