@@ -3,10 +3,11 @@
 
 using Microsoft.Azure.SignalR;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
-    [JsonObject]
+    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     internal class EndpointConnectionInfo : LiteServiceEndpoint
     {
         public EndpointConnectionInfo(ServiceEndpoint endpoint) : base(endpoint)
