@@ -8,16 +8,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal static class JTokenExtensions
     {
-        public static readonly JsonSerializer JsonSerializer = JsonSerializer.Create(new JsonSerializerSettings
-        {
-            Converters = new JsonConverter[] { new ServiceEndpointJsonConverter() }
-        });
-
         public static bool TryToObject<TOutput>(this JToken input, out TOutput output)
         {
             try
             {
-                output = input.ToObject<TOutput>(JsonSerializer);
+                output = input.ToObject<TOutput>(ServiceEndpointJsonConverter.JsonSerializer);
             }
             catch
             {
