@@ -29,7 +29,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             _webhookException = webhookException;
         }
 
-        public Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
+        public async Task<ITriggerBinding> TryCreateAsync(TriggerBindingProviderContext context)
         {
             if (context == null)
             {
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var attribute = parameterInfo.GetCustomAttribute<SignalRTriggerAttribute>(false);
             if (attribute == null)
             {
-                return Task.FromResult<ITriggerBinding>(null);
+                return null;
             }
 
             if (_webhookException != null)
@@ -53,7 +53,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var accessKeys = _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).AccessKeys;
 
-            return Task.FromResult<ITriggerBinding>(new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKeys));
+            var hubContext = await _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).GetAsync(resolvedAttribute.HubName);
+
+            return new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKeys, hubContext);
         }
 
         internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
