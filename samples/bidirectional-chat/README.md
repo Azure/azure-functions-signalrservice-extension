@@ -94,14 +94,27 @@ It's a quick try of this sample. You will create an Azure SignalR Service and an
 
 1. Enable function app cross origin resource sharing (CORS)
 
-    Although there is a CORS setting in local.settings.json, it is not propagated to the function app in Azure. You need to set it separately.
+    * On local, in the `Host` section in the *local.settings.json* file, add `CORS` and `CORSCredentials` properties.
+        ```json
+            {
+                "IsEncrypted": false,
+                "Values": {
+                    // values
+                },
+                "Host": {
+                    "CORS": "http://127.0.0.1:8080",
+                    "CORSCredentials": true
+                }
+            }
+        ```
+    * On Azure, although there is a CORS setting in local.settings.json, it is not propagated to the function app in Azure. You need to set it separately.
 
-    1. Open the function app in the Azure Portal.
-    2. In the left blade, select **CORS** blade.
-    3. In the **Allowed Origins** section, add `http://127.0.0.1:8080` (It is the local web server's url).
-    4. In order for the SignalR JavaScript SDK call your function app from a browser, support for credentials in CORS must be enabled. Select the **Enable Access-Control-Allow-Credentials** checkbox.
-    5. Click **Save** to persist the CORS settings.
-    ![CORS](content/cors.png)
+      1. Open the function app in the Azure Portal.
+      2. In the left blade, select **CORS** blade.
+      3. In the **Allowed Origins** section, add `http://127.0.0.1:8080` (It is the local web server's url).
+      4. In order for the SignalR JavaScript SDK call your function app from a browser, support for credentials in CORS must be enabled. Select the **Enable Access-Control-Allow-Credentials** checkbox.
+      5. Click **Save** to persist the CORS settings.
+      ![CORS](content/cors.png)
 
 2. use a HTTP server to serve the `content/index.html` web page and enter the function app URL after the page opens. You can find it on Azure portal: your function App resource - Overview - URL. If you have [Node](https://nodejs.org/) installed, you can use the scripts `start-web-server.ps1` or `start-web-server.sh` to quickly install a [http server](https://www.npmjs.com/package/live-server) and open the page.
 

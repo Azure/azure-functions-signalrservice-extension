@@ -9,6 +9,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceEndpointJsonConverter : JsonConverter<ServiceEndpoint>
     {
+        public static readonly JsonSerializer JsonSerializer = JsonSerializer.Create(new JsonSerializerSettings
+        {
+            Converters = new JsonConverter[] { new ServiceEndpointJsonConverter() }
+        });
         private const string FakeAccessKey = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
         public override ServiceEndpoint ReadJson(JsonReader reader, Type objectType, ServiceEndpoint existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -23,6 +27,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         private ServiceEndpoint ToEqualServiceEndpoint(LiteServiceEndpoint e)
         {
+            if (e == null)
+            {
+                return null;
+            }
+
             var connectionString = $"Endpoint={e.Endpoint};AccessKey={FakeAccessKey};Version=1.0;";
             return new ServiceEndpoint(connectionString, e.EndpointType, e.Name);
         }

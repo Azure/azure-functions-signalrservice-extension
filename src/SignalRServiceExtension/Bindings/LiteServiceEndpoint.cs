@@ -4,13 +4,14 @@
 using Microsoft.Azure.SignalR;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     /// <summary>
     /// Represents a Azure SignalR Service endpoint, a lite version of <see cref="ServiceEndpoint"/> for endpoints routing.
     /// </summary>
-    [JsonObject]
+    [JsonObject(NamingStrategyType = typeof(CamelCaseNamingStrategy))]
     internal class LiteServiceEndpoint
     {
         [JsonConverter(typeof(StringEnumConverter))]

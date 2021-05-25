@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
+using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Listeners;
 using Microsoft.Azure.WebJobs.Host.Protocols;
@@ -27,13 +28,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalRTriggerAttribute _attribute;
         private readonly ISignalRTriggerDispatcher _dispatcher;
         private readonly AccessKey[] _accessKeys;
+        private readonly IServiceHubContext _hubContext;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, AccessKey[] accessKeys)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, AccessKey[] accessKeys, IServiceHubContext hubContext)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
             _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
             _accessKeys = accessKeys ?? throw new ArgumentNullException(nameof(accessKeys));
+            _hubContext = hubContext;
             BindingDataContract = CreateBindingContract(_attribute, _parameterInfo);
         }
 
@@ -44,7 +47,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             if (value is SignalRTriggerEvent triggerEvent)
             {
                 var bindingContext = triggerEvent.Context;
-
+                bindingContext.HubContext = _hubContext;
                 // If ParameterNames are set, bind them in order.
                 // To reduce undefined situation, number of arguments should keep consist with that of ParameterNames
                 if (_attribute.ParameterNames != null && _attribute.ParameterNames.Length != 0)

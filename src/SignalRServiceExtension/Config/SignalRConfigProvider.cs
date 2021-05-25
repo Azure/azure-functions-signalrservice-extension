@@ -15,7 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -65,15 +64,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 webhookException = ex;
             }
 
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings()
-            {
-                Converters = new List<JsonConverter>() { new ServiceEndpointJsonConverter() },
-                ContractResolver = new DefaultContractResolver
-                {
-                    NamingStrategy = new CamelCaseNamingStrategy()
-                }
-            };
-
             context.AddConverter<string, JObject>(JObject.FromObject)
                    .AddConverter<SignalRConnectionInfo, JObject>(JObject.FromObject)
                    .AddConverter<JObject, SignalRMessage>(input => input.ToObject<SignalRMessage>())
@@ -96,7 +86,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 .BindToInput(new NegotiationContextAsyncConverter(serviceManagerStore));
 
             _ = context.AddBindingRule<SignalREndpointsAttribute>()
-                   .AddConverter<ServiceEndpoint[], JArray>(JArray.FromObject)
+                   .AddConverter<ServiceEndpoint[], JArray>(endpoints => JArray.FromObject(endpoints, ServiceEndpointJsonConverter.JsonSerializer))
                    .BindToInput(new SignalREndpointsAsyncConverter(serviceManagerStore));
 
             var signalRAttributeRule = context.AddBindingRule<SignalRAttribute>();

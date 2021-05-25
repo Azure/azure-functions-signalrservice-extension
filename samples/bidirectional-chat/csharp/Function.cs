@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -20,7 +22,12 @@ namespace FunctionApp
         [FunctionName("negotiate")]
         public Task<SignalRConnectionInfo> NegotiateAsync([HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
         {
-            return NegotiateAsync(new NegotiationOptions { UserId = req.Headers["x-ms-signalr-user-id"], Claims = GetClaims(req.Headers["Authorization"]) });
+            var claims = GetClaims(req.Headers["Authorization"]);
+            return NegotiateAsync(new NegotiationOptions
+            {
+                UserId = claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value,
+                Claims = claims
+            });
         }
 
         [FunctionName(nameof(OnConnected))]

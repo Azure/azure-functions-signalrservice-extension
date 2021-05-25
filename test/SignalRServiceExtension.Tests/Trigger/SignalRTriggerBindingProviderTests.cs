@@ -4,6 +4,7 @@
 using System;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Triggers;
@@ -17,6 +18,8 @@ namespace SignalRServiceExtension.Tests
 {
     public class SignalRTriggerBindingProviderTests
     {
+        private const string CustomConnctionStringSetting = "ConnctionStringSetting";
+
         [Fact]
         public void ResolveAttributeParameterTest()
         {
@@ -107,10 +110,35 @@ namespace SignalRServiceExtension.Tests
             Assert.ThrowsAsync<NotSupportedException>(() => bindingProvider.TryCreateAsync(context));
         }
 
-        private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null)
+        [Fact]
+        public async Task BindingDataTest_WithCustomConnectionString()
+        {
+            var bindingProvider = CreateBindingProvider(connectionStringSetting: CustomConnctionStringSetting);
+            var parameter = typeof(TestNonServerlessHub_CustomConnectionStringSetting).GetMethod(nameof(TestNonServerlessHub_CustomConnectionStringSetting.TestFunction), BindingFlags.Instance | BindingFlags.NonPublic).GetParameters()[0];
+            var context = new TriggerBindingProviderContext(parameter, default);
+            var binding = await bindingProvider.TryCreateAsync(context);
+            var dataProvider = await binding.BindAsync(new SignalRTriggerEvent { Context = new InvocationContext() }, null);
+            var bindingData = (InvocationContext)await dataProvider.ValueProvider.GetValueAsync();
+
+            var clients = await bindingData.GetClientsAsync();
+            Assert.NotNull(clients);
+            var groups = await bindingData.GetGroupsAsync();
+            Assert.NotNull(groups);
+        }
+
+        private class TestNonServerlessHub_CustomConnectionStringSetting
+        {
+            internal void TestFunction(
+            [SignalRTrigger("hub", "connections", null, ConnectionStringSetting = CustomConnctionStringSetting)]
+            InvocationContext context)
+            {
+            }
+        }
+
+        private SignalRTriggerBindingProvider CreateBindingProvider(Exception exception = null, string connectionStringSetting = Constants.AzureSignalRConnectionStringName)
         {
             var configuration = new ConfigurationBuilder().AddInMemoryCollection().Build();
-            configuration[Constants.AzureSignalRConnectionStringName] = "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
+            configuration[connectionStringSetting] = "Endpoint=http://localhost;AccessKey=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;Version=1.0;";
             configuration["Serverless_ExpressionBindings_HubName"] = "test_hub";
             configuration["Serverless_ExpressionBindings_HubCategory"] = "connections";
             configuration["Serverless_ExpressionBindings_HubEvent"] = "connected";

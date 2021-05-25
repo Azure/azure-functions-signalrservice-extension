@@ -8,7 +8,8 @@ Travis: [![travis](https://travis-ci.org/Azure/azure-functions-signalrservice-ex
 
 Package Name | Target Framework | NuGet
 ---|---|---
-Microsoft.Azure.WebJobs.Extensions.SignalRService | .NET Standard 2.0 | [![NuGet](https://img.shields.io/nuget/v/Microsoft.Azure.WebJobs.Extensions.SignalRService.svg)](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.SignalRService)
+Microsoft.Azure.WebJobs.Extensions.SignalRService | .NET Core App 2.1 <br/> .NET Core App 3.1 | [![NuGet](https://img.shields.io/nuget/v/Microsoft.Azure.WebJobs.Extensions.SignalRService.svg)](https://www.nuget.org/packages/Microsoft.Azure.WebJobs.Extensions.SignalRService)
+
 
 ## Intro
 
@@ -29,14 +30,9 @@ These bindings allow Azure Functions to integrate with [Azure SignalR Service](h
 
 `SignalR` output binding allows messages to be broadcast to an Azure SignalR Service hub.
 
-### Current limitations
-
-- Cannot invoke methods on a subset of connections.
-- Functions cannot be triggered by client invocation of server methods (clients need to call an HTTP endpoint or post messages to a Event Grid, etc, to trigger a function)
-
 ## Prerequisites
 
-- [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools) (V2)
+- [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools) (V2 or V3)
 
 ## Usage
 
