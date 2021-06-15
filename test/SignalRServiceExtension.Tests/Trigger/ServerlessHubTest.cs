@@ -3,12 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
+using Microsoft.Azure.SignalR.Tests.Common;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Moq;
@@ -44,6 +46,15 @@ namespace SignalRServiceExtension.Tests.Trigger
             var message = Guid.NewGuid().ToString();
             await myHub.Broadcast(new InvocationContext(), target, message);
             clientProxyMoc.Verify(c => c.SendCoreAsync(target, It.IsAny<object[]>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ServerlessHubSyncNegotiate()
+        {
+            var hubContext = await new ServiceHubContextBuilder().WithOptions(o => o.ConnectionString = FakeEndpointUtils.GetFakeConnectionString(1).Single()).CreateAsync("hub", default);
+            var serviceManager = Mock.Of<IServiceManager>();
+            var myHub = new MyHub(hubContext, serviceManager);
+            var connectionInfo = myHub.Negotiate("user");
         }
     }
 
