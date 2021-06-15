@@ -75,7 +75,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             {
                 UserId = userId,
                 Claims = claims,
-                TokenLifetime = lifetime.GetValueOrDefault(TimeSpan.FromHours(1))
+                TokenLifetime = lifetime.GetValueOrDefault()
             }).Result;
         }
 

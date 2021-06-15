@@ -112,15 +112,17 @@ Here is a diagram that illustrates the structure of this application:
    az functionapp config appsettings set --resource-group <resource_group_name> --name <function_name> \
       --setting AzureSignalRConnectionString=<signalr_connection_string>
    az functionapp config appsettings set --resource-group <resource_group_name> --name <function_name> \
+      --setting WebsiteHostName=<function_name>.azurewebsites.net
+   az functionapp config appsettings set --resource-group <resource_group_name> --name <function_name> \
       --setting FUNCTIONS_EXTENSION_VERSION=~2 
    ```
 
-> Note:  ```blob_host``` is the blob service endpoint hostname (without https://), which you can find in the Blob Service Containers section. ```signalr_connection_string``` refers to the connection string you used before in the Chatroom sample.
+> Note:  ```table_connection_string``` can be located in the Azure Portal from the Access Key section of the created storage account. ```blob_host``` is the blob service endpoint hostname (without https://), which you can find in the Blob Service Containers section. ```signalr_connection_string``` refers to the connection string you used before in the Chatroom sample.
 
 ## Conifigure Authentication
 
-1. In Azure portal, navigate to `Settings`
-2. In `Authentication (classic)`, click button `On`.
+1. In Azure portal, navigate to `Platform features/Authentication.`
+2. In `App Service Authentication`, click button `On`.
 3. Change `Action to take when request is not authenticated` list to `Log in with Azure Active Directory`.
 4. Configure AAD in `Azure Active Directory Settings`.
 5. Finally, click `Save`.

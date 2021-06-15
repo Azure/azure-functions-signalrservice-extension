@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs.Extensions.Http;
-using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Samples
 {
@@ -22,8 +21,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService.Samples
             [SignalRConnectionInfo(HubName = Constants.HubName)] SignalRConnectionInfo connectionInfo)
         {
             return tokenResult.Status == SecurityTokenStatus.Valid
-                ? Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(connectionInfo) })
-                : Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized) { Content = new StringContent($"Validation result: {tokenResult.Status.ToString()}; Message: {tokenResult.Exception?.Message}") });
+                ? Task.FromResult(req.CreateResponse(HttpStatusCode.OK, connectionInfo))
+                : Task.FromResult(req.CreateErrorResponse(HttpStatusCode.Unauthorized, $"Validation result: {tokenResult.Status.ToString()}; Message: {tokenResult.Exception?.Message}"));
         }
 
         [FunctionName("messages")]
