@@ -5,7 +5,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Package Versions">
     <MicroBuildCorePackageVersion>0.3.0</MicroBuildCorePackageVersion>
-    <MicrosoftAzureSignalRManagement>1.8.2</MicrosoftAzureSignalRManagement>
+    <MicrosoftAzureSignalRManagement>1.8.3-preview1-10781</MicrosoftAzureSignalRManagement>
     <MicrosoftAzureFunctionsExtensionsVersion>1.0.0</MicrosoftAzureFunctionsExtensionsVersion>
     <MicrosoftNETTestSdkPackageVersion>15.8.0</MicrosoftNETTestSdkPackageVersion>
     <MoqPackageVersion>4.9.0</MoqPackageVersion>
@@ -17,7 +17,7 @@
     <MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>1.1.5</MicrosoftAspNetCoreSignalRProtocolsMessagePackPackageVersion>
     <SystemIdentityModelTokensJwtVersion>5.5.0</SystemIdentityModelTokensJwtVersion>
     <MicrosoftAspNetCoreSignalRPackageVersion>1.0.0</MicrosoftAspNetCoreSignalRPackageVersion>
-    <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson>
+    <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson3_1>3.0.0</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson3_1>
     <MicrosoftAspNetCoreSignalRClient>5.0.3</MicrosoftAspNetCoreSignalRClient>
     <MicrosoftExtensionsConfiguration>5.0.0</MicrosoftExtensionsConfiguration>
     
@@ -27,6 +27,7 @@
     <MicrosoftAzureFunctionsExtensionsV2>1.0.0</MicrosoftAzureFunctionsExtensionsV2>
     <MicrosoftAzureFunctionsExtensionsV3>1.1.0</MicrosoftAzureFunctionsExtensionsV3>
     <MicrosoftAzureWebJobsHostStorage>3.0.14</MicrosoftAzureWebJobsHostStorage>
+    <MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson5_0>5.0.1</MicrosoftAspNetCoreSignalRProtocolsNewtonsoftJson5_0>
     
   </PropertyGroup>
   <Import Project="$(DotNetPackageVersionPropsPath)" Condition=" '$(DotNetPackageVersionPropsPath)' != '' " />
