@@ -2,10 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using Microsoft.AspNetCore.SignalR.Protocol;
+using Microsoft.Azure.SignalR.Management;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -15,18 +15,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public static IServiceCollection SetHubProtocol(this IServiceCollection services, IConfiguration configuration)
         {
-            if (Environment.Version.Major == 4 && configuration[Constants.AzureSignalRHubProtocol] != null)
+            var hubProtocolConfig = configuration[Constants.AzureSignalRHubProtocol];
+            if (hubProtocolConfig is not null)
             {
-                // Actually is .Net Core 2.x
-                throw new InvalidOperationException(HubProtocolError);
+                if (Environment.Version.Major == 4)
+                {
+                    // .Net Core 2.x is always Newtonsoft.Json.
+                    throw new InvalidOperationException(HubProtocolError);
+                }
+                var hubProtocol = Enum.Parse<HubProtocol>(hubProtocolConfig);
+                //If hubProtocolConfig is SystemTextJson for .Net Core 3.1, do nothing, as transient mode doesn't accept it and persisent mode is already System.Text.Json by default.
+                if (!DotnetRuntime(configuration) || hubProtocol == HubProtocol.NewtonsoftJson)
+                {
+                    if (configuration.GetValue(Constants.AzureSignalRNewtonsoftCamelCase, false))
+                    {
+                        // The default options is camelCase.
+                        services.AddNewtonsoftHubProtocol(o => { });
+                    }
+                    else
+                    {
+                        // Reset the options to keep backward compatibility.
+                        services.AddNewtonsoftHubProtocol(o => o.PayloadSerializerSettings = new JsonSerializerSettings());
+                    }
+                }
             }
-#if NETCOREAPP3_1 || NETCOREAPP3_0 || NETSTANDARD2_0 
-            else if (!DotnetRuntime(configuration) || UserSpecifyNewtonsoft(configuration))
-            {
-                // .Net Core 3.1, overwrite the System.Text.Json Protocol.
-                services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonHubProtocol>());
-            }
-#endif
             return services;
         }
 
@@ -35,11 +47,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var workerRuntime = configuration[Constants.FunctionsWorkerRuntime];
             //unit test environment
             return workerRuntime == null || workerRuntime == Constants.DotnetWorker;
-        }
-
-        private static bool UserSpecifyNewtonsoft(IConfiguration configuration)
-        {
-            return configuration.GetValue(Constants.AzureSignalRHubProtocol, HubProtocol.SystemTextJson) == HubProtocol.NewtonsoftJson;
         }
     }
 }
