@@ -65,6 +65,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         public IDictionary<string, string> Claims { get; set; }
 
-        internal IServiceHubContext HubContext { get; set; }
+        internal ServiceHubContext HubContext { get; set; }
     }
 }
