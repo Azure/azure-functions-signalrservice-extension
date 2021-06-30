@@ -22,7 +22,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         public static Task<IGroupManager> GetGroupsAsync(this InvocationContext invocationContext)
         {
-            return Task.FromResult(invocationContext.HubContext.Groups);
+            return Task.FromResult(invocationContext.HubContext.Groups as IGroupManager);
         }
 
         /// <summary>
@@ -30,7 +30,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         public static Task<IUserGroupManager> GetUserGroupManagerAsync(this InvocationContext invocationContext)
         {
-            return Task.FromResult(invocationContext.HubContext.UserGroups);
+            return Task.FromResult(invocationContext.HubContext.UserGroups as IUserGroupManager);
+        }
+
+        /// <summary>
+        /// Get the client manager of this hub.
+        /// </summary>
+        public static ClientManager GetClientManager(this InvocationContext invocationContext)
+        {
+            return invocationContext.HubContext.ClientManager;
         }
     }
 }

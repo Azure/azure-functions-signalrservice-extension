@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
@@ -55,7 +56,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
             var hubContext = await _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).GetAsync(resolvedAttribute.HubName);
 
-            return new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKeys, hubContext);
+            return new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKeys, hubContext as ServiceHubContext);
         }
 
         internal SignalRTriggerAttribute GetParameterResolvedAttribute(SignalRTriggerAttribute attribute, ParameterInfo parameterInfo)
