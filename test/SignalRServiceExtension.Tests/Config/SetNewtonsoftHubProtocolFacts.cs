@@ -82,7 +82,7 @@ namespace SignalRServiceExtension.Tests
         public async Task SetNewtonsoftCamelCaseInTransientModeAsync()
         {
             var serviceManagerStore = CreateServiceManagerStore(out var configuration);
-            configuration[Constants.AzureSignalRNewtonsoftCamelCase] = "true";
+            configuration["Azure:SignalR:HubProtocol:NewtonsoftJson:CamelCase"] = "true";
 
             var hubContext = await serviceManagerStore.GetOrAddByConnectionStringKey(Constants.AzureSignalRConnectionStringName).GetAsync("hub") as ServiceHubContextImpl;
             var restHubProtocol = hubContext.ServiceProvider.GetRequiredService<IRestHubProtocol>();
@@ -95,7 +95,7 @@ namespace SignalRServiceExtension.Tests
         public async Task SetNewtonsoftCamelCaseInPersistentModeAsync()
         {
             var serviceManagerStore = CreateServiceManagerStore(out var configuration);
-            configuration[Constants.AzureSignalRNewtonsoftCamelCase] = "true";
+            configuration["Azure:SignalR:HubProtocol:NewtonsoftJson:CamelCase"] = "true";
             configuration[Constants.ServiceTransportTypeName] = "Persistent";
 
             var hubContext = await serviceManagerStore.GetOrAddByConnectionStringKey(Constants.AzureSignalRConnectionStringName).GetAsync("hub") as ServiceHubContextImpl;
