@@ -28,9 +28,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private readonly SignalRTriggerAttribute _attribute;
         private readonly ISignalRTriggerDispatcher _dispatcher;
         private readonly AccessKey[] _accessKeys;
-        private readonly IServiceHubContext _hubContext;
+        private readonly ServiceHubContext _hubContext;
 
-        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, AccessKey[] accessKeys, IServiceHubContext hubContext)
+        public SignalRTriggerBinding(ParameterInfo parameterInfo, SignalRTriggerAttribute attribute, ISignalRTriggerDispatcher dispatcher, AccessKey[] accessKeys, ServiceHubContext hubContext)
         {
             _parameterInfo = parameterInfo ?? throw new ArgumentNullException(nameof(parameterInfo));
             _attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
