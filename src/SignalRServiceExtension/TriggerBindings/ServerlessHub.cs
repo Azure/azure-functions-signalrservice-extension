@@ -44,6 +44,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
             _hubContext = hubContext as ServiceHubContext;
+            ClientManager = _hubContext.ClientManager;
         }
 
         /// <summary>
@@ -60,6 +61,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// Get the user group manager of this hub.
         /// </summary>
         public IUserGroupManager UserGroups { get; }
+
+        /// <summary>
+        /// Get the client manager of this hub.
+        /// </summary>
+        public ClientManager ClientManager { get; }
 
         /// <summary>
         /// Get the hub name of this hub.
