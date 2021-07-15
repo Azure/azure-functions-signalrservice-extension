@@ -28,6 +28,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     {
         private static readonly Lazy<JwtSecurityTokenHandler> JwtSecurityTokenHandler = new Lazy<JwtSecurityTokenHandler>(() => new JwtSecurityTokenHandler());
         private bool _disposed;
+        /// <summary>
+        /// Might be converted from <see cref="IServiceHubContext"/>, don't forget to test null before use it.
+        /// </summary>
         private readonly ServiceHubContext _hubContext;
         private readonly IServiceManager _serviceManager;
 
@@ -44,7 +47,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
             _hubContext = hubContext as ServiceHubContext;
-            ClientManager = _hubContext.ClientManager;
+            ClientManager = _hubContext?.ClientManager;
         }
 
         /// <summary>
