@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -40,9 +41,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
+            var hubContextAttribute = GetType().GetCustomAttribute<ServerlessHubContextAttribute>(true);
+            var connectionString = hubContextAttribute?.ConnectionStringSetting ?? Constants.AzureSignalRConnectionStringName;
             HubName = GetType().Name;
-            hubContext = hubContext ?? StaticServiceHubContextStore.Get().GetAsync(HubName).GetAwaiter().GetResult();
-            _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get().ServiceManager;
+            hubContext = hubContext ?? StaticServiceHubContextStore.Get(connectionString).GetAsync(HubName).GetAwaiter().GetResult();
+            _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get(connectionString).ServiceManager;
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
