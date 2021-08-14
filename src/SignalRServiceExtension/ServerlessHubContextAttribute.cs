@@ -6,13 +6,13 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
   /// Customized settings to be passed into the serverless hub context.
   /// </summary>
   [AttributeUsage(AttributeTargets.Class)]
-  class ServerlessHubContextAttribute : Attribute
+  class ServerlessHubContextAttribute : Attribute, IConnectionProvider
   {
     public ServerlessHubContextAttribute(string connectionStringSetting)
     {
-      ConnectionStringSetting = connectionStringSetting;
+      Connection = connectionStringSetting;
     }
 
-    public string ConnectionStringSetting { get; set; } = Constants.AzureSignalRConnectionStringName;
+    public string Connection { get; set; } = Constants.AzureSignalRConnectionStringName;
   }
 }

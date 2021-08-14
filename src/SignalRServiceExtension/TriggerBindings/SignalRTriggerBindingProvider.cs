@@ -88,8 +88,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 hubName = declaredType.Name;
                 category = GetCategoryFromMethodName(method.Name);
                 @event = GetEventFromMethodName(method.Name, category);
-                connectionStringSetting = declaredType.GetCustomAttribute<ServerlessHubContextAttribute>()?.ConnectionStringSetting ?? attribute.ConnectionStringSetting;
-      }
+                connectionStringSetting = declaredType.GetCustomAttribute<ServerlessHubContextAttribute>()?.Connection ?? attribute.ConnectionStringSetting;
+            }
             else
             {
                 parameterNamesFromAttribute = method.GetParameters().

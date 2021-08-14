@@ -42,7 +42,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
             var hubContextAttribute = GetType().GetCustomAttribute<ServerlessHubContextAttribute>(true);
-            var connectionString = hubContextAttribute?.ConnectionStringSetting ?? Constants.AzureSignalRConnectionStringName;
+            var connectionString = hubContextAttribute?.Connection ?? Constants.AzureSignalRConnectionStringName;
             HubName = GetType().Name;
             hubContext = hubContext ?? StaticServiceHubContextStore.Get(connectionString).GetAsync(HubName).GetAwaiter().GetResult();
             _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get(connectionString).ServiceManager;
