@@ -25,7 +25,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     /// <see cref="System.Threading.CancellationToken"/>, or marked by <see cref="SignalRIgnoreAttribute"/>.
     /// Note that <see cref="SignalRTriggerAttribute"/> MUST use parameterless constructor in class based model.
     /// </summary>
-    public abstract class ServerlessHub : IDisposable
+    public abstract class ServerlessHub : IDisposable, IConnectionProvider
     {
         private static readonly Lazy<JwtSecurityTokenHandler> JwtSecurityTokenHandler = new Lazy<JwtSecurityTokenHandler>(() => new JwtSecurityTokenHandler());
         private bool _disposed;
@@ -41,17 +41,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
-            var hubContextAttribute = GetType().GetCustomAttribute<ServerlessHubContextAttribute>(true);
-            var connectionString = hubContextAttribute?.Connection ?? Constants.AzureSignalRConnectionStringName;
             HubName = GetType().Name;
-            hubContext = hubContext ?? StaticServiceHubContextStore.Get(connectionString).GetAsync(HubName).GetAwaiter().GetResult();
-            _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get(connectionString).ServiceManager;
+            hubContext = hubContext ?? StaticServiceHubContextStore.Get(Connection).GetAsync(HubName).GetAwaiter().GetResult();
+            _serviceManager = serviceManager ?? StaticServiceHubContextStore.Get(Connection).ServiceManager;
             Clients = hubContext.Clients;
             Groups = hubContext.Groups;
             UserGroups = hubContext.UserGroups;
             _hubContext = hubContext as ServiceHubContext;
             ClientManager = _hubContext?.ClientManager;
         }
+
+        /// <summary>
+        /// The connection string setting name.
+        /// </summary>
+        public string Connection { get; set; } = Constants.AzureSignalRConnectionStringName;
 
         /// <summary>
         /// Gets an object that can be used to invoke methods on the clients connected to this hub.
