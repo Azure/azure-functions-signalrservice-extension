@@ -54,6 +54,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         }
 
         /// <summary>
+        /// Customized settings to be passed into the serverless hub context.
+        /// </summary>
+        [AttributeUsage(AttributeTargets.Class)]
+        protected class SignalRConnectionAttribute : Attribute, IConnectionProvider
+        {
+          public SignalRConnectionAttribute(string connectionStringSetting)
+          {
+            Connection = connectionStringSetting;
+          }
+
+          public string Connection { get; set; } = Constants.AzureSignalRConnectionStringName;
+        }
+
+        /// <summary>
         /// Gets an object that can be used to invoke methods on the clients connected to this hub.
         /// </summary>
         public IHubClients Clients { get; }
