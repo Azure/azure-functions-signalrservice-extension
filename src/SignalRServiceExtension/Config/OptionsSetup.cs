@@ -39,7 +39,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 
         public void Configure(ServiceManagerOptions options)
         {
-            options.ConnectionString = configuration.GetConnectionString(connectionStringKey) ?? configuration[connectionStringKey];
+            options.ConnectionString = configuration[connectionStringKey];
             options.ServiceEndpoints = configuration.GetEndpoints(Constants.AzureSignalREndpoints).ToArray();
             var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
