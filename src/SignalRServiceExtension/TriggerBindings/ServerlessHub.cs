@@ -41,7 +41,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// </summary>
         protected ServerlessHub(IServiceHubContext hubContext = null, IServiceManager serviceManager = null)
         {
-            var hubContextAttribute = GetType().GetCustomAttribute<ServerlessHubContextAttribute>(true);
+            var hubContextAttribute = GetType().GetCustomAttribute<SignalRConnectionAttribute>(true);
             var connectionString = hubContextAttribute?.Connection ?? Constants.AzureSignalRConnectionStringName;
             HubName = GetType().Name;
             hubContext = hubContext ?? StaticServiceHubContextStore.Get(connectionString).GetAsync(HubName).GetAwaiter().GetResult();
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         /// Customized settings to be passed into the serverless hub context.
         /// </summary>
         [AttributeUsage(AttributeTargets.Class)]
-        protected class SignalRConnectionAttribute : Attribute, IConnectionProvider
+        protected internal class SignalRConnectionAttribute : Attribute, IConnectionProvider
         {
           public SignalRConnectionAttribute(string connectionStringSetting)
           {
