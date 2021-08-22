@@ -21,7 +21,7 @@ namespace SignalRServiceExtension.Tests.Trigger
     public class ServerlessHubTest
     {
         [Fact]
-        private async Task ServerlessHubUnitTest()
+        public async Task ServerlessHubUnitTest()
         {
             var clientProxyMoc = new Mock<IClientProxy>();
             clientProxyMoc
