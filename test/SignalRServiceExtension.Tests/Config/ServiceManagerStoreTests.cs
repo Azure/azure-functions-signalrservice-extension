@@ -9,6 +9,7 @@ using Microsoft.Azure.SignalR.Common;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.SignalR.Tests.Common;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -41,13 +42,13 @@ namespace SignalRServiceExtension.Tests
             var connectionStringKey = "key";
             configuration[connectionStringKey] = connectionString;
             configuration[Constants.FunctionsWorkerRuntime] = Constants.DotnetWorker;
-            
+
             var productInfo = new ServiceCollection()
-                .AddSignalRServiceManager(new OptionsSetup(configuration, NullLoggerFactory.Instance, connectionStringKey))
+                .AddSignalRServiceManager(new OptionsSetup(configuration, NullLoggerFactory.Instance, SingletonAzureComponentFactory.Instance, connectionStringKey))
                 .BuildServiceProvider()
                 .GetRequiredService<IOptions<ServiceManagerOptions>>()
                 .Value.ProductInfo;
-            
+
             Assert.NotNull(productInfo);
             var reg = new Regex(@"\[(\w*)=(\w*)\]");
             var match = reg.Match(productInfo);
@@ -65,7 +66,7 @@ namespace SignalRServiceExtension.Tests
                                 { "key", FakeEndpointUtils.GetFakeConnectionString(1).Single() },
                                 { Constants.ServiceTransportTypeName, ServiceTransportType.Persistent.ToString() }
                             }))
-                .ConfigureWebJobs(b => b.AddSignalR()).Build();
+                .ConfigureWebJobs(b => b.AddSignalR().Services.AddAzureClientsCore()).Build();
             var hubContext = await host.Services.GetRequiredService<IServiceManagerStore>().GetOrAddByConnectionStringKey("key").GetAsync("hubName") as ServiceHubContext;
             await Assert.ThrowsAsync<AzureSignalRNotConnectedException>(() => hubContext.NegotiateAsync().AsTask());
         }

@@ -5,9 +5,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -17,13 +17,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class ServiceManagerStore : IServiceManagerStore
     {
         private readonly ILoggerFactory loggerFactory;
+        private readonly AzureComponentFactory _azureComponentFactory;
         private readonly IConfiguration configuration;
         private readonly IEndpointRouter router;
         private readonly ConcurrentDictionary<string, IInternalServiceHubContextStore> store = new ConcurrentDictionary<string, IInternalServiceHubContextStore>();
 
-        public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory, IEndpointRouter router = null)
+        public ServiceManagerStore(IConfiguration configuration, ILoggerFactory loggerFactory, AzureComponentFactory azureComponentFactory, IEndpointRouter router = null)
         {
             this.loggerFactory = loggerFactory;
+            _azureComponentFactory = azureComponentFactory;
             this.configuration = configuration;
             this.router = router;
         }
@@ -46,7 +48,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         private IInternalServiceHubContextStore CreateHubContextStore(string connectionStringKey)
         {
             var services = new ServiceCollection()
-                .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, connectionStringKey))
+                .SetupOptions<ServiceManagerOptions, OptionsSetup>(new OptionsSetup(configuration, loggerFactory, _azureComponentFactory, connectionStringKey))
                 .PostConfigure<ServiceManagerOptions>(o =>
                 {
                     if ((o.ServiceEndpoints == null || o.ServiceEndpoints.Length == 0) && string.IsNullOrWhiteSpace(o.ConnectionString))
