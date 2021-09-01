@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,10 +16,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
     internal class OptionsSetup : IConfigureOptions<ServiceManagerOptions>, IOptionsChangeTokenSource<ServiceManagerOptions>
     {
         private readonly IConfiguration configuration;
+        private readonly AzureComponentFactory _azureComponentFactory;
         private readonly string connectionStringKey;
         private readonly ILogger logger;
 
-        public OptionsSetup(IConfiguration configuration, ILoggerFactory loggerFactory, string connectionStringKey)
+        public OptionsSetup(IConfiguration configuration, ILoggerFactory loggerFactory, AzureComponentFactory azureComponentFactory, string connectionStringKey)
         {
             if (loggerFactory is null)
             {
@@ -31,6 +33,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             }
 
             this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _azureComponentFactory = azureComponentFactory;
             this.connectionStringKey = connectionStringKey;
             logger = loggerFactory.CreateLogger<OptionsSetup>();
         }
@@ -40,7 +43,14 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public void Configure(ServiceManagerOptions options)
         {
             options.ConnectionString = configuration.GetConnectionString(connectionStringKey) ?? configuration[connectionStringKey];
-            options.ServiceEndpoints = configuration.GetEndpoints(Constants.AzureSignalREndpoints).ToArray();
+            var endpoints = configuration.GetSection(Constants.AzureSignalREndpoints).GetEndpoints(_azureComponentFactory);
+            // Fall back to use a section to configure Azure identity
+            if (options.ConnectionString == null && configuration.GetSection(connectionStringKey).TryGetNamedEndpointFromIdentity(_azureComponentFactory, out var endpoint))
+            {
+                endpoint.Name = string.Empty;
+                endpoints = endpoints.Append(endpoint);
+            }
+            options.ServiceEndpoints = endpoints.ToArray();
             var serviceTransportTypeStr = configuration[Constants.ServiceTransportTypeName];
             if (Enum.TryParse<ServiceTransportType>(serviceTransportTypeStr, out var transport))
             {

@@ -38,7 +38,7 @@ namespace SignalRServiceExtension.Tests
             var connectionStringKey = Constants.AzureSignalRConnectionStringName;
             var configDict = new Dictionary<string, string>() { { Constants.ServiceTransportTypeName, "Transient" }, { connectionStringKey, connectionString } };
             var configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
-            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, new TestRouter());
+            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, SingletonAzureComponentFactory.Instance, new TestRouter());
             var azureSignalRClient = await SignalRUtils.GetAzureSignalRClientAsync(connectionStringKey, hubName, serviceManagerStore);
             var connectionInfo = await azureSignalRClient.GetClientConnectionInfoAsync(userId, idToken, claimTypeList, null);
 

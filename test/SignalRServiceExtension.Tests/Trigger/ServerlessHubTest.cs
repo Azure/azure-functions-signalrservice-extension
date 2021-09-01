@@ -51,7 +51,7 @@ namespace SignalRServiceExtension.Tests.Trigger
         [Fact]
         public async Task ServerlessHubSyncNegotiate()
         {
-            var hubContext = await new ServiceHubContextBuilder().WithOptions(o => o.ConnectionString = FakeEndpointUtils.GetFakeConnectionString(1).Single()).CreateAsync("hub", default);
+            var hubContext = await new ServiceManagerBuilder().WithOptions(o => o.ConnectionString = FakeEndpointUtils.GetFakeConnectionString(1).Single()).BuildServiceManager().CreateHubContextAsync("hub", default);
             var serviceManager = Mock.Of<IServiceManager>();
             var myHub = new MyHub(hubContext, serviceManager);
             var connectionInfo = myHub.Negotiate("user");

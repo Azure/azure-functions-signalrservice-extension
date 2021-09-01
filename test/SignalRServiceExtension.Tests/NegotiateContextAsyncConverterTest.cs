@@ -32,7 +32,7 @@ namespace SignalRServiceExtension.Tests
         public async Task EndpointsEqualFact()
         {
             var configuration = CreateTestConfiguration();
-            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance);
+            var serviceManagerStore = new ServiceManagerStore(configuration, NullLoggerFactory.Instance, SingletonAzureComponentFactory.Instance);
             var converter = new NegotiationContextAsyncConverter(serviceManagerStore);
             var attribute = new SignalRNegotiationAttribute { HubName = HubName };
 
