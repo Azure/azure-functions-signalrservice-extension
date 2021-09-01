@@ -12,7 +12,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceHubContextStore : IInternalServiceHubContextStore
     {
-        private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, Lazy<Task<IServiceHubContext>>> store = new(StringComparer.OrdinalIgnoreCase);
         private readonly IServiceEndpointManager endpointManager;
 
         public IServiceManager ServiceManager { get; }
@@ -28,36 +28,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         public ValueTask<IServiceHubContext> GetAsync(string hubName)
         {
             var pair = store.GetOrAdd(hubName,
-                (new Lazy<Task<IServiceHubContext>>(
-                    () => ServiceManager.CreateHubContextAsync(hubName)), default));
-            return GetAsyncCore(hubName, pair);
-        }
-
-        private ValueTask<IServiceHubContext> GetAsyncCore(string hubName, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value) pair)
-        {
-            if (pair.lazy == null)
-            {
-                return new ValueTask<IServiceHubContext>(pair.value);
-            }
-            else
-            {
-                return new ValueTask<IServiceHubContext>(GetFromLazyAsync(hubName, pair));
-            }
-        }
-
-        private async Task<IServiceHubContext> GetFromLazyAsync(string hubName, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value) pair)
-        {
-            try
-            {
-                var value = await pair.lazy.Value;
-                store.TryUpdate(hubName, (null, value), pair);
-                return value;
-            }
-            catch (Exception)
-            {
-                store.TryRemove(hubName, out _);
-                throw;
-            }
+                new Lazy<Task<IServiceHubContext>>(
+                    () => ServiceManager.CreateHubContextAsync(hubName), true));
+            return new ValueTask<IServiceHubContext>(pair.Value);
         }
     }
 }
