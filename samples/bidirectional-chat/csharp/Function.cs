@@ -14,26 +14,33 @@ using Microsoft.Extensions.Logging;
 
 namespace FunctionApp
 {
-    public class SimpleChat : ServerlessHub
+    public class SimpleChat : ServerlessHub<SimpleChat.IChatClient>
     {
         private const string NewMessageTarget = "newMessage";
         private const string NewConnectionTarget = "newConnection";
 
+        public interface IChatClient
+        {
+            public Task newConnection(NewConnection newConnection);
+            public Task newMessage(NewMessage newMessage);
+        }
+
         [FunctionName("negotiate")]
-        public Task<SignalRConnectionInfo> NegotiateAsync([HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
+        public async Task<SignalRConnectionInfo> NegotiateAsync([HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
         {
             var claims = GetClaims(req.Headers["Authorization"]);
-            return NegotiateAsync(new NegotiationOptions
+            var result = await  NegotiateAsync(new NegotiationOptions
             {
                 UserId = claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value,
                 Claims = claims
             });
+            return result;
         }
 
         [FunctionName(nameof(OnConnected))]
         public async Task OnConnected([SignalRTrigger]InvocationContext invocationContext, ILogger logger)
         {
-            await Clients.All.SendAsync(NewConnectionTarget, new NewConnection(invocationContext.ConnectionId));
+            await Clients.All.newConnection(new NewConnection(invocationContext.ConnectionId));
             logger.LogInformation($"{invocationContext.ConnectionId} has connected");
         }
 
@@ -41,26 +48,26 @@ namespace FunctionApp
         [FunctionName(nameof(Broadcast))]
         public async Task Broadcast([SignalRTrigger]InvocationContext invocationContext, string message, ILogger logger)
         {
-            await Clients.All.SendAsync(NewMessageTarget, new NewMessage(invocationContext, message));
+            await Clients.All.newMessage(new NewMessage(invocationContext, message));
             logger.LogInformation($"{invocationContext.ConnectionId} broadcast {message}");
         }
 
         [FunctionName(nameof(SendToGroup))]
         public async Task SendToGroup([SignalRTrigger]InvocationContext invocationContext, string groupName, string message)
         {
-            await Clients.Group(groupName).SendAsync(NewMessageTarget, new NewMessage(invocationContext, message));
+            await Clients.Group(groupName).newMessage(new NewMessage(invocationContext, message));
         }
 
         [FunctionName(nameof(SendToUser))]
         public async Task SendToUser([SignalRTrigger]InvocationContext invocationContext, string userName, string message)
         {
-            await Clients.User(userName).SendAsync(NewMessageTarget, new NewMessage(invocationContext, message));
+            await Clients.User(userName).newMessage(new NewMessage(invocationContext, message));
         }
 
         [FunctionName(nameof(SendToConnection))]
         public async Task SendToConnection([SignalRTrigger]InvocationContext invocationContext, string connectionId, string message)
         {
-            await Clients.Client(connectionId).SendAsync(NewMessageTarget, new NewMessage(invocationContext, message));
+            await Clients.Client(connectionId).newMessage(new NewMessage(invocationContext, message));
         }
 
         [FunctionName(nameof(JoinGroup))]
@@ -92,7 +99,7 @@ namespace FunctionApp
         {
         }
 
-        private class NewConnection
+        public class NewConnection
         {
             public string ConnectionId { get; }
 
@@ -102,7 +109,7 @@ namespace FunctionApp
             }
         }
 
-        private class NewMessage
+        public class NewMessage
         {
             public string ConnectionId { get; }
             public string Sender { get; }

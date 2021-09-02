@@ -7,13 +7,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.SignalR;
 using Microsoft.Azure.SignalR.Management;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
     internal class ServiceHubContextStore : IInternalServiceHubContextStore
     {
-        private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> store = new ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>>, IServiceHubContext value)>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, (Lazy<Task<IServiceHubContext>> lazy, IServiceHubContext value)> _weakTypedHubStore = new(StringComparer.OrdinalIgnoreCase);
         private readonly IServiceEndpointManager endpointManager;
+        
+        private readonly IServiceProvider _strongTypedHubServiceProvider;
 
         public IServiceManager ServiceManager { get; }
 
@@ -23,11 +26,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
         {
             this.endpointManager = endpointManager;
             ServiceManager = serviceManager;
+            _strongTypedHubServiceProvider = new ServiceCollection()
+                .AddSingleton(serviceManager as ServiceManager)
+                .AddSingleton(typeof(ServerlessHubContext<,>))
+                .BuildServiceProvider();
         }
 
         public ValueTask<IServiceHubContext> GetAsync(string hubName)
         {
-            var pair = store.GetOrAdd(hubName,
+            var pair = _weakTypedHubStore.GetOrAdd(hubName,
                 (new Lazy<Task<IServiceHubContext>>(
                     () => ServiceManager.CreateHubContextAsync(hubName)), default));
             return GetAsyncCore(hubName, pair);
@@ -50,14 +57,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             try
             {
                 var value = await pair.lazy.Value;
-                store.TryUpdate(hubName, (null, value), pair);
+                _weakTypedHubStore.TryUpdate(hubName, (null, value), pair);
                 return value;
             }
             catch (Exception)
             {
-                store.TryRemove(hubName, out _);
+                _weakTypedHubStore.TryRemove(hubName, out _);
                 throw;
             }
+        }
+
+        private Task<ServiceHubContext<T>> GetAsync<THub, T>() where THub : ServerlessHub<T> where T : class
+        {
+            return _strongTypedHubServiceProvider.GetRequiredService<ServerlessHubContext<THub, T>>().HubContextTask;
+        }
+
+        ///<summary>
+        /// The method actually does the following thing
+        ///<code>
+        /// private Task<ServiceHubContext<T>> GetAsync<THub, T>() where THub : ServerlessHub<T> where T : class
+        ///{
+        ///    return _serviceProvider.GetRequiredService<ServerlessHubContext<THub, T>>().HubContext;
+        ///}
+        /// </code>
+        /// </summary>
+        public dynamic GetAsync(Type THubType, Type TType) 
+        {
+            var genericType = typeof(ServerlessHubContext<,>);
+            Type[] typeArgs = { THubType, TType };
+            var serverlessHubContextType = genericType.MakeGenericType(typeArgs);
+            dynamic serverlessHubContext =  _strongTypedHubServiceProvider.GetRequiredService(serverlessHubContextType);
+            return serverlessHubContext.HubContextTask.GetAwaiter().GetResult();
         }
     }
 }
