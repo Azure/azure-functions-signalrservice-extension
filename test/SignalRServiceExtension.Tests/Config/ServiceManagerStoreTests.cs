@@ -63,7 +63,8 @@ namespace SignalRServiceExtension.Tests
             var host = builder
                 .ConfigureAppConfiguration(b => b.AddInMemoryCollection(
                     new Dictionary<string, string> {
-                                { "key", FakeEndpointUtils.GetFakeConnectionString(1).Single() },
+                                { "Azure:SignalR:Endpoints:A", FakeEndpointUtils.GetFakeConnectionString(1).Single() },
+                                { "Azure:SignalR:Endpoints:B", FakeEndpointUtils.GetFakeConnectionString(1).Single() },
                                 { Constants.ServiceTransportTypeName, ServiceTransportType.Persistent.ToString() }
                             }))
                 .ConfigureWebJobs(b => b.AddSignalR().Services.AddAzureClientsCore()).Build();
