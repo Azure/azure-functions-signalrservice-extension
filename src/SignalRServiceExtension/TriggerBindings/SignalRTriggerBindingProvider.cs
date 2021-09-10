@@ -12,6 +12,7 @@ using Microsoft.Azure.WebJobs.Description;
 using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 using Microsoft.Extensions.Logging;
+using static Microsoft.Azure.WebJobs.Extensions.SignalRService.ServerlessHub;
 
 namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
 {
@@ -52,9 +53,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var resolvedAttribute = GetParameterResolvedAttribute(attribute, parameterInfo);
             ValidateSignalRTriggerAttributeBinding(resolvedAttribute);
 
-            var accessKeys = _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).AccessKeys;
+            var accessKeys = _managerStore.GetOrAddByConnectionStringKey(resolvedAttribute.ConnectionStringSetting).AccessKeys;
 
-            var hubContext = await _managerStore.GetOrAddByConnectionStringKey(attribute.ConnectionStringSetting).GetAsync(resolvedAttribute.HubName);
+            var hubContext = await _managerStore.GetOrAddByConnectionStringKey(resolvedAttribute.ConnectionStringSetting).GetAsync(resolvedAttribute.HubName);
 
             return new SignalRTriggerBinding(parameterInfo, resolvedAttribute, _dispatcher, accessKeys, hubContext as ServiceHubContext);
         }
@@ -66,6 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
             var category = attribute.Category;
             var @event = attribute.Event;
             var parameterNames = attribute.ParameterNames ?? Array.Empty<string>();
+            var connectionStringSetting = attribute.ConnectionStringSetting;
 
             // We have two models for C#, one is function based model which also work in multiple language
             // Another one is class based model, which is highly close to SignalR itself but must keep some conventions.
@@ -87,6 +89,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 hubName = declaredType.Name;
                 category = GetCategoryFromMethodName(method.Name);
                 @event = GetEventFromMethodName(method.Name, category);
+                connectionStringSetting = declaredType.GetCustomAttribute<SignalRConnectionAttribute>()?.Connection ?? attribute.ConnectionStringSetting;
             }
             else
             {
@@ -110,7 +113,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.SignalRService
                 ? parameterNamesFromAttribute
                 : parameterNames;
 
-            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) { ConnectionStringSetting = attribute.ConnectionStringSetting };
+            return new SignalRTriggerAttribute(hubName, category, @event, parameterNames) { ConnectionStringSetting = connectionStringSetting };
         }
 
         private void ValidateSignalRTriggerAttributeBinding(SignalRTriggerAttribute attribute)

@@ -10,6 +10,7 @@ using Microsoft.Azure.SignalR;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Azure.WebJobs.Host.Config;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +32,7 @@ namespace SignalRServiceExtension.Tests.Utils
                         services.AddSingleton<IExtensionConfigProvider>(ext);
                     }
                     services.AddSingleton<IExtensionConfigProvider>(new TestExtensionConfig());
+                    services.AddAzureClientsCore();
                 })
                 .ConfigureWebJobs(webJobsBuilder =>
                 {

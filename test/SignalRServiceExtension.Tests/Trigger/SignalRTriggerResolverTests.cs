@@ -18,10 +18,10 @@ namespace SignalRServiceExtension.Tests.Trigger
             var connectionId = "0f9c97a2f0bf4706afe87a14e0797b11";
             var accessKeys = new AccessKey[]
             {
-                new AccessKey("7aab239577fd4f24bc919802fb629f5f","http://endpoint1",1),
-                new AccessKey("a5f2815d0d0c4b00bd27e832432f91ab","http://endpont2",1)
+                new AccessKey("https://endpoint1", "7aab239577fd4f24bc919802fb629f5f"),
+                new AccessKey("https://endpont2", "a5f2815d0d0c4b00bd27e832432f91ab")
             };
-            var wrongAccessKeys = new AccessKey[] { new AccessKey(Guid.NewGuid().ToString(), "http://wrong", 1) };
+            var wrongAccessKeys = new AccessKey[] { new AccessKey("http://wrong", Guid.NewGuid().ToString()) };
             var signatures = new string[]
             {
                 "sha256=7767effcb3946f3e1de039df4b986ef02c110b1469d02c0a06f41b3b727ab561",
