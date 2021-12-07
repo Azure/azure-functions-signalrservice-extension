@@ -1,4 +1,5 @@
 # Azure Functions Bindings for Azure SignalR Service
+**Project moved to [azure-sdk-for-net](https://github.com/Azure/azure-sdk-for-net/tree/main/sdk/signalr/Microsoft.Azure.WebJobs.Extensions.SignalRService) repo.
 
 ## Build Status
 
