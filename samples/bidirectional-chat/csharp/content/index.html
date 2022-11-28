@@ -145,7 +145,7 @@
           }
         }
       });
-      const apiBaseUrl = prompt('Enter the Azure Function app base URL', "http://localhost:7071");
+      const apiBaseUrl = window.apiBaseUrl; //prompt('Enter the Azure Function app base URL', window.apiBaseUrl);
       data.username = prompt("Enter your username");
       const isAdmin = confirm('Work as administrator? (only an administrator can broadcast messages)');
       if (!data.username) {
@@ -170,6 +170,15 @@
           console.log('connected!');
         })
         .catch(console.error);
+      function getAxiosConfig() {
+        const config = {
+          headers: {
+            'x-ms-signalr-user-id':  data.username,
+            'Authorization': 'Bearer ' + generateAccessToken(data.username)
+          }
+        };
+        return config;
+      }
       let counter = 0;
       function onNewMessage(message) {
         message.id = counter++; // vue transitions need an id

@@ -1,16 +1,19 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Azure.SignalR.Management;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FunctionApp
 {
@@ -18,6 +21,19 @@ namespace FunctionApp
     {
         private const string NewMessageTarget = "newMessage";
         private const string NewConnectionTarget = "newConnection";
+
+        [FunctionName("index")]
+        public IActionResult GetHomePage([HttpTrigger(AuthorizationLevel.Anonymous)]HttpRequest req, ExecutionContext context, ILogger logger)
+        {
+            var webPageFile = Path.Combine(context.FunctionAppDirectory, "content/index.html");
+            logger.LogInformation($"Loading page from {webPageFile}");
+
+            return new ContentResult
+            {
+                Content = File.ReadAllText(webPageFile),
+                ContentType = "text/html",
+            };
+        }
 
         [FunctionName("negotiate")]
         public Task<SignalRConnectionInfo> NegotiateAsync([HttpTrigger(AuthorizationLevel.Anonymous)] HttpRequest req)
