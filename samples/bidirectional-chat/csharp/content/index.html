@@ -145,7 +145,7 @@
           }
         }
       });
-      const apiBaseUrl = prompt('Enter the Azure Function app base URL', "http://localhost:7071");
+      const apiBaseUrl = window.apiBaseUrl; //prompt('Enter the Azure Function app base URL', window.apiBaseUrl);
       data.username = prompt("Enter your username");
       const isAdmin = confirm('Work as administrator? (only an administrator can broadcast messages)');
       if (!data.username) {
