@@ -4,7 +4,6 @@
 using System;
 using System.Buffers;
 using System.IO;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -18,42 +17,26 @@ namespace Microsoft.Azure.SignalR.Serverless.Protocols
 
         public bool TryParseMessage(ref ReadOnlySequence<byte> input, out ServerlessMessage message)
         {
-            var textReader = new JsonTextReader(new StreamReader(new ReadOnlySequenceStream(input)));
-            var jObject = JObject.Load(textReader);
-            if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token))
-            {
-                var type = token.Value<int>();
-                switch (type)
-                {
-                    case ServerlessProtocolConstants.InvocationMessageType:
-                        message = SafeParseMessage<InvocationMessage>(jObject);
-                        break;
-                    case ServerlessProtocolConstants.OpenConnectionMessageType:
-                        message = SafeParseMessage<OpenConnectionMessage>(jObject);
-                        break;
-                    case ServerlessProtocolConstants.CloseConnectionMessageType:
-                        message = SafeParseMessage<CloseConnectionMessage>(jObject);
-                        break;
-                    default:
-                        message = null;
-                        break;
-                }
-                return message != null;
-            }
             message = null;
-            return false;
-        }
+            using var inputStream = new ReadOnlySequenceStream(input);
+            using var streamReader = new StreamReader(inputStream);
+            using var textReader = new JsonTextReader(streamReader);
 
-        private ServerlessMessage SafeParseMessage<T>(JObject jObject) where T : ServerlessMessage
-        {
             try
             {
-                return jObject.ToObject<T>();
+                var jObject = JObject.Load(textReader);
+                if (jObject.TryGetValue(TypePropertyName, StringComparison.OrdinalIgnoreCase, out var token)
+                    && token.Type == JTokenType.Integer)
+                    message = token.Value<int>() switch
+                    {
+                        ServerlessProtocolConstants.InvocationMessageType => jObject.ToObject<InvocationMessage>(),
+                        ServerlessProtocolConstants.OpenConnectionMessageType => jObject.ToObject<OpenConnectionMessage>(),
+                        ServerlessProtocolConstants.CloseConnectionMessageType => jObject.ToObject<CloseConnectionMessage>(),
+                        _ => null,
+                    };
             }
-            catch
-            {
-                return null;
-            }
+            catch { }
+            return message != null;
         }
     }
 }
