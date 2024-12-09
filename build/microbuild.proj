@@ -1,8 +1,0 @@
-<Project>
-  <Import Project="dependencies.props" />
-
-  <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCorePackageVersion)" />
-  </ItemGroup>
-
-</Project>
