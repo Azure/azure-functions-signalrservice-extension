@@ -16,17 +16,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Setup .NET 2.1
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@871f041373faaad213a635d9afb62905ec029bbb # v1.10.1
       with:
         dotnet-version: '2.1.x'
     - name: Setup .NET 3.1
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@871f041373faaad213a635d9afb62905ec029bbb # v1.10.1
       with:
         dotnet-version: '3.1.x'
     - name: Setup .NET 5.0
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@871f041373faaad213a635d9afb62905ec029bbb # v1.10.1
       with:
         dotnet-version: '5.0.x'
     - name: Restore dependencies
